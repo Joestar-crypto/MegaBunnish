@@ -16,9 +16,9 @@ export const ConstellationHUD = () => {
     <div className="hud-card">
       <p className="eyebrow">Constellation</p>
       <h3>{stats.totalProjects} active orbs</h3>
-      <p className="muted">{stats.activeIncentives} live incentives glowing right now.</p>
+      <p className="muted">{stats.activeIncentives} live incentives glowing left now.</p>
       <div className="hud-actions">
-        <span>Right-click drag to explore</span>
+        <span>Left-click drag to explore</span>
         <span>Click nodes for intel</span>
       </div>
     </div>

@@ -32,7 +32,10 @@ export type ConstellationProject = RawProject & {
   primaryCategory: string;
   linkedIds: string[];
   clusterOrigin: { x: number; y: number };
+  highlight?: HighlightVariant;
 };
+
+export type HighlightVariant = 'badbunnz' | 'megalio';
 
 export type CameraState = {
   x: number;

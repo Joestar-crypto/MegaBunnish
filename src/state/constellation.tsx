@@ -4,40 +4,90 @@ import {
   CameraState,
   ConstellationProject,
   ConstellationState,
+  HighlightVariant,
   Incentive,
   RawProject
 } from '../types';
-
-const CATEGORY_ORDER = [
-  'Megamafia',
-  'Defi',
-  'Dex',
-  'Lending',
-  'Perps',
-  'BadBunnz',
-  'Social',
+const CORE_CATEGORIES = [
+  'DeFi',
   'Trading',
+  'Tools',
+  'Gaming',
+  'Mobile',
+  'NFT',
   'Meme',
-  'Launchpads',
+  'Megamafia',
   'Depin',
   'Prediction Market',
-  'AI',
-  'Others',
-  'NFT',
-  'Mobile',
-  'Gaming',
-  'RWA',
-  'Gatcha',
-  'Gambling',
-  'Payment',
-  'WTF?',
-  'LST',
-  'Tools',
-  'Bridge',
-  'Stablecoins'
-];
+  'Gambling'
+] as const;
 
-const CATEGORY_ANCHOR_RADIUS = 430;
+type CoreCategory = (typeof CORE_CATEGORIES)[number];
+
+const DEFAULT_CORE_CATEGORY: CoreCategory = 'Megamafia';
+
+const CORE_LOOKUP = CORE_CATEGORIES.reduce<Record<string, CoreCategory>>((acc, category) => {
+  acc[category.toLowerCase()] = category;
+  return acc;
+}, {});
+
+const CATEGORY_ALIASES: Record<string, CoreCategory> = {
+  megmafia: 'Megamafia',
+  megamafia: 'Megamafia',
+  social: 'Megamafia',
+  'badbunnz': 'Megamafia',
+  launchpad: 'Tools',
+  launchpads: 'Tools',
+  dex: 'Trading',
+  perps: 'Trading',
+  'perps/trading': 'Trading',
+  lending: 'DeFi',
+  stablecoins: 'DeFi',
+  bridge: 'Tools',
+  payment: 'Megamafia',
+  rwa: 'DeFi',
+  lst: 'DeFi',
+  gatcha: 'Gambling',
+  casino: 'Gambling',
+  prediction: 'Prediction Market',
+  'prediction market': 'Prediction Market',
+  'prediction-market': 'Prediction Market',
+  meme: 'Meme',
+  ai: 'Tools',
+  depin: 'Depin',
+  mobile: 'Mobile',
+  nft: 'NFT',
+  nfts: 'NFT',
+  collectible: 'NFT',
+  collectibles: 'NFT'
+};
+
+const canonicalizeCategory = (label: string): CoreCategory | null => {
+  const normalized = label.trim().toLowerCase();
+  if (!normalized) {
+    return null;
+  }
+  return CATEGORY_ALIASES[normalized] ?? CORE_LOOKUP[normalized] ?? null;
+};
+
+const sanitizeCategories = (labels: string[]): CoreCategory[] => {
+  const sanitized: CoreCategory[] = [];
+  labels.forEach((label) => {
+    const canonical = canonicalizeCategory(label);
+    if (!canonical || sanitized.includes(canonical)) {
+      return;
+    }
+    sanitized.push(canonical);
+  });
+  if (sanitized.length === 0) {
+    sanitized.push(DEFAULT_CORE_CATEGORY);
+  }
+  return sanitized;
+};
+const CATEGORY_ANCHOR_RADIUS = 320;
+const CLUSTER_RADIUS_PADDING = 70;
+const CLUSTER_COLLISION_ITERATIONS = 8;
+const CLUSTER_PULL_STRENGTH = 0.12;
 const ORBIT_BASE_RADIUS = 90;
 const ORBIT_RING_GAP = 65;
 const BASE_RING_SLOTS = 6;
@@ -48,10 +98,92 @@ const PARENT_RELATIONS: Record<string, string[]> = {
   megalio: ['priority']
 };
 
-const sortCategories = (labels: Set<string>) => {
-  const extras = Array.from(labels).filter((label) => !CATEGORY_ORDER.includes(label)).sort();
-  return [...CATEGORY_ORDER, ...extras];
+const ECOSYSTEM_HIGHLIGHTS: Record<string, HighlightVariant> = {
+  'bad-bunnz': 'badbunnz',
+  prismfi: 'badbunnz',
+  faster: 'badbunnz',
+  bunnzpaw: 'badbunnz',
+  megalio: 'megalio',
+  priority: 'megalio'
 };
+
+type ClusterLayoutMeta = {
+  anchor: { x: number; y: number };
+  radius: number;
+};
+
+const resolveClusterAnchors = (clusters: Record<string, ClusterLayoutMeta>) => {
+  const entries = Object.entries(clusters).map(([category, meta]) => ({
+    category,
+    position: { ...meta.anchor },
+    radius: meta.radius
+  }));
+
+  if (entries.length < 2) {
+    return entries.reduce((acc, entry) => {
+      acc[entry.category] = entry.position;
+      return acc;
+    }, {} as Record<string, { x: number; y: number }>);
+  }
+
+  for (let iteration = 0; iteration < CLUSTER_COLLISION_ITERATIONS; iteration += 1) {
+    let moved = false;
+
+    for (let i = 0; i < entries.length; i += 1) {
+      for (let j = i + 1; j < entries.length; j += 1) {
+        const current = entries[i];
+        const other = entries[j];
+        const dx = other.position.x - current.position.x;
+        const dy = other.position.y - current.position.y;
+        let distance = Math.hypot(dx, dy);
+        if (distance === 0) {
+          distance = 0.001;
+        }
+        const minDistance = current.radius + other.radius;
+        if (distance < minDistance) {
+          const overlap = (minDistance - distance) / 2;
+          const offsetX = (dx / distance) * overlap;
+          const offsetY = (dy / distance) * overlap;
+          current.position.x -= offsetX;
+          current.position.y -= offsetY;
+          other.position.x += offsetX;
+          other.position.y += offsetY;
+          moved = true;
+        }
+      }
+    }
+
+    entries.forEach((entry) => {
+      const currentRadius = Math.hypot(entry.position.x, entry.position.y);
+      if (currentRadius < 1) {
+        entry.position.x = CATEGORY_ANCHOR_RADIUS;
+        entry.position.y = 0;
+        moved = true;
+        return;
+      }
+      const delta = CATEGORY_ANCHOR_RADIUS - currentRadius;
+      if (Math.abs(delta) < 0.5) {
+        return;
+      }
+      const pull = delta * CLUSTER_PULL_STRENGTH;
+      entry.position.x += (entry.position.x / currentRadius) * pull;
+      entry.position.y += (entry.position.y / currentRadius) * pull;
+      moved = true;
+    });
+
+    if (!moved) {
+      break;
+    }
+  }
+
+  return entries.reduce((acc, entry) => {
+    acc[entry.category] = entry.position;
+    return acc;
+  }, {} as Record<string, { x: number; y: number }>);
+};
+
+const sortCategories = (labels: Set<CoreCategory>) =>
+  CORE_CATEGORIES.filter((category) => labels.has(category));
 
 const now = () => new Date();
 
@@ -80,17 +212,17 @@ const registerAdjacency = (
 const computeLayout = (
   projects: RawProject[]
 ): { projects: ConstellationProject[]; categories: string[]; categoryCounts: Record<string, number> } => {
-  const categoryBucket = new Set<string>();
+  const categoryBucket = new Set<CoreCategory>();
   const categoryCounts: Record<string, number> = {};
-  const groupedByPrimary = new Map<string, RawProject[]>();
+  const groupedByPrimary = new Map<CoreCategory, RawProject[]>();
+  const projectCategoryMeta = new Map<string, { primary: CoreCategory; categories: CoreCategory[] }>();
 
   projects.forEach((project) => {
-    const categories = project.categories.length > 0 ? project.categories : ['Others'];
-    categories.forEach((label) => {
-      categoryBucket.add(label);
-      categoryCounts[label] = (categoryCounts[label] ?? 0) + 1;
-    });
-    const primaryCategory = categories[0];
+    const sanitizedCategories = sanitizeCategories(project.categories);
+    const primaryCategory = sanitizedCategories[0];
+    categoryBucket.add(primaryCategory);
+    categoryCounts[primaryCategory] = (categoryCounts[primaryCategory] ?? 0) + 1;
+    projectCategoryMeta.set(project.id, { primary: primaryCategory, categories: sanitizedCategories });
     if (!groupedByPrimary.has(primaryCategory)) {
       groupedByPrimary.set(primaryCategory, []);
     }
@@ -99,6 +231,7 @@ const computeLayout = (
 
   const categories = sortCategories(categoryBucket);
   const categoryAnchors: Record<string, { x: number; y: number }> = {};
+  const clusterStats: Record<string, ClusterLayoutMeta> = {};
   categories.forEach((category, index) => {
     const angle = (index / Math.max(categories.length, 1)) * Math.PI * 2;
     categoryAnchors[category] = {
@@ -110,7 +243,7 @@ const computeLayout = (
   const categoryAdjacency: Record<string, Set<string>> = {};
   const positionedProjects: ConstellationProject[] = [];
   categories.forEach((category) => {
-    const group = groupedByPrimary.get(category);
+    const group = groupedByPrimary.get(category as CoreCategory);
     if (!group || group.length === 0) {
       return;
     }
@@ -119,6 +252,7 @@ const computeLayout = (
     const arrangedIds: string[] = [];
     let processed = 0;
     let ringIndex = 0;
+    let maxOrbitRadius = 0;
 
     while (processed < group.length) {
       const slotsInRing = Math.min(
@@ -130,8 +264,12 @@ const computeLayout = (
 
       for (let slot = 0; slot < slotsInRing; slot += 1) {
         const project = group[processed + slot];
-        const categoriesForProject = project.categories.length > 0 ? project.categories : ['Others'];
-        const primaryCategory = categoriesForProject[0];
+        const meta = projectCategoryMeta.get(project.id);
+        if (!meta) {
+          continue;
+        }
+        const categoriesForProject = meta.categories;
+        const primaryCategory = meta.primary;
         const baseAngle = (slot / slotsInRing) * Math.PI * 2 + rotationOffset;
         const jitter = (((project.id.charCodeAt(0) + slot * 31) % 100) / 100 - 0.5) * 0.25;
         const radiusJitter = ((project.id.length * 13) % 9) - 4;
@@ -140,6 +278,8 @@ const computeLayout = (
         const x = anchor.x + Math.cos(angle) * orbitRadius;
         const y = anchor.y + Math.sin(angle) * orbitRadius;
 
+        maxOrbitRadius = Math.max(maxOrbitRadius, orbitRadius);
+
         positionedProjects.push({
           ...project,
           categories: categoriesForProject,
@@ -147,7 +287,8 @@ const computeLayout = (
           incentives: pruneIncentives(project.incentives),
           linkedIds: [...(project.linkedIds ?? [])],
           clusterOrigin: anchor,
-          position: { x, y }
+          position: { x, y },
+          highlight: ECOSYSTEM_HIGHLIGHTS[project.id]
         });
         arrangedIds.push(project.id);
       }
@@ -155,6 +296,11 @@ const computeLayout = (
       processed += slotsInRing;
       ringIndex += 1;
     }
+
+    clusterStats[category] = {
+      anchor,
+      radius: maxOrbitRadius + CLUSTER_RADIUS_PADDING
+    };
 
     if (arrangedIds.length > 1) {
       arrangedIds.forEach((projectId, index) => {
@@ -164,6 +310,26 @@ const computeLayout = (
         registerAdjacency(categoryAdjacency, projectId, next);
       });
     }
+  });
+
+  const adjustedAnchors = resolveClusterAnchors(clusterStats);
+
+  positionedProjects.forEach((project) => {
+    const nextAnchor = adjustedAnchors[project.primaryCategory];
+    if (!nextAnchor) {
+      return;
+    }
+    const deltaX = nextAnchor.x - project.clusterOrigin.x;
+    const deltaY = nextAnchor.y - project.clusterOrigin.y;
+    if (Math.abs(deltaX) < 0.001 && Math.abs(deltaY) < 0.001) {
+      project.clusterOrigin = nextAnchor;
+      return;
+    }
+    project.clusterOrigin = nextAnchor;
+    project.position = {
+      x: project.position.x + deltaX,
+      y: project.position.y + deltaY
+    };
   });
 
   const byId = new Map(positionedProjects.map((project) => [project.id, project]));
@@ -245,8 +411,8 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       let targetZoom = 1;
 
       if (category) {
-        const projectsInCategory = prev.projects.filter((project) =>
-          project.categories.includes(category)
+        const projectsInCategory = prev.projects.filter(
+          (project) => project.primaryCategory === category
         );
         if (projectsInCategory.length > 0) {
           targetX =

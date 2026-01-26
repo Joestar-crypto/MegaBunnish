@@ -9,10 +9,10 @@ const AppContent = () => {
     <div className="app-shell">
       <header className="site-heading">
         <div>
-          <p className="eyebrow">Astral ecosystems</p>
-          <h1>Navigate the application field</h1>
+          <p className="eyebrow">MegaBunnish ecosystems</p>
+          <h1>Command the MegaBunnish field</h1>
           <p className="muted">
-            Filter by primitive, glide through the map, and dive into live documentation and incentive intel without leaving the canvas.
+            The ops board keeps every primitive, live documentation link, and incentive ping inside a single viewport.
           </p>
         </div>
       </header>

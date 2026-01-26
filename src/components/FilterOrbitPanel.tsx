@@ -6,9 +6,20 @@ export const FilterOrbitPanel = () => {
 
   return (
     <aside className="filter-panel">
-      <header>
-        <p className="eyebrow">Navigate</p>
-        <h2>Choose your sector</h2>
+      <header className="filter-hero">
+        <div>
+          <p className="eyebrow">MegaBunnish mission control</p>
+          <h2>Cluster autopilot</h2>
+          <p className="hero-lede">
+            Rocket keeps every curated primitive, NFT drop lane, and Depin corridor aligned inside this panel.
+          </p>
+        </div>
+        <img
+          src="/logos/Rocket.svg"
+          alt="Rocket sensor"
+          className="filter-hero__rocket"
+          loading="lazy"
+        />
       </header>
       <div className="chips">
         <button
@@ -35,8 +46,8 @@ export const FilterOrbitPanel = () => {
         ))}
       </div>
       <section className="hint-block">
-        <p>Right-click and drag anywhere inside the constellation to glide through space.</p>
-        <p>Scroll to zoom via browser controls for even more focus.</p>
+        <p>Left-click and drag to glide; zoom via browser controls for surgical focus.</p>
+        <p>Each chip recenters on its curated cluster without the extra noise.</p>
       </section>
     </aside>
   );

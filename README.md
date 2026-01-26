@@ -1,6 +1,6 @@
 # Constellation Explorer
 
-A 2D blockchain application navigator that renders a constellation of project nodes from local JSON data. Users can filter by primitive, orbit the canvas with a right-click drag gesture, and inspect detailed resources plus incentive campaigns per project.
+A 2D blockchain application navigator that renders a constellation of project nodes from local JSON data. Users can filter by primitive, orbit the canvas with a left-click drag gesture, and inspect detailed resources plus incentive campaigns per project.
 
 ## Requirements
 
@@ -36,7 +36,7 @@ Expired incentives are hidden automatically at runtime.
 
 ## Interactions
 
-- **Right-click drag** pans the camera.
+- **Left-click drag** pans the camera.
 - **Click nodes** to open the detail drawer.
 - **Category chips** recenter the view on that cluster.
 

@@ -17,7 +17,27 @@ const palette = [
     '#ffb6c1',
     '#c4a2ff'
 ];
+const categoryAccentMap = {
+    'DeFi': '#66f2a2',
+    'Perps/Trading': '#ff9a62'
+};
+const highlightStyles = {
+    badbunnz: {
+        stroke: '#ff6f91',
+        glow: 'rgba(255, 111, 145, 0.45)',
+        halo: 'rgba(255, 111, 145, 0.22)'
+    },
+    megalio: {
+        stroke: '#b58bff',
+        glow: 'rgba(181, 139, 255, 0.45)',
+        halo: 'rgba(181, 139, 255, 0.22)'
+    }
+};
 const categoryColor = (category) => {
+    const preset = categoryAccentMap[category];
+    if (preset) {
+        return preset;
+    }
     const hash = category
         .split('')
         .reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -164,15 +184,40 @@ export const ConstellationCanvas = () => {
                 const pulse = Math.sin(time * 0.002 + index) * 4;
                 const baseRadius = 36;
                 const radius = baseRadius + pulse + (project.id === hoveredId ? 6 : 0);
+                const highlightStyle = project.highlight ? highlightStyles[project.highlight] : null;
+                const baseLineWidth = project.id === selectedId ? 4 : 2;
                 context.beginPath();
                 context.fillStyle = 'rgba(255, 255, 255, 0.08)';
                 context.arc(x, y, radius + 10, 0, Math.PI * 2);
                 context.fill();
+                if (highlightStyle) {
+                    context.save();
+                    const haloRadius = radius + 24;
+                    const haloGradient = context.createRadialGradient(x, y, radius, x, y, haloRadius);
+                    haloGradient.addColorStop(0, highlightStyle.halo);
+                    haloGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                    context.fillStyle = haloGradient;
+                    context.beginPath();
+                    context.arc(x, y, haloRadius, 0, Math.PI * 2);
+                    context.fill();
+                    context.restore();
+                }
                 context.beginPath();
                 context.strokeStyle = categoryColor(project.primaryCategory);
-                context.lineWidth = project.id === selectedId ? 4 : 2;
+                context.lineWidth = baseLineWidth;
                 context.arc(x, y, radius, 0, Math.PI * 2);
                 context.stroke();
+                if (highlightStyle) {
+                    context.save();
+                    context.strokeStyle = highlightStyle.stroke;
+                    context.lineWidth = baseLineWidth + 2;
+                    context.shadowColor = highlightStyle.glow;
+                    context.shadowBlur = 25;
+                    context.beginPath();
+                    context.arc(x, y, radius + 4, 0, Math.PI * 2);
+                    context.stroke();
+                    context.restore();
+                }
                 const image = images.get(project.logo);
                 if (image && image.complete) {
                     context.save();

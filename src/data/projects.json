@@ -2,9 +2,14 @@
   {
     "id": "cap-money",
     "name": "Cap Money",
-    "categories": ["Megamafia", "Defi", "Stablecoins"],
+    "categories": [
+      "Megamafia",
+      "DeFi"
+    ],
     "summary": "Stablecoin rails and treasury automations for MegaMafia treasuries.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://cap.app/",
       "twitter": "https://x.com/capmoney_"
@@ -14,9 +19,15 @@
   {
     "id": "euphoria",
     "name": "Euphoria",
-    "categories": ["Megamafia", "Perps", "Trading", "Mobile"],
+    "categories": [
+      "Megamafia",
+      "Trading",
+      "Mobile"
+    ],
     "summary": "Mobile-native perps terminal with MegaMafia intent routing.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://euphoria.finance/",
       "twitter": "https://x.com/Euphoria_fi",
@@ -28,9 +39,14 @@
   {
     "id": "rocket",
     "name": "Rocket",
-    "categories": ["Megamafia", "Prediction Market"],
+    "categories": [
+      "Megamafia",
+      "Prediction Market"
+    ],
     "summary": "Community prediction markets feeding MegaMafia strategy calls.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://userocket.app/",
       "twitter": "https://x.com/userocket_app"
@@ -40,9 +56,13 @@
   {
     "id": "aveforge",
     "name": "Aveforge",
-    "categories": ["Gaming"],
+    "categories": [
+      "Gaming"
+    ],
     "summary": "PvP arena crafting roguelike items for MegaMafia storylines.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.aveforge.gg/",
       "twitter": "https://x.com/AveForge",
@@ -53,9 +73,14 @@
   {
     "id": "hello-trade",
     "name": "HelloTrade",
-    "categories": ["RWA", "Trading", "Mobile"],
+    "categories": [
+      "Trading",
+      "Mobile"
+    ],
     "summary": "RWA trading desk with one-swipe mobile settlement.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.hello.trade/",
       "twitter": "https://x.com/hellotradeapp"
@@ -65,61 +90,92 @@
   {
     "id": "bad-bunnz",
     "name": "BadBunnz",
-    "categories": ["NFT", "BadBunnz"],
+    "categories": [
+      "NFT"
+    ],
     "summary": "The core MegaBunnz collective coordinating drops and lore.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "twitter": "https://x.com/badbunnz_",
       "discord": "https://discord.com/invite/ZGFNRqFhqq"
     },
     "logo": "/logos/BadBunnz.jpg",
-    "linkedIds": ["prismfi", "bunnzpaw", "faster"]
+    "linkedIds": [
+      "prismfi",
+      "bunnzpaw",
+      "faster"
+    ]
   },
   {
     "id": "prismfi",
     "name": "PrismFi",
-    "categories": ["Dex", "Lending", "Perps", "BadBunnz"],
+    "categories": [
+      "DeFi"
+    ],
     "summary": "BadBunnz-aligned liquidity layer spanning spot, perps, and credit.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.prismfi.cc/",
       "twitter": "https://x.com/PrismFi_"
     },
     "logo": "/logos/PrismFi.jpg",
-    "linkedIds": ["bad-bunnz"]
+    "linkedIds": [
+      "bad-bunnz"
+    ]
   },
   {
     "id": "bunnzpaw",
     "name": "BunnzPaw",
-    "categories": ["Gatcha", "BadBunnz"],
+    "categories": [
+      "Gambling"
+    ],
     "summary": "Loot-box gatcha loops for BadBunnz community rewards.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.bunnzpaw.com/",
       "twitter": "https://x.com/BunnzPaw"
     },
     "logo": "/logos/BunnzPaw.jpg",
-    "linkedIds": ["bad-bunnz"]
+    "linkedIds": [
+      "bad-bunnz"
+    ]
   },
   {
     "id": "faster",
     "name": "Faster",
-    "categories": ["Launchpads", "BadBunnz"],
+    "categories": [
+      "Tools"
+    ],
     "summary": "BadBunnz launch arena for experimental drops and spins.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.fasterz.fun/",
       "twitter": "https://x.com/fasterdotfun"
     },
     "logo": "/logos/Faster.jpg",
-    "linkedIds": ["bad-bunnz"]
+    "linkedIds": [
+      "bad-bunnz"
+    ]
   },
   {
     "id": "legend",
     "name": "Legend",
-    "categories": ["Trading", "Megamafia"],
+    "categories": [
+      "Trading",
+      "Megamafia"
+    ],
     "summary": "Cross-market command center for intent-based trading.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.legend.trade/",
       "twitter": "https://x.com/legendtrade",
@@ -131,9 +187,14 @@
   {
     "id": "brix",
     "name": "Brix",
-    "categories": ["Megamafia", "Defi", "RWA"],
+    "categories": [
+      "Megamafia",
+      "DeFi"
+    ],
     "summary": "Stable RWA vaults abstracted into on-chain Mega bricks.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.brix.money/",
       "twitter": "https://x.com/brix_money",
@@ -144,9 +205,14 @@
   {
     "id": "blitzo",
     "name": "Blitzo",
-    "categories": ["Social", "Payment", "Megamafia", "Mobile", "WTF?"],
+    "categories": [
+      "Megamafia",
+      "Mobile"
+    ],
     "summary": "Voice-first money app bridging chats and on-chain actions.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://blitzo.xyz/",
       "twitter": "https://x.com/blitzo"
@@ -156,9 +222,14 @@
   {
     "id": "lemonade",
     "name": "Lemonade",
-    "categories": ["Megamafia", "Mobile", "Social"],
+    "categories": [
+      "Megamafia",
+      "Mobile"
+    ],
     "summary": "Pocket social wallet with instant discovery packs.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://lemonade.social/",
       "twitter": "https://x.com/LemonadedApp"
@@ -168,9 +239,14 @@
   {
     "id": "dorado",
     "name": "Dorado",
-    "categories": ["Megamafia", "Gambling"],
+    "categories": [
+      "Megamafia",
+      "Gambling"
+    ],
     "summary": "Social casino with MegaMafia leaderboard energy.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.doradogames.xyz/waitlist",
       "twitter": "https://x.com/DoradoGames_xyz"
@@ -180,9 +256,13 @@
   {
     "id": "pumpparty",
     "name": "Pumpparty",
-    "categories": ["Social", "Trading"],
+    "categories": [
+      "Megamafia"
+    ],
     "summary": "Hype-fueled trading pits for social whales.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.pumpparty.com/",
       "twitter": "https://x.com/pumpparty",
@@ -193,9 +273,14 @@
   {
     "id": "worldmarkets",
     "name": "WorldMarkets",
-    "categories": ["Perps", "Lending", "Trading", "Megamafia"],
+    "categories": [
+      "Trading",
+      "Megamafia"
+    ],
     "summary": "MegaMafia macro desk with unified liquidity lines.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.wcm.inc/",
       "twitter": "https://x.com/worldmarkets_io"
@@ -205,9 +290,14 @@
   {
     "id": "benchmark",
     "name": "Benchmark",
-    "categories": ["Defi", "Lending", "Megamafia"],
+    "categories": [
+      "DeFi",
+      "Megamafia"
+    ],
     "summary": "Composable leverage vaults with dynamic benchmarks.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.benchmark.finance/",
       "twitter": "https://x.com/BenchmarkFi"
@@ -217,9 +307,14 @@
   {
     "id": "avon",
     "name": "Avon",
-    "categories": ["Megamafia", "Lending", "Defi"],
+    "categories": [
+      "Megamafia",
+      "DeFi"
+    ],
     "summary": "Sovereign credit lines for MegaMafia squads.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.avon.xyz/",
       "twitter": "https://x.com/avon_xyz",
@@ -230,9 +325,14 @@
   {
     "id": "blackhaven",
     "name": "BlackHaven",
-    "categories": ["Megamafia", "WTF?", "Defi"],
+    "categories": [
+      "Megamafia",
+      "DeFi"
+    ],
     "summary": "Shadow collective for experimental MegaMafia finance loops.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://blackhaven.xyz/",
       "twitter": "https://x.com/blackhaven",
@@ -243,9 +343,13 @@
   {
     "id": "aqua",
     "name": "Aqua",
-    "categories": ["Defi", "LST", "Lending"],
+    "categories": [
+      "DeFi"
+    ],
     "summary": "LST money markets with adaptive liquidity incentives.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://useaqua.xyz/",
       "twitter": "https://x.com/useAqua_xyz",
@@ -256,9 +360,14 @@
   {
     "id": "showdown",
     "name": "Showdown",
-    "categories": ["Gaming", "Megamafia"],
+    "categories": [
+      "Gaming",
+      "Megamafia"
+    ],
     "summary": "TCG battler with MegaMafia IP crossovers.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.showdown.game/",
       "twitter": "https://x.com/Showdown_TCG",
@@ -269,9 +378,14 @@
   {
     "id": "topstrike",
     "name": "TopStrike",
-    "categories": ["Mobile", "Trading", "Gaming"],
+    "categories": [
+      "Mobile",
+      "Gaming"
+    ],
     "summary": "Real-time sports trading duel built for phones.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.topstrike.io/",
       "twitter": "https://x.com/TopStrikeIO",
@@ -282,9 +396,14 @@
   {
     "id": "stomp",
     "name": "Stomp",
-    "categories": ["Gaming", "Megamafia"],
+    "categories": [
+      "Gaming",
+      "Megamafia"
+    ],
     "summary": "Arcade battler with stomp-to-earn tournaments.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://stomp.gg/",
       "twitter": "https://x.com/stompdotgg"
@@ -294,9 +413,13 @@
   {
     "id": "rainmaker",
     "name": "RainMaker",
-    "categories": ["Launchpads", "AI", "Meme"],
+    "categories": [
+      "Tools"
+    ],
     "summary": "AI-assisted memecoin launchpad for fast airdrops.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://rainmakr.xyz/en",
       "twitter": "https://x.com/RainMakr_xyz",
@@ -307,9 +430,16 @@
   {
     "id": "kumbaya",
     "name": "Kumbaya",
-    "categories": ["Launchpads", "Dex", "Defi", "Megamafia"],
+    "categories": [
+      "Tools",
+      "Trading",
+      "DeFi",
+      "Megamafia"
+    ],
     "summary": "Liquidity router powering MegaMafia launch waves.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.kumbaya.xyz/",
       "twitter": "https://x.com/kumbaya_xyz"
@@ -319,9 +449,13 @@
   {
     "id": "meth",
     "name": "Meth",
-    "categories": ["Meme"],
+    "categories": [
+      "Meme"
+    ],
     "summary": "Chaotic MegaMafia meme culture project.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "twitter": "https://x.com/MethMegaeth"
     },
@@ -330,9 +464,13 @@
   {
     "id": "megarafia",
     "name": "Megarafia",
-    "categories": ["Meme", "NFT"],
+    "categories": [
+      "Meme"
+    ],
     "summary": "Mob-inspired NFT syndicate inside MegaMafia.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "twitter": "https://x.com/MegaRafia"
     },
@@ -341,9 +479,14 @@
   {
     "id": "cilium",
     "name": "Cilium",
-    "categories": ["Megamafia", "Depin", "WTF?"],
+    "categories": [
+      "Megamafia",
+      "Depin"
+    ],
     "summary": "Physical hardware mesh powering on-chain verification.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://cilium.ai/",
       "twitter": "https://x.com/Cilium_xyz"
@@ -353,9 +496,14 @@
   {
     "id": "ubitel",
     "name": "Ubitel",
-    "categories": ["Megamafia", "Depin", "WTF?"],
+    "categories": [
+      "Megamafia",
+      "Depin"
+    ],
     "summary": "Peer hardware nodes selling bandwidth into MegaMafia apps.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://app.ubi.tel/",
       "twitter": "https://x.com/getubitel"
@@ -365,9 +513,14 @@
   {
     "id": "hop",
     "name": "Hop",
-    "categories": ["Megamafia", "Depin"],
+    "categories": [
+      "Megamafia",
+      "Depin"
+    ],
     "summary": "Micro-relay depin network for MegaMafia connectivity.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://hopnetwork.xyz/",
       "twitter": "https://x.com/Hop_Network"
@@ -377,9 +530,14 @@
   {
     "id": "hunch",
     "name": "Hunch",
-    "categories": ["Megamafia", "Prediction Market"],
+    "categories": [
+      "Megamafia",
+      "Prediction Market"
+    ],
     "summary": "Crowd forecasts for MegaMafia decision intelligence.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.hunch.lol/",
       "twitter": "https://x.com/hunchlol"
@@ -389,9 +547,13 @@
   {
     "id": "mega-heroes",
     "name": "MegaHeroes",
-    "categories": ["Trading", "AI", "Gaming"],
+    "categories": [
+      "Gaming"
+    ],
     "summary": "AI-powered trading quests with hero NFTs.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.megaheroes.xyz/",
       "twitter": "https://x.com/MegaheroesHQ",
@@ -402,9 +564,14 @@
   {
     "id": "everwatch",
     "name": "Everwatch",
-    "categories": ["Megamafia", "Trading", "AI"],
+    "categories": [
+      "Megamafia",
+      "Tools"
+    ],
     "summary": "AI co-pilot for monitoring MegaMafia on-chain flows.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://everwatch.cc/",
       "twitter": "https://x.com/0xEverwatch"
@@ -414,9 +581,14 @@
   {
     "id": "nectar-ai",
     "name": "NectarAI",
-    "categories": ["Megamafia", "Gaming", "AI"],
+    "categories": [
+      "Megamafia",
+      "Tools"
+    ],
     "summary": "Agentic copilots for MegaMafia quests and raids.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://nectar.ai/",
       "twitter": "https://x.com/TryNectarAI",
@@ -427,9 +599,13 @@
   {
     "id": "mtrkr",
     "name": "MTRKR",
-    "categories": ["Tools"],
+    "categories": [
+      "Tools"
+    ],
     "summary": "Analytics toolkit for MegaMafia protocol telemetry.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.mtrkr.xyz/",
       "twitter": "https://x.com/mtrkr_xyz"
@@ -439,9 +615,14 @@
   {
     "id": "funes",
     "name": "Funes",
-    "categories": ["Depin", "Megamafia"],
+    "categories": [
+      "Depin",
+      "Megamafia"
+    ],
     "summary": "Sensor network rewarding MegaMafia location proofs.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://funes.world/",
       "twitter": "https://x.com/Funes_World"
@@ -451,9 +632,13 @@
   {
     "id": "netizens",
     "name": "Netizens",
-    "categories": ["NFT"],
+    "categories": [
+      "NFT"
+    ],
     "summary": "Citizen-passport NFTs for MegaMafia governance.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "twitter": "https://x.com/WCNetizens",
       "discord": "https://discord.com/invite/2FyAD4uZ6y"
@@ -463,9 +648,13 @@
   {
     "id": "meganacci",
     "name": "Meganacci",
-    "categories": ["NFT"],
+    "categories": [
+      "NFT"
+    ],
     "summary": "Numerology-driven art collection from MegaMafia.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://meganacci.xyz/",
       "twitter": "https://x.com/meganacci"
@@ -475,9 +664,13 @@
   {
     "id": "enjoyooors",
     "name": "Enjoyooors",
-    "categories": ["NFT"],
+    "categories": [
+      "NFT"
+    ],
     "summary": "Community collectibles fueling MegaMafia fun.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://enjoyooors.com/",
       "twitter": "https://x.com/enjoyooors",
@@ -488,9 +681,13 @@
   {
     "id": "digitrabbits",
     "name": "Digitrabbits",
-    "categories": ["NFT"],
+    "categories": [
+      "NFT"
+    ],
     "summary": "MegaMafia rabbit clan with on-chain adventures.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "twitter": "https://x.com/digitrabbits",
       "discord": "https://discord.com/invite/QzJvgbr2",
@@ -502,9 +699,13 @@
   {
     "id": "barry",
     "name": "Barry",
-    "categories": ["NFT"],
+    "categories": [
+      "NFT"
+    ],
     "summary": "Badly drawn Barry editions minted on MegaETH.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "twitter": "https://x.com/badlydrawnbarry",
       "nft": "https://rarible.com/megaethtestnet/collections/0x804d4a7fa24cf485cbd574c329849939e7d11ce8"
@@ -514,9 +715,13 @@
   {
     "id": "glitchy-bunnies",
     "name": "Glitchy Bunnies",
-    "categories": ["NFT"],
+    "categories": [
+      "NFT"
+    ],
     "summary": "404 bunny glitches spawning generative drops.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "twitter": "https://x.com/404bunnies",
       "discord": "https://discord.com/invite/glitchybunnies"
@@ -526,36 +731,52 @@
   {
     "id": "megalio",
     "name": "Megalio",
-    "categories": ["NFT"],
+    "categories": [
+      "NFT"
+    ],
     "summary": "MegaMafia legendary avatars with stratified perks.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "twitter": "https://x.com/MegalioETH",
       "nft": "https://magiceden.io/collections/ethereum/megalio-16",
       "discord": "https://discord.com/invite/Nr3Jak7nXt"
     },
     "logo": "/logos/Megalio.jpg",
-    "linkedIds": ["priority"]
+    "linkedIds": [
+      "priority"
+    ]
   },
   {
     "id": "priority",
     "name": "Priority",
-    "categories": ["Tools"],
+    "categories": [
+      "Tools"
+    ],
     "summary": "Priority trade bot wired into Megalio holders.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "twitter": "https://x.com/PriorityTrade_",
       "telegram": "https://t.me/prioritytradebot"
     },
     "logo": "/logos/Priority.jpg",
-    "linkedIds": ["megalio"]
+    "linkedIds": [
+      "megalio"
+    ]
   },
   {
     "id": "lora-finance",
     "name": "LoraFinance",
-    "categories": ["Trading", "Perps"],
+    "categories": [
+      "Trading"
+    ],
     "summary": "Smart-order perps engine with curated strategies.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://lora.finance/",
       "twitter": "https://x.com/LoraFinance"
@@ -565,9 +786,13 @@
   {
     "id": "leverage-sir",
     "name": "LeverageSir",
-    "categories": ["Trading", "Perps"],
+    "categories": [
+      "Trading"
+    ],
     "summary": "Social leverage desk with shareable trade scripts.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.sir.trading/",
       "twitter": "https://x.com/leveragesir",
@@ -578,9 +803,13 @@
   {
     "id": "supernova",
     "name": "Supernova",
-    "categories": ["Perps", "Trading", "Lending", "Defi"],
+    "categories": [
+      "DeFi"
+    ],
     "summary": "Unified perps, money markets, and strategy vaults.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.supernova.vision/",
       "twitter": "https://x.com/SupernovaLabs_"
@@ -590,9 +819,13 @@
   {
     "id": "nunchi",
     "name": "Nunchi",
-    "categories": ["Perps", "Trading"],
+    "categories": [
+      "Trading"
+    ],
     "summary": "Chips-based trading UX for MegaMafia perps.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://app.nunchi.trade/chips",
       "twitter": "https://x.com/nunchi"
@@ -602,9 +835,13 @@
   {
     "id": "sirio",
     "name": "Sirio",
-    "categories": ["Launchpads"],
+    "categories": [
+      "Tools"
+    ],
     "summary": "Launchpad infrastructure with curated staking flows.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.sirio.gg/",
       "twitter": "https://x.com/SirioApp",
@@ -616,9 +853,13 @@
   {
     "id": "telis",
     "name": "Telis",
-    "categories": ["Bridge"],
+    "categories": [
+      "Tools"
+    ],
     "summary": "Bridge aggregator tuned for MegaMafia routes.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://app.telis.xyz/",
       "twitter": "https://x.com/telisxyz"
@@ -628,9 +869,13 @@
   {
     "id": "hitdotone",
     "name": "Hitdotone",
-    "categories": ["Perps", "Gambling"],
+    "categories": [
+      "Gaming"
+    ],
     "summary": "Perps meets high-stakes gaming with instant payouts.",
-    "networks": ["MegaETH"],
+    "networks": [
+      "MegaETH"
+    ],
     "links": {
       "site": "https://www.hit.one/",
       "twitter": "https://x.com/hitdotone"
