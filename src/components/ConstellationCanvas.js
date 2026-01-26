@@ -89,7 +89,7 @@ const findHitProject = (clientEvent, rect, projects, cameraX, cameraY, zoom) => 
     }
     return null;
 };
-export const ConstellationCanvas = () => {
+export const ConstellationCanvas = ({ onInteractionStart, onInteractionEnd } = {}) => {
     const canvasRef = useRef(null);
     const [pointerState, setPointerState] = useState(defaultPointerState);
     const stars = useMemo(generateStars, []);
@@ -98,6 +98,7 @@ export const ConstellationCanvas = () => {
     const cameraRef = useRef(camera);
     const hoveredRef = useRef(hoveredProjectId);
     const selectedRef = useRef(selectedProjectId);
+    const interactionActiveRef = useRef(false);
     useEffect(() => {
         cameraRef.current = camera;
     }, [camera]);
@@ -273,6 +274,10 @@ export const ConstellationCanvas = () => {
             const deltaX = event.clientX - pointerState.lastX;
             const deltaY = event.clientY - pointerState.lastY;
             const nextHasMoved = pointerState.hasMoved || Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2;
+            if (nextHasMoved && !interactionActiveRef.current) {
+                interactionActiveRef.current = true;
+                onInteractionStart?.();
+            }
             if (nextHasMoved) {
                 panCamera(deltaX, deltaY);
             }
@@ -287,6 +292,12 @@ export const ConstellationCanvas = () => {
         const rect = canvasRef.current.getBoundingClientRect();
         const hit = findHitProject(event.nativeEvent, rect, projects, camera.x, camera.y, camera.zoom);
         setHoveredProject(hit?.id ?? null);
+    };
+    const endInteraction = () => {
+        if (interactionActiveRef.current) {
+            interactionActiveRef.current = false;
+            onInteractionEnd?.();
+        }
     };
     const handlePointerUp = (event) => {
         if (!canvasRef.current) {
@@ -305,6 +316,7 @@ export const ConstellationCanvas = () => {
             }
             canvasRef.current.releasePointerCapture(event.pointerId);
             setPointerState(defaultPointerState);
+            endInteraction();
         }
     };
     const handlePointerLeave = () => {
@@ -313,6 +325,7 @@ export const ConstellationCanvas = () => {
             canvasRef.current.releasePointerCapture(pointerState.pointerId);
         }
         setPointerState(defaultPointerState);
+        endInteraction();
     };
     return (_jsx("canvas", { ref: canvasRef, className: "constellation-canvas", onPointerDown: handlePointerDown, onPointerMove: handlePointerMove, onPointerUp: handlePointerUp, onPointerLeave: handlePointerLeave, onContextMenu: (event) => event.preventDefault() }));
 };

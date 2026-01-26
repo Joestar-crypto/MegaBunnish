@@ -1,29 +1,36 @@
+import { useCallback, useState } from 'react';
 import { ConstellationCanvas } from './components/ConstellationCanvas';
-import { ConstellationHUD } from './components/ConstellationHUD';
 import { FilterOrbitPanel } from './components/FilterOrbitPanel';
 import { ProjectDetailDrawer } from './components/ProjectDetailDrawer';
 import { ConstellationProvider } from './state/constellation';
 
 const AppContent = () => {
+  const [isInteracting, setIsInteracting] = useState(false);
+
+  const handleInteractionStart = useCallback(() => {
+    setIsInteracting(true);
+  }, []);
+
+  const handleInteractionEnd = useCallback(() => {
+    setIsInteracting(false);
+  }, []);
+
   return (
-    <div className="app-shell">
-      <header className="site-heading">
-        <div>
-          <p className="eyebrow">MegaBunnish ecosystems</p>
-          <h1>Command the MegaBunnish field</h1>
-          <p className="muted">
-            The ops board keeps every primitive, live documentation link, and incentive ping inside a single viewport.
-          </p>
+    <div className="app-shell app-shell--immersive">
+      <div className="immersive-stage">
+        <div className="immersive-stage__background">
+          <ConstellationCanvas
+            onInteractionStart={handleInteractionStart}
+            onInteractionEnd={handleInteractionEnd}
+          />
         </div>
-      </header>
-      <main className="constellation-grid">
-        <FilterOrbitPanel />
-        <section className="canvas-stage">
-          <ConstellationCanvas />
-          <ConstellationHUD />
-          <ProjectDetailDrawer />
-        </section>
-      </main>
+        <div className={`hero-overlay ${isInteracting ? 'hero-overlay--hidden' : ''}`}>
+          <p className="eyebrow">MegaETH ecosystem</p>
+          <h1>MegaBunnish</h1>
+        </div>
+        <FilterOrbitPanel isInteracting={isInteracting} />
+        <ProjectDetailDrawer />
+      </div>
     </div>
   );
 };

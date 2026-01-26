@@ -6,94 +6,159 @@ import {
   ConstellationState,
   HighlightVariant,
   Incentive,
-  RawProject
+  RawProject,
+  SpecialFilters
 } from '../types';
+
 const CORE_CATEGORIES = [
+  'Gambling',
+  'Depin',
   'DeFi',
   'Trading',
-  'Tools',
-  'Gaming',
-  'Mobile',
-  'NFT',
   'Meme',
-  'Megamafia',
-  'Depin',
+  'NFT',
+  'Gaming',
+  'Social',
+  'Launchpad',
+  'Tools',
   'Prediction Market',
-  'Gambling'
+  'AI'
 ] as const;
 
-type CoreCategory = (typeof CORE_CATEGORIES)[number];
+const SPECIAL_CATEGORIES = ['Megamafia', 'Mobile'] as const;
 
-const DEFAULT_CORE_CATEGORY: CoreCategory = 'Megamafia';
+type CoreCategory = (typeof CORE_CATEGORIES)[number];
+type SpecialCategory = (typeof SPECIAL_CATEGORIES)[number];
+type CanonicalCategory = CoreCategory | SpecialCategory;
+
+const DEFAULT_CORE_CATEGORY: CoreCategory = 'DeFi';
 
 const CORE_LOOKUP = CORE_CATEGORIES.reduce<Record<string, CoreCategory>>((acc, category) => {
   acc[category.toLowerCase()] = category;
   return acc;
 }, {});
 
-const CATEGORY_ALIASES: Record<string, CoreCategory> = {
-  megmafia: 'Megamafia',
-  megamafia: 'Megamafia',
-  social: 'Megamafia',
-  'badbunnz': 'Megamafia',
-  launchpad: 'Tools',
-  launchpads: 'Tools',
+const CATEGORY_ALIASES: Record<string, CanonicalCategory> = {
+  gaming: 'Gaming',
+  defi: 'DeFi',
+  lending: 'DeFi',
+  stablecoins: 'DeFi',
   dex: 'Trading',
   perps: 'Trading',
   'perps/trading': 'Trading',
-  lending: 'DeFi',
-  stablecoins: 'DeFi',
-  bridge: 'Tools',
-  payment: 'Megamafia',
-  rwa: 'DeFi',
-  lst: 'DeFi',
-  gatcha: 'Gambling',
-  casino: 'Gambling',
-  prediction: 'Prediction Market',
-  'prediction market': 'Prediction Market',
-  'prediction-market': 'Prediction Market',
+  trading: 'Trading',
   meme: 'Meme',
-  ai: 'Tools',
-  depin: 'Depin',
-  mobile: 'Mobile',
+  memes: 'Meme',
   nft: 'NFT',
   nfts: 'NFT',
   collectible: 'NFT',
-  collectibles: 'NFT'
+  collectibles: 'NFT',
+  depin: 'Depin',
+  gambling: 'Gambling',
+  gatcha: 'Gambling',
+  casino: 'Gambling',
+  ai: 'AI',
+  tools: 'Tools',
+  tool: 'Tools',
+  launchpad: 'Launchpad',
+  launchpads: 'Launchpad',
+  social: 'Social',
+  socials: 'Social',
+  community: 'Social',
+  prediction: 'Prediction Market',
+  'prediction market': 'Prediction Market',
+  'prediction-market': 'Prediction Market',
+  megmafia: 'Megamafia',
+  megamafia: 'Megamafia',
+  'badbunnz': 'Megamafia',
+  payment: 'Megamafia',
+  mobile: 'Mobile'
 };
 
-const canonicalizeCategory = (label: string): CoreCategory | null => {
+const canonicalizeCategory = (label: string): CanonicalCategory | null => {
   const normalized = label.trim().toLowerCase();
   if (!normalized) {
     return null;
   }
-  return CATEGORY_ALIASES[normalized] ?? CORE_LOOKUP[normalized] ?? null;
+  if (CATEGORY_ALIASES[normalized]) {
+    return CATEGORY_ALIASES[normalized];
+  }
+  if (CORE_LOOKUP[normalized]) {
+    return CORE_LOOKUP[normalized];
+  }
+  return null;
 };
 
-const sanitizeCategories = (labels: string[]): CoreCategory[] => {
-  const sanitized: CoreCategory[] = [];
+const SPECIAL_DEFAULTS: SpecialFilters = { megamafia: false, mobile: false };
+
+type ProjectCategoryMeta = {
+  primary: CoreCategory;
+  categories: CoreCategory[];
+  traits: SpecialFilters;
+};
+
+const toCategoryMeta = (labels: string[]): ProjectCategoryMeta => {
+  const categories: CoreCategory[] = [];
+  const traits: SpecialFilters = { ...SPECIAL_DEFAULTS };
+
   labels.forEach((label) => {
     const canonical = canonicalizeCategory(label);
-    if (!canonical || sanitized.includes(canonical)) {
+    if (!canonical) {
       return;
     }
-    sanitized.push(canonical);
+    if (canonical === 'Megamafia') {
+      traits.megamafia = true;
+      return;
+    }
+    if (canonical === 'Mobile') {
+      traits.mobile = true;
+      return;
+    }
+    if (!categories.includes(canonical)) {
+      categories.push(canonical);
+    }
   });
-  if (sanitized.length === 0) {
-    sanitized.push(DEFAULT_CORE_CATEGORY);
-  }
-  return sanitized;
-};
-const CATEGORY_ANCHOR_RADIUS = 320;
-const CLUSTER_RADIUS_PADDING = 70;
-const CLUSTER_COLLISION_ITERATIONS = 8;
-const CLUSTER_PULL_STRENGTH = 0.12;
-const ORBIT_BASE_RADIUS = 90;
-const ORBIT_RING_GAP = 65;
-const BASE_RING_SLOTS = 6;
-const RING_SLOT_GROWTH = 5;
 
-const PARENT_RELATIONS: Record<string, string[]> = {
+  if (categories.length === 0) {
+    categories.push(DEFAULT_CORE_CATEGORY);
+  }
+
+  return { primary: categories[0], categories, traits };
+};
+
+const applySpecialFilters = (projects: ConstellationProject[], filters: SpecialFilters) => {
+  if (!filters.megamafia && !filters.mobile) {
+    return projects;
+  }
+  return projects.filter((project) => {
+    if (filters.megamafia && !project.traits.megamafia) {
+      return false;
+    }
+    if (filters.mobile && !project.traits.mobile) {
+      return false;
+    }
+    return true;
+  });
+};
+
+const deriveCategoryCounts = (projects: ConstellationProject[]): Record<string, number> => {
+  return projects.reduce<Record<string, number>>((acc, project) => {
+    acc[project.primaryCategory] = (acc[project.primaryCategory] ?? 0) + 1;
+    return acc;
+  }, {});
+};
+const CATEGORY_ANCHOR_RADIUS = 220;
+const CLUSTER_RADIUS_PADDING = 45;
+const CLUSTER_COLLISION_ITERATIONS = 10;
+const CLUSTER_PULL_STRENGTH = 0.18;
+const ORBIT_BASE_RADIUS = 70;
+const ORBIT_RING_GAP = 50;
+const BASE_RING_SLOTS = 8;
+const RING_SLOT_GROWTH = 4;
+const MIN_ZOOM = 0.45;
+const MAX_ZOOM = 2.4;
+
+const SPECIAL_LINKS: Record<string, string[]> = {
   'bad-bunnz': ['prismfi', 'bunnzpaw', 'faster'],
   megalio: ['priority']
 };
@@ -209,24 +274,33 @@ const registerAdjacency = (
   adjacency[source]!.add(target);
 };
 
+const clamp = (value: number, min: number, max: number) => {
+  if (value < min) {
+    return min;
+  }
+  if (value > max) {
+    return max;
+  }
+  return value;
+};
+
 const computeLayout = (
   projects: RawProject[]
 ): { projects: ConstellationProject[]; categories: string[]; categoryCounts: Record<string, number> } => {
   const categoryBucket = new Set<CoreCategory>();
   const categoryCounts: Record<string, number> = {};
   const groupedByPrimary = new Map<CoreCategory, RawProject[]>();
-  const projectCategoryMeta = new Map<string, { primary: CoreCategory; categories: CoreCategory[] }>();
+  const projectCategoryMeta = new Map<string, ProjectCategoryMeta>();
 
   projects.forEach((project) => {
-    const sanitizedCategories = sanitizeCategories(project.categories);
-    const primaryCategory = sanitizedCategories[0];
-    categoryBucket.add(primaryCategory);
-    categoryCounts[primaryCategory] = (categoryCounts[primaryCategory] ?? 0) + 1;
-    projectCategoryMeta.set(project.id, { primary: primaryCategory, categories: sanitizedCategories });
-    if (!groupedByPrimary.has(primaryCategory)) {
-      groupedByPrimary.set(primaryCategory, []);
+    const meta = toCategoryMeta(project.categories);
+    categoryBucket.add(meta.primary);
+    categoryCounts[meta.primary] = (categoryCounts[meta.primary] ?? 0) + 1;
+    projectCategoryMeta.set(project.id, meta);
+    if (!groupedByPrimary.has(meta.primary)) {
+      groupedByPrimary.set(meta.primary, []);
     }
-    groupedByPrimary.get(primaryCategory)!.push(project);
+    groupedByPrimary.get(meta.primary)!.push(project);
   });
 
   const categories = sortCategories(categoryBucket);
@@ -288,7 +362,8 @@ const computeLayout = (
           linkedIds: [...(project.linkedIds ?? [])],
           clusterOrigin: anchor,
           position: { x, y },
-          highlight: ECOSYSTEM_HIGHLIGHTS[project.id]
+          highlight: ECOSYSTEM_HIGHLIGHTS[project.id],
+          traits: meta.traits
         });
         arrangedIds.push(project.id);
       }
@@ -342,27 +417,19 @@ const computeLayout = (
     project.linkedIds = Array.from(new Set([...project.linkedIds, ...neighbors]));
   });
 
-  Object.entries(PARENT_RELATIONS).forEach(([parentId, children]) => {
-    const parent = byId.get(parentId);
-    if (!parent) {
+  Object.entries(SPECIAL_LINKS).forEach(([sourceId, targets]) => {
+    const source = byId.get(sourceId);
+    if (!source) {
       return;
     }
 
-    children.forEach((childId, index) => {
-      const child = byId.get(childId);
-      if (!child) {
+    targets.forEach((targetId) => {
+      const target = byId.get(targetId);
+      if (!target) {
         return;
       }
-
-      const orbitRadius = 55 + index * 10;
-      const angle = (index / Math.max(children.length, 1)) * Math.PI * 2;
-      child.position = {
-        x: parent.position.x + Math.cos(angle) * orbitRadius,
-        y: parent.position.y + Math.sin(angle) * orbitRadius
-      };
-      child.clusterOrigin = parent.clusterOrigin;
-      child.linkedIds = Array.from(new Set([...child.linkedIds, parentId]));
-      parent.linkedIds = Array.from(new Set([...parent.linkedIds, childId]));
+      source.linkedIds = Array.from(new Set([...source.linkedIds, targetId]));
+      target.linkedIds = Array.from(new Set([...target.linkedIds, sourceId]));
     });
   });
 
@@ -383,21 +450,28 @@ type ConstellationContextShape = ConstellationState & {
   setHoveredProject: (projectId: string | null) => void;
   selectProject: (projectId: string | null) => void;
   panCamera: (deltaX: number, deltaY: number) => void;
+  zoomCamera: (deltaZoom: number, focus?: { x: number; y: number }) => void;
   resetCamera: () => void;
+  toggleFilter: (filterKey: keyof SpecialFilters) => void;
 };
 
 const ConstellationContext = createContext<ConstellationContextShape | undefined>(undefined);
 
 export const ConstellationProvider = ({ children }: { children: ReactNode }) => {
   const layout = useMemo(() => computeLayout(rawProjects as RawProject[]), []);
-  const [state, setState] = useState<ConstellationState>({
-    projects: layout.projects,
-    categories: layout.categories,
-    categoryCounts: layout.categoryCounts,
-    activeCategory: null,
-    hoveredProjectId: null,
-    selectedProjectId: null,
-    camera: defaultCamera()
+  const [state, setState] = useState<ConstellationState>(() => {
+    const filters = { ...SPECIAL_DEFAULTS };
+    const filteredProjects = applySpecialFilters(layout.projects, filters);
+    return {
+      projects: filteredProjects,
+      categories: layout.categories,
+      categoryCounts: deriveCategoryCounts(filteredProjects),
+      activeCategory: null,
+      hoveredProjectId: null,
+      selectedProjectId: null,
+      camera: defaultCamera(),
+      filters
+    };
   });
 
   const setActiveCategory = useCallback((category: string | null) => {
@@ -438,6 +512,39 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
     });
   }, []);
 
+  const toggleFilter = useCallback(
+    (filterKey: keyof SpecialFilters) => {
+      setState((prev) => {
+        const nextFilters = { ...prev.filters, [filterKey]: !prev.filters[filterKey] };
+        const filteredProjects = applySpecialFilters(layout.projects, nextFilters);
+        const visibleIds = new Set(filteredProjects.map((project) => project.id));
+        const nextCategoryCounts = deriveCategoryCounts(filteredProjects);
+        const nextActiveCategory =
+          prev.activeCategory &&
+          filteredProjects.some((project) => project.primaryCategory === prev.activeCategory)
+            ? prev.activeCategory
+            : null;
+
+        return {
+          ...prev,
+          filters: nextFilters,
+          projects: filteredProjects,
+          categoryCounts: nextCategoryCounts,
+          hoveredProjectId:
+            prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId)
+              ? prev.hoveredProjectId
+              : null,
+          selectedProjectId:
+            prev.selectedProjectId && visibleIds.has(prev.selectedProjectId)
+              ? prev.selectedProjectId
+              : null,
+          activeCategory: nextActiveCategory
+        };
+      });
+    },
+    [layout.projects]
+  );
+
   const setHoveredProject = useCallback((projectId: string | null) => {
     setState((prev) => {
       if (prev.hoveredProjectId === projectId) {
@@ -465,6 +572,34 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
           ...prev.camera,
           targetX: prev.camera.targetX - deltaX * speedFactor,
           targetY: prev.camera.targetY - deltaY * speedFactor
+        }
+      };
+    });
+  }, []);
+
+  const zoomCamera = useCallback((deltaZoom: number, focus?: { x: number; y: number }) => {
+    setState((prev) => {
+      const nextZoom = clamp(prev.camera.targetZoom + deltaZoom, MIN_ZOOM, MAX_ZOOM);
+      if (nextZoom === prev.camera.targetZoom) {
+        return prev;
+      }
+
+      let targetX = prev.camera.targetX;
+      let targetY = prev.camera.targetY;
+
+      if (focus) {
+        const blend = 0.25;
+        targetX = focus.x * blend + targetX * (1 - blend);
+        targetY = focus.y * blend + targetY * (1 - blend);
+      }
+
+      return {
+        ...prev,
+        camera: {
+          ...prev.camera,
+          targetX,
+          targetY,
+          targetZoom: nextZoom
         }
       };
     });
@@ -528,9 +663,20 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       setHoveredProject,
       selectProject,
       panCamera,
-      resetCamera
+      zoomCamera,
+      resetCamera,
+      toggleFilter
     }),
-    [state, setActiveCategory, setHoveredProject, selectProject, panCamera, resetCamera]
+    [
+      state,
+      setActiveCategory,
+      setHoveredProject,
+      selectProject,
+      panCamera,
+      zoomCamera,
+      resetCamera,
+      toggleFilter
+    ]
   );
 
   return <ConstellationContext.Provider value={value}>{children}</ConstellationContext.Provider>;

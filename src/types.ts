@@ -26,6 +26,11 @@ export type RawProject = {
   linkedIds?: string[];
 };
 
+export type SpecialFilters = {
+  megamafia: boolean;
+  mobile: boolean;
+};
+
 export type ConstellationProject = RawProject & {
   position: { x: number; y: number };
   incentives: Incentive[];
@@ -33,6 +38,7 @@ export type ConstellationProject = RawProject & {
   linkedIds: string[];
   clusterOrigin: { x: number; y: number };
   highlight?: HighlightVariant;
+  traits: SpecialFilters;
 };
 
 export type HighlightVariant = 'badbunnz' | 'megalio';
@@ -54,4 +60,5 @@ export type ConstellationState = {
   hoveredProjectId: string | null;
   selectedProjectId: string | null;
   camera: CameraState;
+  filters: SpecialFilters;
 };

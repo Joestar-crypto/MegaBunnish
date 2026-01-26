@@ -1,34 +1,59 @@
 import { useConstellation } from '../state/constellation';
 
-export const FilterOrbitPanel = () => {
-  const { projects, categories, categoryCounts, activeCategory, setActiveCategory, resetCamera } = useConstellation();
+type FilterOrbitPanelProps = {
+  isInteracting?: boolean;
+};
+
+export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProps) => {
+  const {
+    projects,
+    categories,
+    categoryCounts,
+    activeCategory,
+    setActiveCategory,
+    resetCamera,
+    filters,
+    toggleFilter
+  } = useConstellation();
   const totalProjects = projects.length;
 
+  const quickSelect = (category: string | null) => {
+    if (category === null) {
+      setActiveCategory(null);
+      resetCamera();
+      return;
+    }
+    setActiveCategory(category);
+  };
+
+  const overlayFilters: { key: keyof typeof filters; label: string }[] = [
+    { key: 'megamafia', label: 'Megamafia' },
+    { key: 'mobile', label: 'Mobile' }
+  ];
+
   return (
-    <aside className="filter-panel">
-      <header className="filter-hero">
-        <div>
-          <p className="eyebrow">MegaBunnish mission control</p>
-          <h2>Cluster autopilot</h2>
-          <p className="hero-lede">
-            Rocket keeps every curated primitive, NFT drop lane, and Depin corridor aligned inside this panel.
-          </p>
-        </div>
-        <img
-          src="/logos/Rocket.svg"
-          alt="Rocket sensor"
-          className="filter-hero__rocket"
-          loading="lazy"
-        />
-      </header>
-      <div className="chips">
+    <aside
+      className={`category-rail ${isInteracting ? 'category-rail--hidden' : ''}`}
+      aria-label="Constellation filters"
+    >
+      <div className="category-rail__special">
+        {overlayFilters.map((filter) => (
+          <button
+            key={filter.key}
+            type="button"
+            className={filters[filter.key] ? 'chip active' : 'chip'}
+            onClick={() => toggleFilter(filter.key)}
+          >
+            <span className="chip-label">{filter.label}</span>
+          </button>
+        ))}
+      </div>
+      <div className="category-rail__divider" aria-hidden />
+      <div className="category-rail__list" role="tablist">
         <button
           className={activeCategory === null ? 'chip active' : 'chip'}
           type="button"
-          onClick={() => {
-            setActiveCategory(null);
-            resetCamera();
-          }}
+          onClick={() => quickSelect(null)}
         >
           <span className="chip-label">All</span>
           <span className="chip-count">{totalProjects}</span>
@@ -38,17 +63,13 @@ export const FilterOrbitPanel = () => {
             key={category}
             className={activeCategory === category ? 'chip active' : 'chip'}
             type="button"
-            onClick={() => setActiveCategory(category)}
+            onClick={() => quickSelect(category)}
           >
             <span className="chip-label">{category}</span>
             <span className="chip-count">{categoryCounts[category] ?? 0}</span>
           </button>
         ))}
       </div>
-      <section className="hint-block">
-        <p>Left-click and drag to glide; zoom via browser controls for surgical focus.</p>
-        <p>Each chip recenters on its curated cluster without the extra noise.</p>
-      </section>
     </aside>
   );
 };

@@ -2,82 +2,127 @@ import { jsx as _jsx } from "react/jsx-runtime";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import rawProjects from '../data/projects.json';
 const CORE_CATEGORIES = [
+    'Gambling',
+    'Depin',
     'DeFi',
     'Trading',
-    'Tools',
-    'Gaming',
-    'Mobile',
-    'NFT',
     'Meme',
-    'Megamafia',
-    'Depin',
+    'NFT',
+    'Gaming',
+    'Social',
+    'Launchpad',
     'Prediction Market',
-    'Gambling'
+    'AI'
 ];
-const DEFAULT_CORE_CATEGORY = 'Megamafia';
+const SPECIAL_CATEGORIES = ['Megamafia', 'Mobile'];
+const DEFAULT_CORE_CATEGORY = 'DeFi';
 const CORE_LOOKUP = CORE_CATEGORIES.reduce((acc, category) => {
     acc[category.toLowerCase()] = category;
     return acc;
 }, {});
 const CATEGORY_ALIASES = {
-    megmafia: 'Megamafia',
-    megamafia: 'Megamafia',
-    social: 'Megamafia',
-    'badbunnz': 'Megamafia',
-    launchpad: 'Tools',
-    launchpads: 'Tools',
+    gaming: 'Gaming',
+    defi: 'DeFi',
+    lending: 'DeFi',
+    stablecoins: 'DeFi',
     dex: 'Trading',
     perps: 'Trading',
     'perps/trading': 'Trading',
-    lending: 'DeFi',
-    stablecoins: 'DeFi',
-    bridge: 'Tools',
-    payment: 'Megamafia',
-    rwa: 'DeFi',
-    lst: 'DeFi',
-    gatcha: 'Gambling',
-    casino: 'Gambling',
-    prediction: 'Prediction Market',
-    'prediction market': 'Prediction Market',
-    'prediction-market': 'Prediction Market',
+    trading: 'Trading',
     meme: 'Meme',
-    ai: 'Tools',
-    depin: 'Depin',
-    mobile: 'Mobile',
+    memes: 'Meme',
     nft: 'NFT',
     nfts: 'NFT',
     collectible: 'NFT',
-    collectibles: 'NFT'
+    collectibles: 'NFT',
+    depin: 'Depin',
+    gambling: 'Gambling',
+    gatcha: 'Gambling',
+    casino: 'Gambling',
+    ai: 'AI',
+    tools: 'Launchpad',
+    tool: 'Launchpad',
+    launchpad: 'Launchpad',
+    launchpads: 'Launchpad',
+    social: 'Social',
+    socials: 'Social',
+    community: 'Social',
+    prediction: 'Prediction Market',
+    'prediction market': 'Prediction Market',
+    'prediction-market': 'Prediction Market',
+    megmafia: 'Megamafia',
+    megamafia: 'Megamafia',
+    'badbunnz': 'Megamafia',
+    payment: 'Megamafia',
+    mobile: 'Mobile'
 };
 const canonicalizeCategory = (label) => {
     const normalized = label.trim().toLowerCase();
     if (!normalized) {
         return null;
     }
-    return CATEGORY_ALIASES[normalized] ?? CORE_LOOKUP[normalized] ?? null;
+    if (CATEGORY_ALIASES[normalized]) {
+        return CATEGORY_ALIASES[normalized];
+    }
+    if (CORE_LOOKUP[normalized]) {
+        return CORE_LOOKUP[normalized];
+    }
+    return null;
 };
-const sanitizeCategories = (labels) => {
-    const sanitized = [];
+const SPECIAL_DEFAULTS = { megamafia: false, mobile: false };
+const toCategoryMeta = (labels) => {
+    const categories = [];
+    const traits = { ...SPECIAL_DEFAULTS };
     labels.forEach((label) => {
         const canonical = canonicalizeCategory(label);
-        if (!canonical || sanitized.includes(canonical)) {
+        if (!canonical) {
             return;
         }
-        sanitized.push(canonical);
+        if (canonical === 'Megamafia') {
+            traits.megamafia = true;
+            return;
+        }
+        if (canonical === 'Mobile') {
+            traits.mobile = true;
+            return;
+        }
+        if (!categories.includes(canonical)) {
+            categories.push(canonical);
+        }
     });
-    if (sanitized.length === 0) {
-        sanitized.push(DEFAULT_CORE_CATEGORY);
+    if (categories.length === 0) {
+        categories.push(DEFAULT_CORE_CATEGORY);
     }
-    return sanitized;
+    return { primary: categories[0], categories, traits };
 };
-const CATEGORY_ANCHOR_RADIUS = 320;
-const CLUSTER_RADIUS_PADDING = 70;
-const CLUSTER_COLLISION_ITERATIONS = 8;
-const CLUSTER_PULL_STRENGTH = 0.12;
-const ORBIT_BASE_RADIUS = 90;
-const ORBIT_RING_GAP = 65;
-const BASE_RING_SLOTS = 6;
-const RING_SLOT_GROWTH = 5;
+const applySpecialFilters = (projects, filters) => {
+    if (!filters.megamafia && !filters.mobile) {
+        return projects;
+    }
+    return projects.filter((project) => {
+        if (filters.megamafia && !project.traits.megamafia) {
+            return false;
+        }
+        if (filters.mobile && !project.traits.mobile) {
+            return false;
+        }
+        return true;
+    });
+};
+const deriveCategoryCounts = (projects) => {
+    return projects.reduce((acc, project) => {
+        acc[project.primaryCategory] = (acc[project.primaryCategory] ?? 0) + 1;
+        return acc;
+    }, {});
+};
+const CATEGORY_ANCHOR_RADIUS = 220;
+const CLUSTER_RADIUS_PADDING = 45;
+const CLUSTER_COLLISION_ITERATIONS = 10;
+const CLUSTER_PULL_STRENGTH = 0.18;
+const ORBIT_BASE_RADIUS = 70;
+const ORBIT_RING_GAP = 50;
+const BASE_RING_SLOTS = 8;
+const RING_SLOT_GROWTH = 4;
 const PARENT_RELATIONS = {
     'bad-bunnz': ['prismfi', 'bunnzpaw', 'faster'],
     megalio: ['priority']
@@ -177,15 +222,14 @@ const computeLayout = (projects) => {
     const groupedByPrimary = new Map();
     const projectCategoryMeta = new Map();
     projects.forEach((project) => {
-        const sanitizedCategories = sanitizeCategories(project.categories);
-        const primaryCategory = sanitizedCategories[0];
-        categoryBucket.add(primaryCategory);
-        categoryCounts[primaryCategory] = (categoryCounts[primaryCategory] ?? 0) + 1;
-        projectCategoryMeta.set(project.id, { primary: primaryCategory, categories: sanitizedCategories });
-        if (!groupedByPrimary.has(primaryCategory)) {
-            groupedByPrimary.set(primaryCategory, []);
+        const meta = toCategoryMeta(project.categories);
+        categoryBucket.add(meta.primary);
+        categoryCounts[meta.primary] = (categoryCounts[meta.primary] ?? 0) + 1;
+        projectCategoryMeta.set(project.id, meta);
+        if (!groupedByPrimary.has(meta.primary)) {
+            groupedByPrimary.set(meta.primary, []);
         }
-        groupedByPrimary.get(primaryCategory).push(project);
+        groupedByPrimary.get(meta.primary).push(project);
     });
     const categories = sortCategories(categoryBucket);
     const categoryAnchors = {};
@@ -236,7 +280,8 @@ const computeLayout = (projects) => {
                     linkedIds: [...(project.linkedIds ?? [])],
                     clusterOrigin: anchor,
                     position: { x, y },
-                    highlight: ECOSYSTEM_HIGHLIGHTS[project.id]
+                    highlight: ECOSYSTEM_HIGHLIGHTS[project.id],
+                    traits: meta.traits
                 });
                 arrangedIds.push(project.id);
             }
@@ -316,14 +361,19 @@ const defaultCamera = () => ({
 const ConstellationContext = createContext(undefined);
 export const ConstellationProvider = ({ children }) => {
     const layout = useMemo(() => computeLayout(rawProjects), []);
-    const [state, setState] = useState({
-        projects: layout.projects,
-        categories: layout.categories,
-        categoryCounts: layout.categoryCounts,
-        activeCategory: null,
-        hoveredProjectId: null,
-        selectedProjectId: null,
-        camera: defaultCamera()
+    const [state, setState] = useState(() => {
+        const filters = { ...SPECIAL_DEFAULTS };
+        const filteredProjects = applySpecialFilters(layout.projects, filters);
+        return {
+            projects: filteredProjects,
+            categories: layout.categories,
+            categoryCounts: deriveCategoryCounts(filteredProjects),
+            activeCategory: null,
+            hoveredProjectId: null,
+            selectedProjectId: null,
+            camera: defaultCamera(),
+            filters
+        };
     });
     const setActiveCategory = useCallback((category) => {
         setState((prev) => {
@@ -357,6 +407,31 @@ export const ConstellationProvider = ({ children }) => {
             };
         });
     }, []);
+    const toggleFilter = useCallback((filterKey) => {
+        setState((prev) => {
+            const nextFilters = { ...prev.filters, [filterKey]: !prev.filters[filterKey] };
+            const filteredProjects = applySpecialFilters(layout.projects, nextFilters);
+            const visibleIds = new Set(filteredProjects.map((project) => project.id));
+            const nextCategoryCounts = deriveCategoryCounts(filteredProjects);
+            const nextActiveCategory = prev.activeCategory &&
+                filteredProjects.some((project) => project.primaryCategory === prev.activeCategory)
+                ? prev.activeCategory
+                : null;
+            return {
+                ...prev,
+                filters: nextFilters,
+                projects: filteredProjects,
+                categoryCounts: nextCategoryCounts,
+                hoveredProjectId: prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId)
+                    ? prev.hoveredProjectId
+                    : null,
+                selectedProjectId: prev.selectedProjectId && visibleIds.has(prev.selectedProjectId)
+                    ? prev.selectedProjectId
+                    : null,
+                activeCategory: nextActiveCategory
+            };
+        });
+    }, [layout.projects]);
     const setHoveredProject = useCallback((projectId) => {
         setState((prev) => {
             if (prev.hoveredProjectId === projectId) {
@@ -432,8 +507,9 @@ export const ConstellationProvider = ({ children }) => {
         setHoveredProject,
         selectProject,
         panCamera,
-        resetCamera
-    }), [state, setActiveCategory, setHoveredProject, selectProject, panCamera, resetCamera]);
+        resetCamera,
+        toggleFilter
+    }), [state, setActiveCategory, setHoveredProject, selectProject, panCamera, resetCamera, toggleFilter]);
     return _jsx(ConstellationContext.Provider, { value: value, children: children });
 };
 export const useConstellation = () => {
