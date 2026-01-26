@@ -1,0 +1,54 @@
+export type ConstellationLinkMap = {
+  site?: string;
+  docs?: string;
+  twitter?: string;
+  discord?: string;
+  telegram?: string;
+  nft?: string;
+};
+
+export type Incentive = {
+  id: string;
+  title: string;
+  reward: string;
+  expiresAt: string;
+};
+
+export type RawProject = {
+  id: string;
+  name: string;
+  categories: string[];
+  summary: string;
+  networks: string[];
+  links: ConstellationLinkMap;
+  logo: string;
+  incentives?: Incentive[];
+  linkedIds?: string[];
+};
+
+export type ConstellationProject = RawProject & {
+  position: { x: number; y: number };
+  incentives: Incentive[];
+  primaryCategory: string;
+  linkedIds: string[];
+  clusterOrigin: { x: number; y: number };
+};
+
+export type CameraState = {
+  x: number;
+  y: number;
+  zoom: number;
+  targetX: number;
+  targetY: number;
+  targetZoom: number;
+};
+
+export type ConstellationState = {
+  projects: ConstellationProject[];
+  categories: string[];
+  categoryCounts: Record<string, number>;
+  activeCategory: string | null;
+  hoveredProjectId: string | null;
+  selectedProjectId: string | null;
+  camera: CameraState;
+};
