@@ -112,7 +112,8 @@
     "id": "prismfi",
     "name": "PrismFi",
     "categories": [
-      "DeFi"
+      "DeFi",
+      "Megamafia"
     ],
     "summary": "BadBunnz-aligned liquidity layer spanning spot, perps, and credit.",
     "networks": [
@@ -131,7 +132,8 @@
     "id": "bunnzpaw",
     "name": "BunnzPaw",
     "categories": [
-      "Gambling"
+      "Gambling",
+      "Megamafia"
     ],
     "summary": "Loot-box gatcha loops for BadBunnz community rewards.",
     "networks": [
@@ -150,7 +152,8 @@
     "id": "faster",
     "name": "Faster",
     "categories": [
-      "Tools"
+      "Tools",
+      "Megamafia"
     ],
     "summary": "BadBunnz launch arena for experimental drops and spins.",
     "networks": [
@@ -732,7 +735,9 @@
     "id": "megalio",
     "name": "Megalio",
     "categories": [
-      "NFT"
+      "Tools",
+      "NFT",
+      "Megamafia"
     ],
     "summary": "MegaMafia legendary avatars with stratified perks.",
     "networks": [
@@ -752,7 +757,8 @@
     "id": "priority",
     "name": "Priority",
     "categories": [
-      "Tools"
+      "Tools",
+      "Megamafia"
     ],
     "summary": "Priority trade bot wired into Megalio holders.",
     "networks": [

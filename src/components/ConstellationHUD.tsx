@@ -20,6 +20,7 @@ export const ConstellationHUD = () => {
       <div className="hud-actions">
         <span>Left-click drag to explore</span>
         <span>Click nodes for intel</span>
+        <span>Scroll or tap +/− to zoom</span>
       </div>
     </div>
   );

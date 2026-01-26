@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { CameraControls } from './components/CameraControls';
 import { ConstellationCanvas } from './components/ConstellationCanvas';
 import { FilterOrbitPanel } from './components/FilterOrbitPanel';
 import { ProjectDetailDrawer } from './components/ProjectDetailDrawer';
@@ -25,10 +26,13 @@ const AppContent = () => {
           />
         </div>
         <div className={`hero-overlay ${isInteracting ? 'hero-overlay--hidden' : ''}`}>
-          <p className="eyebrow">MegaETH ecosystem</p>
-          <h1>MegaBunnish</h1>
+          <div className="hero-overlay__content">
+            <p className="eyebrow">MegaETH ecosystem</p>
+            <h1>MegaBunnish</h1>
+          </div>
         </div>
         <FilterOrbitPanel isInteracting={isInteracting} />
+        <CameraControls isHidden={isInteracting} />
         <ProjectDetailDrawer />
       </div>
     </div>

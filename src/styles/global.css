@@ -82,6 +82,7 @@ select {
   inset: 0;
   z-index: 2;
   padding: clamp(1.5rem, 5vw, 4rem);
+  padding-left: clamp(8rem, 8vw + 4rem, 20rem);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -89,10 +90,52 @@ select {
   text-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
 }
 
-.hero-overlay h1 {
+.hero-overlay__content {
+  max-width: clamp(320px, 46vw, 620px);
+}
+
+.hero-overlay__content h1 {
   margin: 0.2rem 0 0;
   font-size: clamp(1.75rem, 5vw, 3.5rem);
   line-height: 1;
+}
+
+.camera-controls {
+  position: absolute;
+  right: clamp(1rem, 4vw, 3rem);
+  bottom: clamp(1.5rem, 4vw, 3rem);
+  z-index: 4;
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.5rem;
+  border-radius: 999px;
+  background: rgba(5, 8, 20, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(18px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.camera-controls button {
+  border: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.camera-controls button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.camera-controls--hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
 }
 
 .hero-overlay--hidden {
@@ -398,6 +441,17 @@ select {
 
   .hero-overlay {
     padding: 2rem 1.5rem;
+    padding-left: 1.5rem;
+  }
+
+  .hero-overlay__content {
+    max-width: 100%;
+  }
+
+  .camera-controls {
+    position: fixed;
+    right: 1.5rem;
+    bottom: 1.5rem;
   }
 
   .detail-drawer {

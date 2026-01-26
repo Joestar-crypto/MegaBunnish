@@ -11,6 +11,7 @@ const CORE_CATEGORIES = [
     'Gaming',
     'Social',
     'Launchpad',
+    'Tools',
     'Prediction Market',
     'AI'
 ];
@@ -40,8 +41,8 @@ const CATEGORY_ALIASES = {
     gatcha: 'Gambling',
     casino: 'Gambling',
     ai: 'AI',
-    tools: 'Launchpad',
-    tool: 'Launchpad',
+    tools: 'Tools',
+    tool: 'Tools',
     launchpad: 'Launchpad',
     launchpads: 'Launchpad',
     social: 'Social',
@@ -123,7 +124,9 @@ const ORBIT_BASE_RADIUS = 70;
 const ORBIT_RING_GAP = 50;
 const BASE_RING_SLOTS = 8;
 const RING_SLOT_GROWTH = 4;
-const PARENT_RELATIONS = {
+const MIN_ZOOM = 0.45;
+const MAX_ZOOM = 2.4;
+const SPECIAL_LINKS = {
     'bad-bunnz': ['prismfi', 'bunnzpaw', 'faster'],
     megalio: ['priority']
 };
@@ -215,6 +218,15 @@ const registerAdjacency = (adjacency, source, target) => {
         adjacency[source] = new Set();
     }
     adjacency[source].add(target);
+};
+const clamp = (value, min, max) => {
+    if (value < min) {
+        return min;
+    }
+    if (value > max) {
+        return max;
+    }
+    return value;
 };
 const computeLayout = (projects) => {
     const categoryBucket = new Set();
@@ -327,25 +339,18 @@ const computeLayout = (projects) => {
         }
         project.linkedIds = Array.from(new Set([...project.linkedIds, ...neighbors]));
     });
-    Object.entries(PARENT_RELATIONS).forEach(([parentId, children]) => {
-        const parent = byId.get(parentId);
-        if (!parent) {
+    Object.entries(SPECIAL_LINKS).forEach(([sourceId, targets]) => {
+        const source = byId.get(sourceId);
+        if (!source) {
             return;
         }
-        children.forEach((childId, index) => {
-            const child = byId.get(childId);
-            if (!child) {
+        targets.forEach((targetId) => {
+            const target = byId.get(targetId);
+            if (!target) {
                 return;
             }
-            const orbitRadius = 55 + index * 10;
-            const angle = (index / Math.max(children.length, 1)) * Math.PI * 2;
-            child.position = {
-                x: parent.position.x + Math.cos(angle) * orbitRadius,
-                y: parent.position.y + Math.sin(angle) * orbitRadius
-            };
-            child.clusterOrigin = parent.clusterOrigin;
-            child.linkedIds = Array.from(new Set([...child.linkedIds, parentId]));
-            parent.linkedIds = Array.from(new Set([...parent.linkedIds, childId]));
+            source.linkedIds = Array.from(new Set([...source.linkedIds, targetId]));
+            target.linkedIds = Array.from(new Set([...target.linkedIds, sourceId]));
         });
     });
     return { projects: positionedProjects, categories, categoryCounts };
@@ -461,6 +466,30 @@ export const ConstellationProvider = ({ children }) => {
             };
         });
     }, []);
+    const zoomCamera = useCallback((deltaZoom, focus) => {
+        setState((prev) => {
+            const nextZoom = clamp(prev.camera.targetZoom + deltaZoom, MIN_ZOOM, MAX_ZOOM);
+            if (nextZoom === prev.camera.targetZoom) {
+                return prev;
+            }
+            let targetX = prev.camera.targetX;
+            let targetY = prev.camera.targetY;
+            if (focus) {
+                const blend = 0.25;
+                targetX = focus.x * blend + targetX * (1 - blend);
+                targetY = focus.y * blend + targetY * (1 - blend);
+            }
+            return {
+                ...prev,
+                camera: {
+                    ...prev.camera,
+                    targetX,
+                    targetY,
+                    targetZoom: nextZoom
+                }
+            };
+        });
+    }, []);
     const resetCamera = useCallback(() => {
         setState((prev) => ({
             ...prev,
@@ -507,9 +536,19 @@ export const ConstellationProvider = ({ children }) => {
         setHoveredProject,
         selectProject,
         panCamera,
+        zoomCamera,
         resetCamera,
         toggleFilter
-    }), [state, setActiveCategory, setHoveredProject, selectProject, panCamera, resetCamera, toggleFilter]);
+    }), [
+        state,
+        setActiveCategory,
+        setHoveredProject,
+        selectProject,
+        panCamera,
+        zoomCamera,
+        resetCamera,
+        toggleFilter
+    ]);
     return _jsx(ConstellationContext.Provider, { value: value, children: children });
 };
 export const useConstellation = () => {

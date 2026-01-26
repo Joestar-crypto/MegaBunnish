@@ -69,6 +69,32 @@ const generateStars = () => Array.from({ length: 120 }, () => ({
     radius: Math.random() * 1.5 + 0.2,
     speed: Math.random() * 0.6 + 0.2
 }));
+const generateNebulae = () => Array.from({ length: 4 }, (_, index) => {
+    const palettes = [
+        ['rgba(78, 241, 255, 0.2)', 'rgba(78, 241, 255, 0)'],
+        ['rgba(255, 154, 98, 0.18)', 'rgba(255, 154, 98, 0)'],
+        ['rgba(155, 107, 255, 0.22)', 'rgba(155, 107, 255, 0)'],
+        ['rgba(111, 255, 200, 0.16)', 'rgba(111, 255, 200, 0)']
+    ];
+    const paletteIndex = index % palettes.length;
+    return {
+        x: Math.random(),
+        y: Math.random(),
+        radius: 320 + Math.random() * 420,
+        speed: 0.00005 + Math.random() * 0.00008,
+        wobble: 40 + Math.random() * 50,
+        innerColor: palettes[paletteIndex][0],
+        outerColor: palettes[paletteIndex][1]
+    };
+});
+const generateHyperLanes = () => Array.from({ length: 8 }, () => ({
+    radius: 180 + Math.random() * 260,
+    speed: 0.0002 + Math.random() * 0.00025,
+    drift: 20 + Math.random() * 40,
+    width: 0.4 + Math.random() * 1.2,
+    phase: Math.random() * Math.PI * 2,
+    sweep: Math.PI / 3 + Math.random() * (Math.PI / 2)
+}));
 const worldFromClient = (event, rect, cameraX, cameraY, zoom) => {
     const relativeX = event.clientX - rect.left;
     const relativeY = event.clientY - rect.top;
@@ -93,7 +119,9 @@ export const ConstellationCanvas = ({ onInteractionStart, onInteractionEnd } = {
     const canvasRef = useRef(null);
     const [pointerState, setPointerState] = useState(defaultPointerState);
     const stars = useMemo(generateStars, []);
-    const { projects, camera, hoveredProjectId, selectedProjectId, setHoveredProject, selectProject, panCamera } = useConstellation();
+    const nebulae = useMemo(generateNebulae, []);
+    const hyperLanes = useMemo(generateHyperLanes, []);
+    const { projects, camera, hoveredProjectId, selectedProjectId, setHoveredProject, selectProject, panCamera, zoomCamera } = useConstellation();
     const images = useImageCache(projects);
     const cameraRef = useRef(camera);
     const hoveredRef = useRef(hoveredProjectId);
@@ -128,14 +156,47 @@ export const ConstellationCanvas = ({ onInteractionStart, onInteractionEnd } = {
         resize();
         const handleResize = () => resize();
         window.addEventListener('resize', handleResize);
+        const projectById = new Map(projects.map((project) => [project.id, project]));
         const render = (time) => {
             const width = canvas.width / dpr;
             const height = canvas.height / dpr;
             context.setTransform(1, 0, 0, 1, 0, 0);
             context.clearRect(0, 0, canvas.width, canvas.height);
             context.scale(dpr, dpr);
-            context.fillStyle = 'rgba(5, 8, 20, 0.9)';
+            context.fillStyle = 'rgba(5, 8, 20, 0.92)';
             context.fillRect(0, 0, width, height);
+            context.save();
+            context.globalCompositeOperation = 'lighter';
+            nebulae.forEach((layer, index) => {
+                const wobble = Math.sin(time * layer.speed + index) * layer.wobble;
+                const centerX = width * layer.x + wobble;
+                const centerY = height * layer.y - wobble;
+                const gradient = context.createRadialGradient(centerX, centerY, 0, centerX, centerY, layer.radius);
+                gradient.addColorStop(0, layer.innerColor);
+                gradient.addColorStop(1, layer.outerColor);
+                context.fillStyle = gradient;
+                context.beginPath();
+                context.arc(centerX, centerY, layer.radius, 0, Math.PI * 2);
+                context.fill();
+            });
+            context.restore();
+            context.save();
+            context.translate(width / 2, height / 2);
+            context.globalCompositeOperation = 'screen';
+            hyperLanes.forEach((lane, idx) => {
+                const oscillation = Math.sin(time * lane.speed + idx) * lane.drift;
+                const orbitRadius = lane.radius + oscillation;
+                const startAngle = lane.phase + (time * lane.speed) / 2;
+                const gradient = context.createLinearGradient(0, 0, orbitRadius, 0);
+                gradient.addColorStop(0, 'rgba(78, 241, 255, 0)');
+                gradient.addColorStop(1, 'rgba(78, 241, 255, 0.4)');
+                context.strokeStyle = gradient;
+                context.lineWidth = lane.width;
+                context.beginPath();
+                context.arc(0, 0, orbitRadius, startAngle, startAngle + lane.sweep);
+                context.stroke();
+            });
+            context.restore();
             stars.forEach((star) => {
                 const drift = Math.sin(time * 0.0002 * star.speed) * 5;
                 context.beginPath();
@@ -179,6 +240,41 @@ export const ConstellationCanvas = ({ onInteractionStart, onInteractionEnd } = {
                 context.fillStyle = gradient;
                 context.arc(center.x, center.y, screenRadius, 0, Math.PI * 2);
                 context.fill();
+            });
+            const drawnLinks = new Set();
+            projects.forEach((project, index) => {
+                const sourceScreen = toScreen(project.position);
+                project.linkedIds.forEach((linkedId) => {
+                    const target = projectById.get(linkedId);
+                    if (!target) {
+                        return;
+                    }
+                    const key = project.id < linkedId ? `${project.id}|${linkedId}` : `${linkedId}|${project.id}`;
+                    if (drawnLinks.has(key)) {
+                        return;
+                    }
+                    drawnLinks.add(key);
+                    const targetScreen = toScreen(target.position);
+                    const curvature = Math.sin((project.position.x + target.position.y + index) * 0.001) * 35;
+                    const controlX = (sourceScreen.x + targetScreen.x) / 2 + curvature;
+                    const controlY = (sourceScreen.y + targetScreen.y) / 2 - curvature;
+                    const sourceHighlight = project.highlight ? highlightStyles[project.highlight] : null;
+                    const targetHighlight = target.highlight ? highlightStyles[target.highlight] : null;
+                    const stroke = sourceHighlight?.stroke ?? targetHighlight?.stroke ?? 'rgba(78, 241, 255, 0.2)';
+                    const glow = sourceHighlight?.glow ?? targetHighlight?.glow ?? 'rgba(78, 241, 255, 0.28)';
+                    const pulse = (Math.sin(time * 0.0015 + index) + 2) / 3;
+                    context.save();
+                    context.globalAlpha = 0.18 + pulse * 0.25;
+                    context.strokeStyle = stroke;
+                    context.lineWidth = 0.8 + pulse * 0.6;
+                    context.shadowBlur = 16;
+                    context.shadowColor = glow;
+                    context.beginPath();
+                    context.moveTo(sourceScreen.x, sourceScreen.y);
+                    context.quadraticCurveTo(controlX, controlY, targetScreen.x, targetScreen.y);
+                    context.stroke();
+                    context.restore();
+                });
             });
             projects.forEach((project, index) => {
                 const { x, y } = toScreen(project.position);
@@ -252,7 +348,7 @@ export const ConstellationCanvas = ({ onInteractionStart, onInteractionEnd } = {
             cancelAnimationFrame(animationFrame);
             window.removeEventListener('resize', handleResize);
         };
-    }, [projects, images, stars]);
+    }, [projects, images, stars, nebulae, hyperLanes]);
     const handlePointerDown = (event) => {
         if (!canvasRef.current || event.button !== 0) {
             return;
@@ -327,5 +423,16 @@ export const ConstellationCanvas = ({ onInteractionStart, onInteractionEnd } = {
         setPointerState(defaultPointerState);
         endInteraction();
     };
-    return (_jsx("canvas", { ref: canvasRef, className: "constellation-canvas", onPointerDown: handlePointerDown, onPointerMove: handlePointerMove, onPointerUp: handlePointerUp, onPointerLeave: handlePointerLeave, onContextMenu: (event) => event.preventDefault() }));
+    const handleWheel = (event) => {
+        if (!canvasRef.current) {
+            return;
+        }
+        event.preventDefault();
+        const rect = canvasRef.current.getBoundingClientRect();
+        const { worldX, worldY } = worldFromClient(event.nativeEvent, rect, camera.x, camera.y, camera.zoom);
+        const direction = event.deltaY > 0 ? 1 : -1;
+        const normalizedDelta = Math.min(Math.abs(event.deltaY) / 500, 0.3);
+        zoomCamera(direction * normalizedDelta, { x: worldX, y: worldY });
+    };
+    return (_jsx("canvas", { ref: canvasRef, className: "constellation-canvas", onPointerDown: handlePointerDown, onPointerMove: handlePointerMove, onPointerUp: handlePointerUp, onPointerLeave: handlePointerLeave, onWheel: handleWheel, onContextMenu: (event) => event.preventDefault() }));
 };
