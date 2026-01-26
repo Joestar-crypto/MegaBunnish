@@ -1,7 +1,7 @@
 import { jsx as _jsx } from "react/jsx-runtime";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import rawProjects from '../data/projects.json';
-const CORE_CATEGORIES = [
+export const CORE_CATEGORIES = [
     'Gambling',
     'Depin',
     'DeFi',
@@ -111,10 +111,24 @@ const applySpecialFilters = (projects, filters) => {
     });
 };
 const deriveCategoryCounts = (projects) => {
-    return projects.reduce((acc, project) => {
-        acc[project.primaryCategory] = (acc[project.primaryCategory] ?? 0) + 1;
+    const counts = CORE_CATEGORIES.reduce((acc, category) => {
+        acc[category] = 0;
         return acc;
     }, {});
+    projects.forEach((project) => {
+        project.categories.forEach((category) => {
+            if (counts[category] !== undefined) {
+                counts[category] += 1;
+            }
+        });
+    });
+    return counts;
+};
+const filterProjectsByCategory = (projects, category) => {
+    if (!category) {
+        return projects;
+    }
+    return projects.filter((project) => project.categories.includes(category));
 };
 const CATEGORY_ANCHOR_RADIUS = 220;
 const CLUSTER_RADIUS_PADDING = 45;
@@ -371,7 +385,7 @@ export const ConstellationProvider = ({ children }) => {
         const filteredProjects = applySpecialFilters(layout.projects, filters);
         return {
             projects: filteredProjects,
-            categories: layout.categories,
+            categories: [...CORE_CATEGORIES],
             categoryCounts: deriveCategoryCounts(filteredProjects),
             activeCategory: null,
             hoveredProjectId: null,
@@ -389,7 +403,7 @@ export const ConstellationProvider = ({ children }) => {
             let targetY = 0;
             let targetZoom = 1;
             if (category) {
-                const projectsInCategory = prev.projects.filter((project) => project.primaryCategory === category);
+                const projectsInCategory = filterProjectsByCategory(prev.projects, category);
                 if (projectsInCategory.length > 0) {
                     targetX =
                         projectsInCategory.reduce((sum, project) => sum + project.position.x, 0) /
@@ -419,7 +433,7 @@ export const ConstellationProvider = ({ children }) => {
             const visibleIds = new Set(filteredProjects.map((project) => project.id));
             const nextCategoryCounts = deriveCategoryCounts(filteredProjects);
             const nextActiveCategory = prev.activeCategory &&
-                filteredProjects.some((project) => project.primaryCategory === prev.activeCategory)
+                filterProjectsByCategory(filteredProjects, prev.activeCategory).length > 0
                 ? prev.activeCategory
                 : null;
             return {

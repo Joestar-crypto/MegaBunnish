@@ -209,6 +209,7 @@
     "id": "blitzo",
     "name": "Blitzo",
     "categories": [
+      "Social",
       "Megamafia",
       "Mobile"
     ],
@@ -226,6 +227,7 @@
     "id": "lemonade",
     "name": "Lemonade",
     "categories": [
+      "Social",
       "Megamafia",
       "Mobile"
     ],
@@ -260,6 +262,7 @@
     "id": "pumpparty",
     "name": "Pumpparty",
     "categories": [
+      "Trading",
       "Megamafia"
     ],
     "summary": "Hype-fueled trading pits for social whales.",
