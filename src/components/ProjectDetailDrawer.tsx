@@ -61,31 +61,6 @@ export const ProjectDetailDrawer = () => {
             </div>
           </section>
           <section>
-            <h3>Networks</h3>
-            <div className="badge-row">
-              {project.networks.map((network) => (
-                <span key={network} className="badge">
-                  {network}
-                </span>
-              ))}
-            </div>
-          </section>
-          <section>
-            <h3>Resources</h3>
-            <div className="link-grid">
-              {project.links.site && (
-                <a href={project.links.site} target="_blank" rel="noreferrer">
-                  Primary site
-                </a>
-              )}
-              {project.links.docs && (
-                <a href={project.links.docs} target="_blank" rel="noreferrer">
-                  Documentation
-                </a>
-              )}
-            </div>
-          </section>
-          <section>
             <h3>Active incentives</h3>
             {project.incentives.length === 0 ? (
               <p className="muted">Nothing live right now. Check back soon.</p>

@@ -130,19 +130,26 @@ const filterProjectsByCategory = (projects, category) => {
     }
     return projects.filter((project) => project.categories.includes(category));
 };
-const CATEGORY_ANCHOR_RADIUS = 220;
-const CLUSTER_RADIUS_PADDING = 45;
-const CLUSTER_COLLISION_ITERATIONS = 10;
+const CATEGORY_ANCHOR_RADIUS = 260;
+const CLUSTER_RADIUS_PADDING = 60;
+const CLUSTER_COLLISION_ITERATIONS = 12;
 const CLUSTER_PULL_STRENGTH = 0.18;
-const ORBIT_BASE_RADIUS = 70;
-const ORBIT_RING_GAP = 50;
+const ORBIT_BASE_RADIUS = 95;
+const ORBIT_RING_GAP = 70;
 const BASE_RING_SLOTS = 8;
-const RING_SLOT_GROWTH = 4;
-const MIN_ZOOM = 0.45;
+const RING_SLOT_GROWTH = 3;
+const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 2.4;
+const NODE_RELAX_ITERATIONS = 6;
+const MIN_NODE_SPACING = 90;
+const CAMERA_BASE_ZOOM = 640;
+const CAMERA_SPREAD_PADDING = 260;
 const SPECIAL_LINKS = {
     'bad-bunnz': ['prismfi', 'bunnzpaw', 'faster'],
     megalio: ['priority']
+};
+const EXCLUSIVE_LINKS = {
+    priority: ['megalio']
 };
 const ECOSYSTEM_HIGHLIGHTS = {
     'bad-bunnz': 'badbunnz',
@@ -215,6 +222,54 @@ const resolveClusterAnchors = (clusters) => {
         return acc;
     }, {});
 };
+const relaxClusterDensity = (assignments, anchors) => {
+    Object.entries(assignments).forEach(([category, projects]) => {
+        if (projects.length < 2) {
+            return;
+        }
+        for (let iteration = 0; iteration < NODE_RELAX_ITERATIONS; iteration += 1) {
+            for (let i = 0; i < projects.length; i += 1) {
+                for (let j = i + 1; j < projects.length; j += 1) {
+                    const current = projects[i];
+                    const other = projects[j];
+                    const dx = other.position.x - current.position.x;
+                    const dy = other.position.y - current.position.y;
+                    let distance = Math.hypot(dx, dy);
+                    if (distance === 0) {
+                        distance = 0.001;
+                    }
+                    if (distance >= MIN_NODE_SPACING) {
+                        continue;
+                    }
+                    const overlap = (MIN_NODE_SPACING - distance) / 2;
+                    const offsetX = (dx / distance) * overlap;
+                    const offsetY = (dy / distance) * overlap;
+                    current.position.x -= offsetX;
+                    current.position.y -= offsetY;
+                    other.position.x += offsetX;
+                    other.position.y += offsetY;
+                }
+            }
+        }
+        const anchor = anchors[category];
+        if (!anchor) {
+            return;
+        }
+        const centroid = projects.reduce((acc, project) => {
+            acc.x += project.position.x;
+            acc.y += project.position.y;
+            return acc;
+        }, { x: 0, y: 0 });
+        centroid.x /= projects.length;
+        centroid.y /= projects.length;
+        const offsetX = anchor.x - centroid.x;
+        const offsetY = anchor.y - centroid.y;
+        projects.forEach((project) => {
+            project.position.x += offsetX;
+            project.position.y += offsetY;
+        });
+    });
+};
 const sortCategories = (labels) => CORE_CATEGORIES.filter((category) => labels.has(category));
 const now = () => new Date();
 const pruneIncentives = (entries) => {
@@ -269,6 +324,7 @@ const computeLayout = (projects) => {
     });
     const categoryAdjacency = {};
     const positionedProjects = [];
+    const clusterAssignments = {};
     categories.forEach((category) => {
         const group = groupedByPrimary.get(category);
         if (!group || group.length === 0) {
@@ -279,6 +335,7 @@ const computeLayout = (projects) => {
         let processed = 0;
         let ringIndex = 0;
         let maxOrbitRadius = 0;
+        clusterAssignments[category] = clusterAssignments[category] ?? [];
         while (processed < group.length) {
             const slotsInRing = Math.min(BASE_RING_SLOTS + ringIndex * RING_SLOT_GROWTH, group.length - processed);
             const rotationOffset = (((category.charCodeAt(0) + ringIndex * 17) % 360) * Math.PI) / 180;
@@ -298,7 +355,7 @@ const computeLayout = (projects) => {
                 const x = anchor.x + Math.cos(angle) * orbitRadius;
                 const y = anchor.y + Math.sin(angle) * orbitRadius;
                 maxOrbitRadius = Math.max(maxOrbitRadius, orbitRadius);
-                positionedProjects.push({
+                const positionedProject = {
                     ...project,
                     categories: categoriesForProject,
                     primaryCategory,
@@ -308,7 +365,9 @@ const computeLayout = (projects) => {
                     position: { x, y },
                     highlight: ECOSYSTEM_HIGHLIGHTS[project.id],
                     traits: meta.traits
-                });
+                };
+                positionedProjects.push(positionedProject);
+                clusterAssignments[category].push(positionedProject);
                 arrangedIds.push(project.id);
             }
             processed += slotsInRing;
@@ -345,6 +404,7 @@ const computeLayout = (projects) => {
             y: project.position.y + deltaY
         };
     });
+    relaxClusterDensity(clusterAssignments, adjustedAnchors);
     const byId = new Map(positionedProjects.map((project) => [project.id, project]));
     Object.entries(categoryAdjacency).forEach(([projectId, neighbors]) => {
         const project = byId.get(projectId);
@@ -367,7 +427,58 @@ const computeLayout = (projects) => {
             target.linkedIds = Array.from(new Set([...target.linkedIds, sourceId]));
         });
     });
+    Object.entries(EXCLUSIVE_LINKS).forEach(([sourceId, allowedTargets]) => {
+        const allowedSet = new Set(allowedTargets);
+        const source = byId.get(sourceId);
+        if (source) {
+            source.linkedIds = source.linkedIds.filter((targetId) => allowedSet.has(targetId));
+            allowedTargets.forEach((targetId) => {
+                if (!source.linkedIds.includes(targetId)) {
+                    source.linkedIds.push(targetId);
+                }
+            });
+        }
+        allowedTargets.forEach((targetId) => {
+            const target = byId.get(targetId);
+            if (!target) {
+                return;
+            }
+            if (!target.linkedIds.includes(sourceId)) {
+                target.linkedIds.push(sourceId);
+            }
+        });
+        byId.forEach((project) => {
+            if (project.id === sourceId || allowedSet.has(project.id)) {
+                return;
+            }
+            project.linkedIds = project.linkedIds.filter((targetId) => targetId !== sourceId);
+        });
+    });
     return { projects: positionedProjects, categories, categoryCounts };
+};
+const deriveProjectView = (baseProjects, filters, category) => {
+    const pool = applySpecialFilters(baseProjects, filters);
+    const visible = filterProjectsByCategory(pool, category);
+    return { pool, visible, counts: deriveCategoryCounts(pool) };
+};
+const computeCameraFocus = (category, focusProjects) => {
+    if (!category || focusProjects.length === 0) {
+        return { x: 0, y: 0, zoom: 1 };
+    }
+    const centroid = focusProjects.reduce((acc, project) => {
+        acc.x += project.position.x;
+        acc.y += project.position.y;
+        return acc;
+    }, { x: 0, y: 0 });
+    centroid.x /= focusProjects.length;
+    centroid.y /= focusProjects.length;
+    const spread = focusProjects.reduce((max, project) => {
+        const dx = project.position.x - centroid.x;
+        const dy = project.position.y - centroid.y;
+        return Math.max(max, Math.hypot(dx, dy));
+    }, 0);
+    const zoom = clamp(CAMERA_BASE_ZOOM / (spread + CAMERA_SPREAD_PADDING), 0.7, 1.9);
+    return { x: centroid.x, y: centroid.y, zoom };
 };
 const defaultCamera = () => ({
     x: 0,
@@ -382,11 +493,12 @@ export const ConstellationProvider = ({ children }) => {
     const layout = useMemo(() => computeLayout(rawProjects), []);
     const [state, setState] = useState(() => {
         const filters = { ...SPECIAL_DEFAULTS };
-        const filteredProjects = applySpecialFilters(layout.projects, filters);
+        const { pool, visible, counts } = deriveProjectView(layout.projects, filters, null);
         return {
-            projects: filteredProjects,
+            projects: visible,
+            projectPoolSize: pool.length,
             categories: [...CORE_CATEGORIES],
-            categoryCounts: deriveCategoryCounts(filteredProjects),
+            categoryCounts: counts,
             activeCategory: null,
             hoveredProjectId: null,
             selectedProjectId: null,
@@ -399,55 +511,60 @@ export const ConstellationProvider = ({ children }) => {
             if (prev.activeCategory === category) {
                 return prev;
             }
-            let targetX = 0;
-            let targetY = 0;
-            let targetZoom = 1;
-            if (category) {
-                const projectsInCategory = filterProjectsByCategory(prev.projects, category);
-                if (projectsInCategory.length > 0) {
-                    targetX =
-                        projectsInCategory.reduce((sum, project) => sum + project.position.x, 0) /
-                            projectsInCategory.length;
-                    targetY =
-                        projectsInCategory.reduce((sum, project) => sum + project.position.y, 0) /
-                            projectsInCategory.length;
-                    targetZoom = 1.25;
-                }
-            }
+            const { pool, visible, counts } = deriveProjectView(layout.projects, prev.filters, category);
+            const visibleIds = new Set(visible.map((project) => project.id));
+            const focus = computeCameraFocus(category, visible);
             return {
                 ...prev,
+                projects: visible,
+                projectPoolSize: pool.length,
+                categoryCounts: counts,
                 activeCategory: category,
+                hoveredProjectId: prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId) ? prev.hoveredProjectId : null,
+                selectedProjectId: prev.selectedProjectId && visibleIds.has(prev.selectedProjectId) ? prev.selectedProjectId : null,
                 camera: {
                     ...prev.camera,
-                    targetX,
-                    targetY,
-                    targetZoom
+                    targetX: focus.x,
+                    targetY: focus.y,
+                    targetZoom: focus.zoom
                 }
             };
         });
-    }, []);
+    }, [layout.projects]);
     const toggleFilter = useCallback((filterKey) => {
         setState((prev) => {
             const nextFilters = { ...prev.filters, [filterKey]: !prev.filters[filterKey] };
-            const filteredProjects = applySpecialFilters(layout.projects, nextFilters);
-            const visibleIds = new Set(filteredProjects.map((project) => project.id));
-            const nextCategoryCounts = deriveCategoryCounts(filteredProjects);
-            const nextActiveCategory = prev.activeCategory &&
-                filterProjectsByCategory(filteredProjects, prev.activeCategory).length > 0
-                ? prev.activeCategory
-                : null;
+            const { pool, visible, counts } = deriveProjectView(layout.projects, nextFilters, prev.activeCategory);
+            let nextActiveCategory = prev.activeCategory;
+            let nextVisible = visible;
+            if (nextActiveCategory && visible.length === 0) {
+                nextActiveCategory = null;
+                nextVisible = pool;
+            }
+            const visibleIds = new Set(nextVisible.map((project) => project.id));
+            const focus = computeCameraFocus(nextActiveCategory, nextVisible);
+            const shouldUpdateCamera = Boolean(nextActiveCategory) || prev.activeCategory !== nextActiveCategory;
             return {
                 ...prev,
                 filters: nextFilters,
-                projects: filteredProjects,
-                categoryCounts: nextCategoryCounts,
+                projects: nextVisible,
+                projectPoolSize: pool.length,
+                categoryCounts: counts,
+                activeCategory: nextActiveCategory,
                 hoveredProjectId: prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId)
                     ? prev.hoveredProjectId
                     : null,
                 selectedProjectId: prev.selectedProjectId && visibleIds.has(prev.selectedProjectId)
                     ? prev.selectedProjectId
                     : null,
-                activeCategory: nextActiveCategory
+                camera: shouldUpdateCamera
+                    ? {
+                        ...prev.camera,
+                        targetX: focus.x,
+                        targetY: focus.y,
+                        targetZoom: focus.zoom
+                    }
+                    : prev.camera
             };
         });
     }, [layout.projects]);
@@ -505,12 +622,23 @@ export const ConstellationProvider = ({ children }) => {
         });
     }, []);
     const resetCamera = useCallback(() => {
-        setState((prev) => ({
-            ...prev,
-            activeCategory: null,
-            camera: { ...prev.camera, targetX: 0, targetY: 0, targetZoom: 1 }
-        }));
-    }, []);
+        setState((prev) => {
+            const { pool, counts } = deriveProjectView(layout.projects, prev.filters, null);
+            const visibleIds = new Set(pool.map((project) => project.id));
+            return {
+                ...prev,
+                projects: pool,
+                projectPoolSize: pool.length,
+                categoryCounts: counts,
+                activeCategory: null,
+                hoveredProjectId: prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId) ? prev.hoveredProjectId : null,
+                selectedProjectId: prev.selectedProjectId && visibleIds.has(prev.selectedProjectId)
+                    ? prev.selectedProjectId
+                    : null,
+                camera: { ...prev.camera, targetX: 0, targetY: 0, targetZoom: 1 }
+            };
+        });
+    }, [layout.projects]);
     useEffect(() => {
         let animationFrame;
         const tick = () => {

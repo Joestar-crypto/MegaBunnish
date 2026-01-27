@@ -375,15 +375,26 @@ export const ConstellationCanvas = ({
           const controlY = (sourceScreen.y + targetScreen.y) / 2 - curvature;
           const sourceHighlight = project.highlight ? highlightStyles[project.highlight] : null;
           const targetHighlight = target.highlight ? highlightStyles[target.highlight] : null;
-          const stroke = sourceHighlight?.stroke ?? targetHighlight?.stroke ?? 'rgba(78, 241, 255, 0.2)';
-          const glow = sourceHighlight?.glow ?? targetHighlight?.glow ?? 'rgba(78, 241, 255, 0.28)';
+          const sharedHighlight =
+            project.highlight && project.highlight === target.highlight
+              ? highlightStyles[project.highlight]
+              : null;
+          const stroke =
+            sharedHighlight?.stroke ?? sourceHighlight?.stroke ?? targetHighlight?.stroke ?? 'rgba(78, 241, 255, 0.2)';
+          const glow =
+            sharedHighlight?.glow ?? sourceHighlight?.glow ?? targetHighlight?.glow ?? 'rgba(78, 241, 255, 0.28)';
           const pulse = (Math.sin(time * 0.0015 + index) + 2) / 3;
+          const baseWidth = sharedHighlight ? 1.6 : 0.8;
+          const pulseWidth = sharedHighlight ? 0.9 : 0.6;
+          const baseAlpha = sharedHighlight ? 0.28 : 0.18;
+          const alphaPulse = sharedHighlight ? 0.32 : 0.25;
+          const shadowBlur = sharedHighlight ? 24 : 16;
 
           context.save();
-          context.globalAlpha = 0.18 + pulse * 0.25;
+          context.globalAlpha = baseAlpha + pulse * alphaPulse;
           context.strokeStyle = stroke;
-          context.lineWidth = 0.8 + pulse * 0.6;
-          context.shadowBlur = 16;
+          context.lineWidth = baseWidth + pulse * pulseWidth;
+          context.shadowBlur = shadowBlur;
           context.shadowColor = glow;
           context.beginPath();
           context.moveTo(sourceScreen.x, sourceScreen.y);

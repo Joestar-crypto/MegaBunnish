@@ -54,6 +54,7 @@ export type CameraState = {
 
 export type ConstellationState = {
   projects: ConstellationProject[];
+  projectPoolSize: number;
   categories: string[];
   categoryCounts: Record<string, number>;
   activeCategory: string | null;

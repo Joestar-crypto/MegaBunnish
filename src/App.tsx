@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react';
-import { CameraControls } from './components/CameraControls';
 import { ConstellationCanvas } from './components/ConstellationCanvas';
 import { FilterOrbitPanel } from './components/FilterOrbitPanel';
 import { ProjectDetailDrawer } from './components/ProjectDetailDrawer';
@@ -32,7 +31,6 @@ const AppContent = () => {
           </div>
         </div>
         <FilterOrbitPanel isInteracting={isInteracting} />
-        <CameraControls isHidden={isInteracting} />
         <ProjectDetailDrawer />
       </div>
     </div>

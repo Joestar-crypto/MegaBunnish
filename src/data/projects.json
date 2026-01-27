@@ -112,8 +112,7 @@
     "id": "prismfi",
     "name": "PrismFi",
     "categories": [
-      "DeFi",
-      "Megamafia"
+      "DeFi"
     ],
     "summary": "BadBunnz-aligned liquidity layer spanning spot, perps, and credit.",
     "networks": [
@@ -132,8 +131,7 @@
     "id": "bunnzpaw",
     "name": "BunnzPaw",
     "categories": [
-      "Gambling",
-      "Megamafia"
+      "Gambling"
     ],
     "summary": "Loot-box gatcha loops for BadBunnz community rewards.",
     "networks": [
@@ -152,8 +150,7 @@
     "id": "faster",
     "name": "Faster",
     "categories": [
-      "Tools",
-      "Megamafia"
+      "Launchpad"
     ],
     "summary": "BadBunnz launch arena for experimental drops and spins.",
     "networks": [
@@ -262,8 +259,7 @@
     "id": "pumpparty",
     "name": "Pumpparty",
     "categories": [
-      "Trading",
-      "Megamafia"
+      "Social"
     ],
     "summary": "Hype-fueled trading pits for social whales.",
     "networks": [
@@ -420,7 +416,7 @@
     "id": "rainmaker",
     "name": "RainMaker",
     "categories": [
-      "Tools"
+      "Launchpad"
     ],
     "summary": "AI-assisted memecoin launchpad for fast airdrops.",
     "networks": [
@@ -437,8 +433,8 @@
     "id": "kumbaya",
     "name": "Kumbaya",
     "categories": [
-      "Tools",
-      "Trading",
+      "Launchpad",
+      "Dex",
       "DeFi",
       "Megamafia"
     ],
@@ -572,7 +568,7 @@
     "name": "Everwatch",
     "categories": [
       "Megamafia",
-      "Tools"
+      "AI"
     ],
     "summary": "AI co-pilot for monitoring MegaMafia on-chain flows.",
     "networks": [
@@ -589,7 +585,7 @@
     "name": "NectarAI",
     "categories": [
       "Megamafia",
-      "Tools"
+      "AI"
     ],
     "summary": "Agentic copilots for MegaMafia quests and raids.",
     "networks": [
@@ -738,9 +734,7 @@
     "id": "megalio",
     "name": "Megalio",
     "categories": [
-      "Tools",
-      "NFT",
-      "Megamafia"
+      "NFT"
     ],
     "summary": "MegaMafia legendary avatars with stratified perks.",
     "networks": [
@@ -760,8 +754,7 @@
     "id": "priority",
     "name": "Priority",
     "categories": [
-      "Tools",
-      "Megamafia"
+      "Tools"
     ],
     "summary": "Priority trade bot wired into Megalio holders.",
     "networks": [
@@ -845,7 +838,7 @@
     "id": "sirio",
     "name": "Sirio",
     "categories": [
-      "Tools"
+      "Launchpad"
     ],
     "summary": "Launchpad infrastructure with curated staking flows.",
     "networks": [

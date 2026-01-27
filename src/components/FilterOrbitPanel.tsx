@@ -29,10 +29,10 @@ type SpecialFilterKey = keyof SpecialFilters;
 const SPECIAL_FILTERS: Array<{
   key: SpecialFilterKey;
   label: string;
-  hint: string;
+  hint?: string;
   Icon: () => JSX.Element;
 }> = [
-  { key: 'megamafia', label: 'Megamafia', hint: 'Badbunnz orbit', Icon: MegamafiaIcon },
+  { key: 'megamafia', label: 'Megamafia', Icon: MegamafiaIcon },
   { key: 'mobile', label: 'Mobile', hint: 'Phone-native', Icon: MobileIcon }
 ];
 
@@ -42,23 +42,17 @@ type FilterOrbitPanelProps = {
 
 export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProps) => {
   const {
-    projects,
+    projectPoolSize,
     categories,
     categoryCounts,
     activeCategory,
     setActiveCategory,
-    resetCamera,
     filters,
     toggleFilter
   } = useConstellation();
-  const totalProjects = projects.length;
+  const totalProjects = projectPoolSize;
 
   const quickSelect = (category: string | null) => {
-    if (category === null) {
-      setActiveCategory(null);
-      resetCamera();
-      return;
-    }
     setActiveCategory(category);
   };
 
@@ -83,7 +77,7 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
               </span>
               <span className="chip__stack">
                 <span className="chip-label">{label}</span>
-                <span className="chip-hint">{hint}</span>
+                {hint ? <span className="chip-hint">{hint}</span> : null}
               </span>
             </button>
           ))}
