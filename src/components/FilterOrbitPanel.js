@@ -2,10 +2,12 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
 import { useConstellation } from '../state/constellation';
 import { getCategoryColor } from '../utils/colors';
 const MobileIcon = () => (_jsxs("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false", children: [_jsx("rect", { x: 7.5, y: 3.5, width: 9, height: 17, rx: 2, stroke: "currentColor", strokeWidth: 1.5 }), _jsx("line", { x1: 7.5, y1: 7.5, x2: 16.5, y2: 7.5, stroke: "currentColor", strokeWidth: 1.5, opacity: 0.5 }), _jsx("circle", { cx: 12, cy: 17.5, r: 0.9, fill: "currentColor" })] }));
+const MegamafiaIcon = () => (_jsxs("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false", children: [_jsx("path", { d: "M5 9.5 8.2 7l3.3 2.5L14.8 7 19 9.5l-1 9.5H6Z", fill: "none", stroke: "currentColor", strokeWidth: 1.4, strokeLinejoin: "round" }), _jsx("path", { d: "M9.25 12.5 12 15.25 14.75 12.5", fill: "none", stroke: "currentColor", strokeWidth: 1.4 })] }));
+const NativeCoreIcon = () => (_jsxs("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false", children: [_jsx("circle", { cx: 12, cy: 12, r: 7, fill: "none", stroke: "currentColor", strokeWidth: 1.4, opacity: 0.8 }), _jsx("circle", { cx: 12, cy: 12, r: 3.2, fill: "currentColor", opacity: 0.75 }), _jsx("circle", { cx: 12, cy: 12, r: 1.4, fill: "var(--page-bg)" })] }));
 const formatCategoryLabel = (category) => category === 'Prediction Market' ? 'Prediction M.' : category;
 const SPECIAL_FILTERS = [
-    { key: 'megamafia', label: 'Megamafia', iconSrc: '/logos/Megamafia.png' },
-    { key: 'native', label: 'Native', hint: 'MegaETH core', iconSrc: '/logos/Megaeth.jpg' },
+    { key: 'megamafia', label: 'Megamafia', Icon: MegamafiaIcon },
+    { key: 'native', label: 'Native', hint: 'MegaETH core', Icon: NativeCoreIcon },
     { key: 'mobile', label: 'Mobile', hint: 'Phone-native', Icon: MobileIcon }
 ];
 export const FilterOrbitPanel = ({ isInteracting = false }) => {

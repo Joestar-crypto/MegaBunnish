@@ -29,6 +29,14 @@ const AppContent = () => {
           <div className="hero-overlay__content">
             <p className="eyebrow">MegaETH ecosystem</p>
             <h1>MegaBunnish</h1>
+            <a
+              className="hero-overlay__credit"
+              href="https://x.com/JoestarCrypto"
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              Made by Joestar
+            </a>
           </div>
         </div>
         <FilterOrbitPanel isInteracting={isInteracting} />

@@ -437,7 +437,7 @@ const JojoOracle = ({ projectId, onNavigate }: { projectId: string; onNavigate: 
   return (
     <section className="jojo-panel">
       <div className="jojo-avatar">
-        <img src="/logos/Jojo2.jpg" alt="Jojo avatar" />
+        <img src="/logos/Jojo2.webp" alt="Jojo avatar" />
       </div>
       <div className="jojo-bubble">
         <p className="jojo-title">Jojo's Insight</p>

@@ -10,6 +10,27 @@ const MobileIcon = () => (
   </svg>
 );
 
+const MegamafiaIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path
+      d="M5 9.5 8.2 7l3.3 2.5L14.8 7 19 9.5l-1 9.5H6Z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.4}
+      strokeLinejoin="round"
+    />
+    <path d="M9.25 12.5 12 15.25 14.75 12.5" fill="none" stroke="currentColor" strokeWidth={1.4} />
+  </svg>
+);
+
+const NativeCoreIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <circle cx={12} cy={12} r={7} fill="none" stroke="currentColor" strokeWidth={1.4} opacity={0.8} />
+    <circle cx={12} cy={12} r={3.2} fill="currentColor" opacity={0.75} />
+    <circle cx={12} cy={12} r={1.4} fill="var(--page-bg)" />
+  </svg>
+);
+
 type SpecialFilterKey = keyof SpecialFilters;
 
 const formatCategoryLabel = (category: string) =>
@@ -24,8 +45,8 @@ type SpecialFilterDefinition = {
 };
 
 const SPECIAL_FILTERS: SpecialFilterDefinition[] = [
-  { key: 'megamafia', label: 'Megamafia', iconSrc: '/logos/Megamafia.png' },
-  { key: 'native', label: 'Native', hint: 'MegaETH core', iconSrc: '/logos/Megaeth.jpg' },
+  { key: 'megamafia', label: 'Megamafia', Icon: MegamafiaIcon },
+  { key: 'native', label: 'Native', hint: 'MegaETH core', Icon: NativeCoreIcon },
   { key: 'mobile', label: 'Mobile', hint: 'Phone-native', Icon: MobileIcon }
 ];
 
