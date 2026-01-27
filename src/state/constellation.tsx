@@ -21,7 +21,7 @@ export const CORE_CATEGORIES = [
   'Social',
   'Launchpad',
   'Tools',
-  'Prediction Market',
+  'Prediction M.',
   'AI'
 ] as const;
 
@@ -65,9 +65,10 @@ const CATEGORY_ALIASES: Record<string, CanonicalCategory> = {
   social: 'Social',
   socials: 'Social',
   community: 'Social',
-  prediction: 'Prediction Market',
-  'prediction market': 'Prediction Market',
-  'prediction-market': 'Prediction Market',
+  prediction: 'Prediction M.',
+  'prediction market': 'Prediction M.',
+  'prediction-market': 'Prediction M.',
+  'prediction m.': 'Prediction M.',
   megmafia: 'Megamafia',
   megamafia: 'Megamafia',
   'badbunnz': 'Megamafia',
@@ -565,6 +566,21 @@ const deriveProjectView = (
   return { pool, visible, counts: deriveCategoryCounts(pool) };
 };
 
+const computeProjectsCentroid = (projects: ConstellationProject[]) => {
+  if (projects.length === 0) {
+    return { x: 0, y: 0 };
+  }
+  const totals = projects.reduce(
+    (acc, project) => {
+      acc.x += project.position.x;
+      acc.y += project.position.y;
+      return acc;
+    },
+    { x: 0, y: 0 }
+  );
+  return { x: totals.x / projects.length, y: totals.y / projects.length };
+};
+
 const computeCameraFocus = (
   category: string | null,
   focusProjects: ConstellationProject[]
@@ -757,11 +773,15 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
 
       let targetX = prev.camera.targetX;
       let targetY = prev.camera.targetY;
+      const blend = 0.25;
 
       if (focus) {
-        const blend = 0.25;
         targetX = focus.x * blend + targetX * (1 - blend);
         targetY = focus.y * blend + targetY * (1 - blend);
+      } else if (prev.projects.length > 0) {
+        const centroid = computeProjectsCentroid(prev.projects);
+        targetX = centroid.x * blend + targetX * (1 - blend);
+        targetY = centroid.y * blend + targetY * (1 - blend);
       }
 
       return {

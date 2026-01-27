@@ -71,6 +71,7 @@ select {
   min-height: 0;
   cursor: grab;
   display: block;
+  touch-action: none;
 }
 
 .constellation-canvas:active {
@@ -85,14 +86,18 @@ select {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  align-items: flex-start;
+  align-items: flex-end;
   pointer-events: none;
   text-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
 }
 
 .hero-overlay__content {
   max-width: clamp(280px, 36vw, 520px);
-  text-align: left;
+  text-align: right;
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
 .hero-overlay__content h1 {

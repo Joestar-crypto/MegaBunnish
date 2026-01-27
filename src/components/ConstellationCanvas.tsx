@@ -83,6 +83,16 @@ type HyperLane = {
   sweep: number;
 };
 
+type ClientLikeEvent = { clientX: number; clientY: number };
+
+type PinchState = {
+  activePointers: Map<number, { x: number; y: number }>;
+  originDistance: number;
+  initialZoom: number;
+  focus: { x: number; y: number } | null;
+  isPinching: boolean;
+};
+
 const useImageCache = (projects: ConstellationProject[]) => {
   const cache = useMemo(() => new Map<string, HTMLImageElement>(), []);
 
@@ -138,11 +148,7 @@ const generateHyperLanes = (): HyperLane[] =>
   }));
 
 const worldFromClient = (
-  event:
-    | PointerEvent
-    | WheelEvent
-    | React.PointerEvent<HTMLCanvasElement>
-    | React.WheelEvent<HTMLCanvasElement>,
+  event: ClientLikeEvent,
   rect: DOMRect,
   cameraX: number,
   cameraY: number,
@@ -156,10 +162,7 @@ const worldFromClient = (
 };
 
 const findHitProject = (
-  clientEvent:
-    | PointerEvent
-    | React.PointerEvent<HTMLCanvasElement>
-    | React.WheelEvent<HTMLCanvasElement>,
+  clientEvent: ClientLikeEvent,
   rect: DOMRect,
   projects: ConstellationProject[],
   cameraX: number,
@@ -192,6 +195,13 @@ export const ConstellationCanvas = ({
 }: ConstellationCanvasProps = {}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [pointerState, setPointerState] = useState<PointerState>(defaultPointerState);
+  const pinchStateRef = useRef<PinchState>({
+    activePointers: new Map(),
+    originDistance: 0,
+    initialZoom: 1,
+    focus: null,
+    isPinching: false
+  });
   const stars = useMemo(generateStars, []);
   const nebulae = useMemo(generateNebulae, []);
   const hyperLanes = useMemo(generateHyperLanes, []);
@@ -486,12 +496,118 @@ export const ConstellationCanvas = ({
     };
   }, [projects, images, stars, nebulae, hyperLanes]);
 
-  const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current || event.button !== 0) {
+  const endInteraction = () => {
+    if (interactionActiveRef.current) {
+      interactionActiveRef.current = false;
+      onInteractionEnd?.();
+    }
+  };
+
+  const beginPinchGesture = () => {
+    const pinchState = pinchStateRef.current;
+    if (!canvasRef.current || pinchState.activePointers.size < 2) {
+      return;
+    }
+    const [first, second] = Array.from(pinchState.activePointers.values());
+    const distance = Math.hypot(first.x - second.x, first.y - second.y);
+    if (!distance || !isFinite(distance)) {
       return;
     }
 
+    const rect = canvasRef.current.getBoundingClientRect();
+    const midpointX = (first.x + second.x) / 2;
+    const midpointY = (first.y + second.y) / 2;
+    const { worldX, worldY } = worldFromClient(
+      { clientX: midpointX, clientY: midpointY },
+      rect,
+      cameraRef.current.x,
+      cameraRef.current.y,
+      cameraRef.current.zoom
+    );
+
+    pinchState.originDistance = distance;
+    pinchState.initialZoom = cameraRef.current.targetZoom;
+    pinchState.focus = { x: worldX, y: worldY };
+    pinchState.isPinching = true;
+    setPointerState(defaultPointerState);
+
+    if (!interactionActiveRef.current) {
+      interactionActiveRef.current = true;
+      onInteractionStart?.();
+    }
+  };
+
+  const updatePinchZoom = () => {
+    const pinchState = pinchStateRef.current;
+    if (!pinchState.isPinching || pinchState.originDistance <= 0 || !pinchState.focus) {
+      return;
+    }
+    const [first, second] = Array.from(pinchState.activePointers.values());
+    if (!first || !second) {
+      return;
+    }
+    const distance = Math.hypot(first.x - second.x, first.y - second.y);
+    if (!distance || !isFinite(distance)) {
+      return;
+    }
+    const ratio = distance / pinchState.originDistance;
+    if (!isFinite(ratio) || ratio <= 0) {
+      return;
+    }
+    const targetZoom = pinchState.initialZoom * ratio;
+    const deltaZoom = targetZoom - cameraRef.current.targetZoom;
+    if (Math.abs(deltaZoom) < 0.001) {
+      return;
+    }
+    zoomCamera(deltaZoom, pinchState.focus);
+  };
+
+  const registerTouchPoint = (pointerId: number, position: { x: number; y: number }) => {
+    const pinchState = pinchStateRef.current;
+    pinchState.activePointers.set(pointerId, position);
+    if (pinchState.activePointers.size >= 2 && !pinchState.isPinching) {
+      beginPinchGesture();
+    }
+  };
+
+  const removeTouchPoint = (pointerId: number) => {
+    const pinchState = pinchStateRef.current;
+    pinchState.activePointers.delete(pointerId);
+    if (pinchState.activePointers.size < 2 && pinchState.isPinching) {
+      pinchState.isPinching = false;
+      pinchState.originDistance = 0;
+      pinchState.focus = null;
+      endInteraction();
+    }
+  };
+
+  const resetPinchState = () => {
+    const pinchState = pinchStateRef.current;
+    pinchState.activePointers.clear();
+    pinchState.originDistance = 0;
+    pinchState.focus = null;
+    pinchState.isPinching = false;
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current) {
+      return;
+    }
+
+    if (event.pointerType === 'mouse' && event.button !== 0) {
+      return;
+    }
+
+    if (event.pointerType === 'touch') {
+      registerTouchPoint(event.pointerId, { x: event.clientX, y: event.clientY });
+    }
+
     canvasRef.current.setPointerCapture(event.pointerId);
+
+    if (pinchStateRef.current.isPinching) {
+      return;
+    }
+
     setPointerState({
       isDragging: true,
       pointerId: event.pointerId,
@@ -504,6 +620,17 @@ export const ConstellationCanvas = ({
   const handlePointerMove = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (!canvasRef.current) {
       return;
+    }
+
+    if (event.pointerType === 'touch' && pinchStateRef.current.activePointers.has(event.pointerId)) {
+      pinchStateRef.current.activePointers.set(event.pointerId, {
+        x: event.clientX,
+        y: event.clientY
+      });
+      if (pinchStateRef.current.isPinching) {
+        updatePinchZoom();
+        return;
+      }
     }
 
     if (pointerState.isDragging && pointerState.pointerId === event.pointerId) {
@@ -532,16 +659,13 @@ export const ConstellationCanvas = ({
     setHoveredProject(hit?.id ?? null);
   };
 
-  const endInteraction = () => {
-    if (interactionActiveRef.current) {
-      interactionActiveRef.current = false;
-      onInteractionEnd?.();
-    }
-  };
-
   const handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (!canvasRef.current) {
       return;
+    }
+
+    if (event.pointerType === 'touch') {
+      removeTouchPoint(event.pointerId);
     }
 
     if (pointerState.isDragging && pointerState.pointerId === event.pointerId) {
@@ -555,9 +679,12 @@ export const ConstellationCanvas = ({
         }
       }
 
-      canvasRef.current.releasePointerCapture(event.pointerId);
       setPointerState(defaultPointerState);
       endInteraction();
+    }
+
+    if (canvasRef.current.hasPointerCapture(event.pointerId)) {
+      canvasRef.current.releasePointerCapture(event.pointerId);
     }
   };
 
@@ -566,6 +693,7 @@ export const ConstellationCanvas = ({
     if (canvasRef.current && pointerState.pointerId !== null) {
       canvasRef.current.releasePointerCapture(pointerState.pointerId);
     }
+    resetPinchState();
     setPointerState(defaultPointerState);
     endInteraction();
   };

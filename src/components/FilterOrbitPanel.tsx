@@ -26,6 +26,9 @@ const MobileIcon = () => (
 
 type SpecialFilterKey = keyof SpecialFilters;
 
+const formatCategoryLabel = (category: string) =>
+  category === 'Prediction Market' ? 'Prediction M.' : category;
+
 const SPECIAL_FILTERS: Array<{
   key: SpecialFilterKey;
   label: string;
@@ -53,6 +56,10 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
   const totalProjects = projectPoolSize;
 
   const quickSelect = (category: string | null) => {
+    if (category && activeCategory === category) {
+      setActiveCategory(null);
+      return;
+    }
     setActiveCategory(category);
   };
 
@@ -103,7 +110,7 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
               onClick={() => quickSelect(category)}
               aria-pressed={activeCategory === category}
             >
-              <span className="chip-label">{category}</span>
+              <span className="chip-label">{formatCategoryLabel(category)}</span>
               <span className="chip-count">{categoryCounts[category] ?? 0}</span>
             </button>
           ))}
