@@ -386,24 +386,26 @@ const JojoOracle = ({ projectId, onNavigate }: { projectId: string; onNavigate: 
       </div>
       <div className="jojo-bubble">
         <p className="jojo-title">Jojo intel</p>
-        {script.map((block, blockIndex) => (
-          <p key={`jojo-line-${blockIndex}`}>
-            {block.map((segment, segmentIndex) =>
-              segment.kind === 'text' ? (
-                <span key={`text-${segmentIndex}`}>{segment.content}</span>
-              ) : (
-                <button
-                  key={`link-${segmentIndex}-${segment.label}`}
-                  type="button"
-                  className="jojo-link"
-                  onClick={() => onNavigate(segment.targetId)}
-                >
-                  {segment.label}
-                </button>
-              )
-            )}
-          </p>
-        ))}
+        <div className="jojo-dialogue">
+          {script.map((block, blockIndex) => (
+            <p key={`jojo-line-${blockIndex}`}>
+              {block.map((segment, segmentIndex) =>
+                segment.kind === 'text' ? (
+                  <span key={`text-${segmentIndex}`}>{segment.content}</span>
+                ) : (
+                  <button
+                    key={`link-${segmentIndex}-${segment.label}`}
+                    type="button"
+                    className="jojo-link"
+                    onClick={() => onNavigate(segment.targetId)}
+                  >
+                    {segment.label}
+                  </button>
+                )
+              )}
+            </p>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -414,6 +416,16 @@ export const ProjectDetailDrawer = () => {
   const project = useMemo(
     () => projects.find((entry) => entry.id === selectedProjectId),
     [projects, selectedProjectId]
+  );
+  const socialLinks = useMemo(
+    () =>
+      project
+        ? SOCIAL_LINKS.filter(({ key }) => Boolean(project.links[key])).map((entry) => ({
+            ...entry,
+            href: project.links[entry.key] as string
+          }))
+        : [],
+    [project]
   );
 
   const isVisible = Boolean(project);
@@ -431,8 +443,21 @@ export const ProjectDetailDrawer = () => {
               Close
             </button>
           </header>
-          <p className="summary">{project.summary}</p>
+          {socialLinks.length ? (
+            <section>
+              <h3>Access</h3>
+              <div className="icon-link-row">
+                {socialLinks.map(({ key, label, icon, href }) => (
+                  <a key={key} className="icon-link" href={href} target="_blank" rel="noreferrer" aria-label={label}>
+                    <img src={icon} alt="" aria-hidden />
+                    <span>{label}</span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          ) : null}
           <JojoOracle projectId={project.id} onNavigate={selectProject} />
+          <p className="summary">{project.summary}</p>
           <section>
             <h3>Categories</h3>
             <div className="badge-row">
@@ -446,24 +471,6 @@ export const ProjectDetailDrawer = () => {
                 >
                   {category}
                 </button>
-              ))}
-            </div>
-          </section>
-          <section>
-            <h3>Access</h3>
-            <div className="icon-link-row">
-              {SOCIAL_LINKS.filter(({ key }) => Boolean(project.links[key])).map(({ key, label, icon }) => (
-                <a
-                  key={key}
-                  className="icon-link"
-                  href={project.links[key]}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={label}
-                >
-                  <img src={icon} alt="" aria-hidden />
-                  <span>{label}</span>
-                </a>
               ))}
             </div>
           </section>

@@ -15,7 +15,7 @@ export const CORE_CATEGORIES = [
     'Prediction M.',
     'AI'
 ];
-const SPECIAL_CATEGORIES = ['Megamafia', 'Mobile'];
+const SPECIAL_CATEGORIES = ['Megamafia', 'Mobile', 'Native'];
 const DEFAULT_CORE_CATEGORY = 'DeFi';
 const CORE_LOOKUP = CORE_CATEGORIES.reduce((acc, category) => {
     acc[category.toLowerCase()] = category;
@@ -56,7 +56,8 @@ const CATEGORY_ALIASES = {
     megamafia: 'Megamafia',
     'badbunnz': 'Megamafia',
     payment: 'Megamafia',
-    mobile: 'Mobile'
+    mobile: 'Mobile',
+    native: 'Native'
 };
 const canonicalizeCategory = (label) => {
     const normalized = label.trim().toLowerCase();
@@ -71,7 +72,7 @@ const canonicalizeCategory = (label) => {
     }
     return null;
 };
-const SPECIAL_DEFAULTS = { megamafia: false, mobile: false };
+const SPECIAL_DEFAULTS = { megamafia: false, mobile: false, native: false };
 const toCategoryMeta = (labels) => {
     const categories = [];
     const traits = { ...SPECIAL_DEFAULTS };
@@ -88,6 +89,10 @@ const toCategoryMeta = (labels) => {
             traits.mobile = true;
             return;
         }
+        if (canonical === 'Native') {
+            traits.native = true;
+            return;
+        }
         if (!categories.includes(canonical)) {
             categories.push(canonical);
         }
@@ -98,7 +103,7 @@ const toCategoryMeta = (labels) => {
     return { primary: categories[0], categories, traits };
 };
 const applySpecialFilters = (projects, filters) => {
-    if (!filters.megamafia && !filters.mobile) {
+    if (!filters.megamafia && !filters.mobile && !filters.native) {
         return projects;
     }
     return projects.filter((project) => {
@@ -108,10 +113,13 @@ const applySpecialFilters = (projects, filters) => {
         if (filters.mobile && !project.traits.mobile) {
             return false;
         }
+        if (filters.native && !project.traits.native) {
+            return false;
+        }
         return true;
     });
 };
-const shouldAggregateFilters = (filters) => filters.megamafia || filters.mobile;
+const shouldAggregateFilters = (filters) => filters.megamafia || filters.mobile || filters.native;
 const cloneProject = (project) => ({
     ...project,
     position: { ...project.position },

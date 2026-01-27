@@ -29,6 +29,7 @@ export type RawProject = {
 export type SpecialFilters = {
   megamafia: boolean;
   mobile: boolean;
+  native: boolean;
 };
 
 export type ConstellationProject = RawProject & {

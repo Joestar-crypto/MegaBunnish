@@ -25,6 +25,7 @@ type SpecialFilterDefinition = {
 
 const SPECIAL_FILTERS: SpecialFilterDefinition[] = [
   { key: 'megamafia', label: 'Megamafia', iconSrc: '/logos/Megamafia.png' },
+  { key: 'native', label: 'Native', hint: 'MegaETH core', iconSrc: '/logos/Megaeth.jpg' },
   { key: 'mobile', label: 'Mobile', hint: 'Phone-native', Icon: MobileIcon }
 ];
 

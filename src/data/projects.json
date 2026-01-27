@@ -4,7 +4,8 @@
     "name": "Cap Money",
     "categories": [
       "Megamafia",
-      "DeFi"
+      "DeFi",
+      "Native"
     ],
     "summary": "Stablecoin rails and treasury automations for MegaMafia treasuries.",
     "networks": [
@@ -22,7 +23,8 @@
     "categories": [
       "Megamafia",
       "Trading",
-      "Mobile"
+      "Mobile",
+      "Native"
     ],
     "summary": "Mobile-native perps terminal with MegaMafia intent routing.",
     "networks": [
@@ -41,7 +43,8 @@
     "name": "Rocket",
     "categories": [
       "Megamafia",
-      "Prediction Market"
+      "Prediction Market",
+      "Native"
     ],
     "summary": "Community prediction markets feeding MegaMafia strategy calls.",
     "networks": [
@@ -57,7 +60,8 @@
     "id": "aveforge",
     "name": "Aveforge",
     "categories": [
-      "Gaming"
+      "Gaming",
+      "Native"
     ],
     "summary": "PvP arena crafting roguelike items for MegaMafia storylines.",
     "networks": [
@@ -75,7 +79,8 @@
     "name": "HelloTrade",
     "categories": [
       "Trading",
-      "Mobile"
+      "Mobile",
+      "Native"
     ],
     "summary": "RWA trading desk with one-swipe mobile settlement.",
     "networks": [
@@ -91,7 +96,8 @@
     "id": "bad-bunnz",
     "name": "BadBunnz",
     "categories": [
-      "NFT"
+      "NFT",
+      "Native"
     ],
     "summary": "The core MegaBunnz collective coordinating drops and lore.",
     "networks": [
@@ -112,7 +118,8 @@
     "id": "prismfi",
     "name": "PrismFi",
     "categories": [
-      "DeFi"
+      "DeFi",
+      "Native"
     ],
     "summary": "BadBunnz-aligned liquidity layer spanning spot, perps, and credit.",
     "networks": [
@@ -131,7 +138,8 @@
     "id": "bunnzpaw",
     "name": "BunnzPaw",
     "categories": [
-      "Gambling"
+      "Gambling",
+      "Native"
     ],
     "summary": "Loot-box gatcha loops for BadBunnz community rewards.",
     "networks": [
@@ -150,7 +158,8 @@
     "id": "faster",
     "name": "Faster",
     "categories": [
-      "Launchpad"
+      "Launchpad",
+      "Native"
     ],
     "summary": "BadBunnz launch arena for experimental drops and spins.",
     "networks": [
@@ -170,7 +179,8 @@
     "name": "Legend",
     "categories": [
       "Trading",
-      "Megamafia"
+      "Megamafia",
+      "Native"
     ],
     "summary": "Cross-market command center for intent-based trading.",
     "networks": [
@@ -189,7 +199,8 @@
     "name": "Brix",
     "categories": [
       "Megamafia",
-      "DeFi"
+      "DeFi",
+      "Native"
     ],
     "summary": "Stable RWA vaults abstracted into on-chain Mega bricks.",
     "networks": [
@@ -208,7 +219,8 @@
     "categories": [
       "Social",
       "Megamafia",
-      "Mobile"
+      "Mobile",
+      "Native"
     ],
     "summary": "Voice-first money app bridging chats and on-chain actions.",
     "networks": [
@@ -226,7 +238,8 @@
     "categories": [
       "Social",
       "Megamafia",
-      "Mobile"
+      "Mobile",
+      "Native"
     ],
     "summary": "Pocket social wallet with instant discovery packs.",
     "networks": [
@@ -243,7 +256,8 @@
     "name": "Dorado",
     "categories": [
       "Megamafia",
-      "Gambling"
+      "Gambling",
+      "Native"
     ],
     "summary": "Social casino with MegaMafia leaderboard energy.",
     "networks": [
@@ -259,7 +273,8 @@
     "id": "pumpparty",
     "name": "Pumpparty",
     "categories": [
-      "Social"
+      "Social",
+      "Native"
     ],
     "summary": "Hype-fueled trading pits for social whales.",
     "networks": [
@@ -277,7 +292,8 @@
     "name": "WorldMarkets",
     "categories": [
       "Trading",
-      "Megamafia"
+      "Megamafia",
+      "Native"
     ],
     "summary": "MegaMafia macro desk with unified liquidity lines.",
     "networks": [
@@ -294,7 +310,8 @@
     "name": "Benchmark",
     "categories": [
       "DeFi",
-      "Megamafia"
+      "Megamafia",
+      "Native"
     ],
     "summary": "Composable leverage vaults with dynamic benchmarks.",
     "networks": [
@@ -311,7 +328,8 @@
     "name": "Avon",
     "categories": [
       "Megamafia",
-      "DeFi"
+      "DeFi",
+      "Native"
     ],
     "summary": "Sovereign credit lines for MegaMafia squads.",
     "networks": [
@@ -329,7 +347,8 @@
     "name": "BlackHaven",
     "categories": [
       "Megamafia",
-      "DeFi"
+      "DeFi",
+      "Native"
     ],
     "summary": "Shadow collective for experimental MegaMafia finance loops.",
     "networks": [
@@ -346,7 +365,8 @@
     "id": "aqua",
     "name": "Aqua",
     "categories": [
-      "DeFi"
+      "DeFi",
+      "Native"
     ],
     "summary": "LST money markets with adaptive liquidity incentives.",
     "networks": [
@@ -364,7 +384,8 @@
     "name": "Showdown",
     "categories": [
       "Gaming",
-      "Megamafia"
+      "Megamafia",
+      "Native"
     ],
     "summary": "TCG battler with MegaMafia IP crossovers.",
     "networks": [
@@ -382,7 +403,8 @@
     "name": "TopStrike",
     "categories": [
       "Mobile",
-      "Gaming"
+      "Gaming",
+      "Native"
     ],
     "summary": "Real-time sports trading duel built for phones.",
     "networks": [
@@ -400,7 +422,8 @@
     "name": "Stomp",
     "categories": [
       "Gaming",
-      "Megamafia"
+      "Megamafia",
+      "Native"
     ],
     "summary": "Arcade battler with stomp-to-earn tournaments.",
     "networks": [
@@ -416,7 +439,8 @@
     "id": "rainmaker",
     "name": "RainMaker",
     "categories": [
-      "Launchpad"
+      "Launchpad",
+      "Native"
     ],
     "summary": "AI-assisted memecoin launchpad for fast airdrops.",
     "networks": [
@@ -436,7 +460,8 @@
       "Launchpad",
       "Dex",
       "DeFi",
-      "Megamafia"
+      "Megamafia",
+      "Native"
     ],
     "summary": "Liquidity router powering MegaMafia launch waves.",
     "networks": [
@@ -452,7 +477,8 @@
     "id": "meth",
     "name": "Meth",
     "categories": [
-      "Meme"
+      "Meme",
+      "Native"
     ],
     "summary": "Chaotic MegaMafia meme culture project.",
     "networks": [
@@ -467,7 +493,8 @@
     "id": "megarafia",
     "name": "Megarafia",
     "categories": [
-      "Meme"
+      "Meme",
+      "Native"
     ],
     "summary": "Mob-inspired NFT syndicate inside MegaMafia.",
     "networks": [
@@ -483,7 +510,8 @@
     "name": "Cilium",
     "categories": [
       "Megamafia",
-      "Depin"
+      "Depin",
+      "Native"
     ],
     "summary": "Physical hardware mesh powering on-chain verification.",
     "networks": [
@@ -500,7 +528,8 @@
     "name": "Ubitel",
     "categories": [
       "Megamafia",
-      "Depin"
+      "Depin",
+      "Native"
     ],
     "summary": "Peer hardware nodes selling bandwidth into MegaMafia apps.",
     "networks": [
@@ -517,7 +546,8 @@
     "name": "Hop",
     "categories": [
       "Megamafia",
-      "Depin"
+      "Depin",
+      "Native"
     ],
     "summary": "Micro-relay depin network for MegaMafia connectivity.",
     "networks": [
@@ -534,7 +564,8 @@
     "name": "Hunch",
     "categories": [
       "Megamafia",
-      "Prediction Market"
+      "Prediction Market",
+      "Native"
     ],
     "summary": "Crowd forecasts for MegaMafia decision intelligence.",
     "networks": [
@@ -550,7 +581,8 @@
     "id": "mega-heroes",
     "name": "MegaHeroes",
     "categories": [
-      "Gaming"
+      "Gaming",
+      "Native"
     ],
     "summary": "AI-powered trading quests with hero NFTs.",
     "networks": [
@@ -568,7 +600,8 @@
     "name": "Everwatch",
     "categories": [
       "Megamafia",
-      "AI"
+      "AI",
+      "Native"
     ],
     "summary": "AI co-pilot for monitoring MegaMafia on-chain flows.",
     "networks": [
@@ -585,7 +618,8 @@
     "name": "NectarAI",
     "categories": [
       "Megamafia",
-      "AI"
+      "AI",
+      "Native"
     ],
     "summary": "Agentic copilots for MegaMafia quests and raids.",
     "networks": [
@@ -602,7 +636,8 @@
     "id": "mtrkr",
     "name": "MTRKR",
     "categories": [
-      "Tools"
+      "Tools",
+      "Native"
     ],
     "summary": "Analytics toolkit for MegaMafia protocol telemetry.",
     "networks": [
@@ -619,7 +654,8 @@
     "name": "Funes",
     "categories": [
       "Depin",
-      "Megamafia"
+      "Megamafia",
+      "Native"
     ],
     "summary": "Sensor network rewarding MegaMafia location proofs.",
     "networks": [
@@ -635,7 +671,8 @@
     "id": "netizens",
     "name": "Netizens",
     "categories": [
-      "NFT"
+      "NFT",
+      "Native"
     ],
     "summary": "Citizen-passport NFTs for MegaMafia governance.",
     "networks": [
@@ -651,7 +688,8 @@
     "id": "meganacci",
     "name": "Meganacci",
     "categories": [
-      "NFT"
+      "NFT",
+      "Native"
     ],
     "summary": "Numerology-driven art collection from MegaMafia.",
     "networks": [
@@ -667,7 +705,8 @@
     "id": "enjoyooors",
     "name": "Enjoyooors",
     "categories": [
-      "NFT"
+      "NFT",
+      "Native"
     ],
     "summary": "Community collectibles fueling MegaMafia fun.",
     "networks": [
@@ -684,7 +723,8 @@
     "id": "digitrabbits",
     "name": "Digitrabbits",
     "categories": [
-      "NFT"
+      "NFT",
+      "Native"
     ],
     "summary": "MegaMafia rabbit clan with on-chain adventures.",
     "networks": [
@@ -702,7 +742,8 @@
     "id": "barry",
     "name": "Barry",
     "categories": [
-      "NFT"
+      "NFT",
+      "Native"
     ],
     "summary": "Badly drawn Barry editions minted on MegaETH.",
     "networks": [
@@ -718,7 +759,8 @@
     "id": "glitchy-bunnies",
     "name": "Glitchy Bunnies",
     "categories": [
-      "NFT"
+      "NFT",
+      "Native"
     ],
     "summary": "404 bunny glitches spawning generative drops.",
     "networks": [
@@ -734,7 +776,8 @@
     "id": "megalio",
     "name": "Megalio",
     "categories": [
-      "NFT"
+      "NFT",
+      "Native"
     ],
     "summary": "MegaMafia legendary avatars with stratified perks.",
     "networks": [
@@ -754,7 +797,8 @@
     "id": "priority",
     "name": "Priority",
     "categories": [
-      "Tools"
+      "Tools",
+      "Native"
     ],
     "summary": "Priority trade bot wired into Megalio holders.",
     "networks": [
@@ -773,7 +817,8 @@
     "id": "lora-finance",
     "name": "LoraFinance",
     "categories": [
-      "Trading"
+      "Trading",
+      "Native"
     ],
     "summary": "Smart-order perps engine with curated strategies.",
     "networks": [
@@ -806,7 +851,8 @@
     "id": "supernova",
     "name": "Supernova",
     "categories": [
-      "DeFi"
+      "DeFi",
+      "Native"
     ],
     "summary": "Unified perps, money markets, and strategy vaults.",
     "networks": [
@@ -838,7 +884,8 @@
     "id": "sirio",
     "name": "Sirio",
     "categories": [
-      "Launchpad"
+      "Launchpad",
+      "Native"
     ],
     "summary": "Launchpad infrastructure with curated staking flows.",
     "networks": [
@@ -856,7 +903,8 @@
     "id": "telis",
     "name": "Telis",
     "categories": [
-      "Tools"
+      "Tools",
+      "Native"
     ],
     "summary": "Bridge aggregator tuned for MegaMafia routes.",
     "networks": [
@@ -872,7 +920,8 @@
     "id": "hitdotone",
     "name": "Hitdotone",
     "categories": [
-      "Gaming"
+      "Gaming",
+      "Native"
     ],
     "summary": "Perps meets high-stakes gaming with instant payouts.",
     "networks": [

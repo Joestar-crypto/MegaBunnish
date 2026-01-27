@@ -5,6 +5,7 @@ const MobileIcon = () => (_jsxs("svg", { viewBox: "0 0 24 24", "aria-hidden": "t
 const formatCategoryLabel = (category) => category === 'Prediction Market' ? 'Prediction M.' : category;
 const SPECIAL_FILTERS = [
     { key: 'megamafia', label: 'Megamafia', iconSrc: '/logos/Megamafia.png' },
+    { key: 'native', label: 'Native', hint: 'MegaETH core', iconSrc: '/logos/Megaeth.jpg' },
     { key: 'mobile', label: 'Mobile', hint: 'Phone-native', Icon: MobileIcon }
 ];
 export const FilterOrbitPanel = ({ isInteracting = false }) => {

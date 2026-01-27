@@ -34,45 +34,12 @@ const useImageCache = (projects) => {
     }, [cache, projects]);
     return cache;
 };
-const generateStars = () => Array.from({ length: 160 }, () => ({
+const generateStars = () => Array.from({ length: 260 }, () => ({
     x: Math.random(),
     y: Math.random(),
-    radius: Math.random() * 1.2 + 0.3,
+    radius: Math.random() * 1.4 + 0.2,
     speed: Math.random() * 0.4 + 0.2,
     twinkle: Math.random() * Math.PI * 2
-}));
-const generateNebulae = () => Array.from({ length: 4 }, (_, index) => {
-    const palettes = [
-        ['rgba(82, 108, 255, 0.18)', 'rgba(82, 108, 255, 0)'],
-        ['rgba(91, 243, 255, 0.12)', 'rgba(91, 243, 255, 0)'],
-        ['rgba(150, 120, 255, 0.16)', 'rgba(150, 120, 255, 0)'],
-        ['rgba(255, 255, 255, 0.07)', 'rgba(255, 255, 255, 0)']
-    ];
-    const paletteIndex = index % palettes.length;
-    return {
-        x: Math.random(),
-        y: Math.random(),
-        radius: 360 + Math.random() * 460,
-        speed: 0.00004 + Math.random() * 0.00006,
-        wobble: 30 + Math.random() * 60,
-        innerColor: palettes[paletteIndex][0],
-        outerColor: palettes[paletteIndex][1]
-    };
-});
-const generateHyperLanes = () => Array.from({ length: 8 }, () => ({
-    radius: 180 + Math.random() * 260,
-    speed: 0.0002 + Math.random() * 0.00025,
-    drift: 20 + Math.random() * 40,
-    width: 0.4 + Math.random() * 1.2,
-    phase: Math.random() * Math.PI * 2,
-    sweep: Math.PI / 3 + Math.random() * (Math.PI / 2)
-}));
-const generateDust = () => Array.from({ length: 65 }, () => ({
-    angle: Math.random() * Math.PI * 2,
-    orbit: 180 + Math.random() * 520,
-    speed: 0.00005 + Math.random() * 0.0001,
-    size: Math.random() * 1.3 + 0.2,
-    alpha: 0.03 + Math.random() * 0.07
 }));
 const worldFromClient = (event, rect, cameraX, cameraY, zoom) => {
     const relativeX = event.clientX - rect.left;
@@ -105,9 +72,6 @@ export const ConstellationCanvas = ({ onInteractionStart, onInteractionEnd } = {
         isPinching: false
     });
     const stars = useMemo(generateStars, []);
-    const nebulae = useMemo(generateNebulae, []);
-    const hyperLanes = useMemo(generateHyperLanes, []);
-    const dust = useMemo(generateDust, []);
     const { projects, camera, hoveredProjectId, selectedProjectId, setHoveredProject, selectProject, panCamera, zoomCamera } = useConstellation();
     const images = useImageCache(projects);
     const cameraRef = useRef(camera);
@@ -150,57 +114,8 @@ export const ConstellationCanvas = ({ onInteractionStart, onInteractionEnd } = {
             context.setTransform(1, 0, 0, 1, 0, 0);
             context.clearRect(0, 0, canvas.width, canvas.height);
             context.scale(dpr, dpr);
-            context.fillStyle = '#010106';
+            context.fillStyle = '#000000';
             context.fillRect(0, 0, width, height);
-            context.save();
-            context.globalCompositeOperation = 'lighter';
-            nebulae.forEach((layer, index) => {
-                const wobble = Math.sin(time * layer.speed + index) * layer.wobble;
-                const centerX = width * layer.x + wobble;
-                const centerY = height * layer.y - wobble;
-                const gradient = context.createRadialGradient(centerX, centerY, 0, centerX, centerY, layer.radius);
-                gradient.addColorStop(0, layer.innerColor);
-                gradient.addColorStop(1, layer.outerColor);
-                context.fillStyle = gradient;
-                context.beginPath();
-                context.arc(centerX, centerY, layer.radius, 0, Math.PI * 2);
-                context.fill();
-            });
-            context.restore();
-            context.save();
-            context.translate(width / 2, height / 2);
-            context.globalCompositeOperation = 'screen';
-            hyperLanes.forEach((lane, idx) => {
-                const oscillation = Math.sin(time * lane.speed + idx) * lane.drift;
-                const orbitRadius = lane.radius + oscillation;
-                const startAngle = lane.phase + (time * lane.speed) / 2;
-                const gradient = context.createLinearGradient(0, 0, orbitRadius, 0);
-                gradient.addColorStop(0, 'rgba(38, 70, 140, 0)');
-                gradient.addColorStop(1, 'rgba(120, 188, 255, 0.35)');
-                context.strokeStyle = gradient;
-                context.lineWidth = lane.width;
-                context.beginPath();
-                context.arc(0, 0, orbitRadius, startAngle, startAngle + lane.sweep);
-                context.stroke();
-            });
-            context.restore();
-            context.save();
-            context.translate(width / 2, height / 2);
-            dust.forEach((particle, index) => {
-                const angle = particle.angle + time * particle.speed + index * 0.0008;
-                const wobble = Math.sin(time * 0.0003 + index) * 8;
-                const radius = particle.orbit + wobble;
-                const x = Math.cos(angle) * radius;
-                const y = Math.sin(angle) * radius;
-                const gradient = context.createRadialGradient(x, y, 0, x, y, particle.size * 14);
-                gradient.addColorStop(0, `rgba(148, 189, 255, ${particle.alpha})`);
-                gradient.addColorStop(1, 'rgba(148, 189, 255, 0)');
-                context.fillStyle = gradient;
-                context.beginPath();
-                context.arc(x, y, particle.size * 14, 0, Math.PI * 2);
-                context.fill();
-            });
-            context.restore();
             stars.forEach((star, idx) => {
                 const drift = Math.sin(time * 0.0002 * star.speed + idx) * 4;
                 const brightness = 0.35 + ((Math.sin(time * 0.001 * star.speed + star.twinkle) + 1) / 2) * 0.45;
@@ -362,7 +277,7 @@ export const ConstellationCanvas = ({ onInteractionStart, onInteractionEnd } = {
             cancelAnimationFrame(animationFrame);
             window.removeEventListener('resize', handleResize);
         };
-    }, [projects, images, stars, nebulae, hyperLanes]);
+    }, [projects, images, stars]);
     const endInteraction = () => {
         if (interactionActiveRef.current) {
             interactionActiveRef.current = false;

@@ -46,7 +46,7 @@ select {
   min-height: 0;
   overflow: hidden;
   padding: 0;
-  background: #010106;
+  background: #000000;
 }
 
 .app-shell--immersive {
@@ -397,10 +397,13 @@ select {
   color: var(--text-dim);
 }
 
+
 .jojo-panel {
   display: flex;
-  gap: 0.9rem;
-  padding: 0.85rem 1rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
   border-radius: 1.25rem;
   background: rgba(8, 13, 32, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -409,7 +412,7 @@ select {
 }
 
 .jojo-avatar {
-  width: 74px;
+  width: 96px;
   flex-shrink: 0;
 }
 
@@ -423,10 +426,10 @@ select {
 }
 
 .jojo-bubble {
-  flex: 1;
+  width: 100%;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 1rem;
-  padding: 0.75rem 0.95rem;
+  padding: 0.85rem 1rem;
   border: 1px solid rgba(78, 241, 255, 0.2);
   animation: jojoFade 0.35s ease;
 }
@@ -435,6 +438,12 @@ select {
   margin: 0.35rem 0;
   font-size: 0.9rem;
   color: var(--text);
+}
+
+.jojo-dialogue {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
 }
 
 .jojo-title {
