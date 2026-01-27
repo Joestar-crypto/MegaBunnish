@@ -3,16 +3,17 @@ import { useCallback, useState } from 'react';
 import { ConstellationCanvas } from './components/ConstellationCanvas';
 import { FilterOrbitPanel } from './components/FilterOrbitPanel';
 import { ProjectDetailDrawer } from './components/ProjectDetailDrawer';
-import { ConstellationProvider } from './state/constellation';
+import { ConstellationProvider, useConstellation } from './state/constellation';
 const AppContent = () => {
     const [isInteracting, setIsInteracting] = useState(false);
+    const { resetCamera } = useConstellation();
     const handleInteractionStart = useCallback(() => {
         setIsInteracting(true);
     }, []);
     const handleInteractionEnd = useCallback(() => {
         setIsInteracting(false);
     }, []);
-    return (_jsxs("div", { className: "app-shell app-shell--immersive", children: [_jsxs("div", { className: "immersive-stage", children: [_jsx("div", { className: "immersive-stage__background", children: _jsx(ConstellationCanvas, { onInteractionStart: handleInteractionStart, onInteractionEnd: handleInteractionEnd }) }), _jsx("div", { className: `hero-overlay ${isInteracting ? 'hero-overlay--hidden' : ''}`, children: _jsxs("div", { className: "hero-overlay__content", children: [_jsx("p", { className: "eyebrow", children: "MegaETH ecosystem" }), _jsx("h1", { children: "MegaBunnish" })] }) }), _jsx(FilterOrbitPanel, { isInteracting: isInteracting }), _jsx(ProjectDetailDrawer, {})] }), _jsx("div", { className: "mobile-overlay", children: "Please visit this site on desktop for the ultimate experience." })] }));
+    return (_jsxs("div", { className: "app-shell app-shell--immersive", children: [_jsxs("div", { className: "immersive-stage", children: [_jsx("div", { className: "immersive-stage__background", children: _jsx(ConstellationCanvas, { onInteractionStart: handleInteractionStart, onInteractionEnd: handleInteractionEnd }) }), _jsx("div", { className: `hero-overlay ${isInteracting ? 'hero-overlay--hidden' : ''}`, children: _jsxs("div", { className: "hero-overlay__content", children: [_jsx("p", { className: "eyebrow", children: "MegaETH ecosystem" }), _jsx("h1", { children: "MegaBunnish" })] }) }), _jsx(FilterOrbitPanel, { isInteracting: isInteracting }), _jsx("button", { type: "button", className: "reset-anchor", onClick: resetCamera, "aria-label": "Reset camera view", children: "Reset" }), _jsx(ProjectDetailDrawer, {})] }), _jsx("div", { className: "mobile-overlay", children: "Please visit this site on desktop for the ultimate experience." })] }));
 };
 const App = () => {
     return (_jsx(ConstellationProvider, { children: _jsx(AppContent, {}) }));

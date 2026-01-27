@@ -2,10 +2,11 @@ import { useCallback, useState } from 'react';
 import { ConstellationCanvas } from './components/ConstellationCanvas';
 import { FilterOrbitPanel } from './components/FilterOrbitPanel';
 import { ProjectDetailDrawer } from './components/ProjectDetailDrawer';
-import { ConstellationProvider } from './state/constellation';
+import { ConstellationProvider, useConstellation } from './state/constellation';
 
 const AppContent = () => {
   const [isInteracting, setIsInteracting] = useState(false);
+  const { resetCamera } = useConstellation();
 
   const handleInteractionStart = useCallback(() => {
     setIsInteracting(true);
@@ -31,6 +32,9 @@ const AppContent = () => {
           </div>
         </div>
         <FilterOrbitPanel isInteracting={isInteracting} />
+        <button type="button" className="reset-anchor" onClick={resetCamera} aria-label="Reset camera view">
+          Reset
+        </button>
         <ProjectDetailDrawer />
       </div>
       <div className="mobile-overlay">

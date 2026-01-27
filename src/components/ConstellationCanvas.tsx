@@ -338,13 +338,28 @@ export const ConstellationCanvas = ({
         }
 
         const image = images.get(project.logo);
-        if (image && image.complete) {
+        const canRenderImage =
+          image &&
+          image.complete &&
+          image.naturalWidth > 0 &&
+          image.naturalHeight > 0;
+        if (canRenderImage) {
           context.save();
           context.beginPath();
           context.arc(x, y, radius - 6, 0, Math.PI * 2);
           context.closePath();
           context.clip();
-          context.drawImage(image, x - (radius - 6), y - (radius - 6), (radius - 6) * 2, (radius - 6) * 2);
+          try {
+            context.drawImage(
+              image,
+              x - (radius - 6),
+              y - (radius - 6),
+              (radius - 6) * 2,
+              (radius - 6) * 2
+            );
+          } catch (err) {
+            console.warn('Failed to draw project logo', project.id, err);
+          }
           context.restore();
         } else {
           context.fillStyle = nodeColor;

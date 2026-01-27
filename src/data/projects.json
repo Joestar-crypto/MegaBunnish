@@ -7,7 +7,6 @@
       "DeFi",
       "Native"
     ],
-    "summary": "Stablecoin rails and treasury automations for MegaMafia treasuries.",
     "networks": [
       "MegaETH"
     ],
@@ -26,7 +25,6 @@
       "Mobile",
       "Native"
     ],
-    "summary": "Mobile-native perps terminal with MegaMafia intent routing.",
     "networks": [
       "MegaETH"
     ],
@@ -46,7 +44,6 @@
       "Prediction Market",
       "Native"
     ],
-    "summary": "Community prediction markets feeding MegaMafia strategy calls.",
     "networks": [
       "MegaETH"
     ],
@@ -63,7 +60,6 @@
       "Gaming",
       "Native"
     ],
-    "summary": "PvP arena crafting roguelike items for MegaMafia storylines.",
     "networks": [
       "MegaETH"
     ],
@@ -82,7 +78,6 @@
       "Mobile",
       "Native"
     ],
-    "summary": "RWA trading desk with one-swipe mobile settlement.",
     "networks": [
       "MegaETH"
     ],
@@ -99,7 +94,6 @@
       "NFT",
       "Native"
     ],
-    "summary": "The core MegaBunnz collective coordinating drops and lore.",
     "networks": [
       "MegaETH"
     ],
@@ -121,7 +115,6 @@
       "DeFi",
       "Native"
     ],
-    "summary": "BadBunnz-aligned liquidity layer spanning spot, perps, and credit.",
     "networks": [
       "MegaETH"
     ],
@@ -141,7 +134,6 @@
       "Gambling",
       "Native"
     ],
-    "summary": "Loot-box gatcha loops for BadBunnz community rewards.",
     "networks": [
       "MegaETH"
     ],
@@ -161,7 +153,6 @@
       "Launchpad",
       "Native"
     ],
-    "summary": "BadBunnz launch arena for experimental drops and spins.",
     "networks": [
       "MegaETH"
     ],
@@ -182,7 +173,6 @@
       "Megamafia",
       "Native"
     ],
-    "summary": "Cross-market command center for intent-based trading.",
     "networks": [
       "MegaETH"
     ],
@@ -202,7 +192,6 @@
       "DeFi",
       "Native"
     ],
-    "summary": "Stable RWA vaults abstracted into on-chain Mega bricks.",
     "networks": [
       "MegaETH"
     ],
@@ -222,7 +211,6 @@
       "Mobile",
       "Native"
     ],
-    "summary": "Voice-first money app bridging chats and on-chain actions.",
     "networks": [
       "MegaETH"
     ],
@@ -241,7 +229,6 @@
       "Mobile",
       "Native"
     ],
-    "summary": "Pocket social wallet with instant discovery packs.",
     "networks": [
       "MegaETH"
     ],
@@ -259,7 +246,6 @@
       "Gambling",
       "Native"
     ],
-    "summary": "Social casino with MegaMafia leaderboard energy.",
     "networks": [
       "MegaETH"
     ],
@@ -276,7 +262,6 @@
       "Social",
       "Native"
     ],
-    "summary": "Hype-fueled trading pits for social whales.",
     "networks": [
       "MegaETH"
     ],
@@ -295,7 +280,6 @@
       "Megamafia",
       "Native"
     ],
-    "summary": "MegaMafia macro desk with unified liquidity lines.",
     "networks": [
       "MegaETH"
     ],
@@ -313,7 +297,6 @@
       "Megamafia",
       "Native"
     ],
-    "summary": "Composable leverage vaults with dynamic benchmarks.",
     "networks": [
       "MegaETH"
     ],
@@ -331,7 +314,6 @@
       "DeFi",
       "Native"
     ],
-    "summary": "Sovereign credit lines for MegaMafia squads.",
     "networks": [
       "MegaETH"
     ],
@@ -350,7 +332,6 @@
       "DeFi",
       "Native"
     ],
-    "summary": "Shadow collective for experimental MegaMafia finance loops.",
     "networks": [
       "MegaETH"
     ],
@@ -368,7 +349,6 @@
       "DeFi",
       "Native"
     ],
-    "summary": "LST money markets with adaptive liquidity incentives.",
     "networks": [
       "MegaETH"
     ],
@@ -387,7 +367,6 @@
       "Megamafia",
       "Native"
     ],
-    "summary": "TCG battler with MegaMafia IP crossovers.",
     "networks": [
       "MegaETH"
     ],
@@ -406,7 +385,6 @@
       "Gaming",
       "Native"
     ],
-    "summary": "Real-time sports trading duel built for phones.",
     "networks": [
       "MegaETH"
     ],
@@ -425,7 +403,6 @@
       "Megamafia",
       "Native"
     ],
-    "summary": "Arcade battler with stomp-to-earn tournaments.",
     "networks": [
       "MegaETH"
     ],
@@ -442,7 +419,6 @@
       "Launchpad",
       "Native"
     ],
-    "summary": "AI-assisted memecoin launchpad for fast airdrops.",
     "networks": [
       "MegaETH"
     ],
@@ -463,7 +439,6 @@
       "Megamafia",
       "Native"
     ],
-    "summary": "Liquidity router powering MegaMafia launch waves.",
     "networks": [
       "MegaETH"
     ],
@@ -480,7 +455,6 @@
       "Meme",
       "Native"
     ],
-    "summary": "Chaotic MegaMafia meme culture project.",
     "networks": [
       "MegaETH"
     ],
@@ -496,7 +470,6 @@
       "Meme",
       "Native"
     ],
-    "summary": "Mob-inspired NFT syndicate inside MegaMafia.",
     "networks": [
       "MegaETH"
     ],
@@ -513,7 +486,6 @@
       "Depin",
       "Native"
     ],
-    "summary": "Physical hardware mesh powering on-chain verification.",
     "networks": [
       "MegaETH"
     ],
@@ -531,7 +503,6 @@
       "Depin",
       "Native"
     ],
-    "summary": "Peer hardware nodes selling bandwidth into MegaMafia apps.",
     "networks": [
       "MegaETH"
     ],
@@ -549,7 +520,6 @@
       "Depin",
       "Native"
     ],
-    "summary": "Micro-relay depin network for MegaMafia connectivity.",
     "networks": [
       "MegaETH"
     ],
@@ -567,7 +537,6 @@
       "Prediction Market",
       "Native"
     ],
-    "summary": "Crowd forecasts for MegaMafia decision intelligence.",
     "networks": [
       "MegaETH"
     ],
@@ -584,7 +553,6 @@
       "Gaming",
       "Native"
     ],
-    "summary": "AI-powered trading quests with hero NFTs.",
     "networks": [
       "MegaETH"
     ],
@@ -603,7 +571,6 @@
       "AI",
       "Native"
     ],
-    "summary": "AI co-pilot for monitoring MegaMafia on-chain flows.",
     "networks": [
       "MegaETH"
     ],
@@ -621,7 +588,6 @@
       "AI",
       "Native"
     ],
-    "summary": "Agentic copilots for MegaMafia quests and raids.",
     "networks": [
       "MegaETH"
     ],
@@ -639,7 +605,6 @@
       "Tools",
       "Native"
     ],
-    "summary": "Analytics toolkit for MegaMafia protocol telemetry.",
     "networks": [
       "MegaETH"
     ],
@@ -657,7 +622,6 @@
       "Megamafia",
       "Native"
     ],
-    "summary": "Sensor network rewarding MegaMafia location proofs.",
     "networks": [
       "MegaETH"
     ],
@@ -674,7 +638,6 @@
       "NFT",
       "Native"
     ],
-    "summary": "Citizen-passport NFTs for MegaMafia governance.",
     "networks": [
       "MegaETH"
     ],
@@ -691,7 +654,6 @@
       "NFT",
       "Native"
     ],
-    "summary": "Numerology-driven art collection from MegaMafia.",
     "networks": [
       "MegaETH"
     ],
@@ -702,22 +664,24 @@
     "logo": "/logos/Meganacci.jpg"
   },
   {
-    "id": "enjoyooors",
-    "name": "Enjoyooors",
+    "id": "megalio",
+    "name": "Megalio",
     "categories": [
       "NFT",
       "Native"
     ],
-    "summary": "Community collectibles fueling MegaMafia fun.",
     "networks": [
       "MegaETH"
     ],
     "links": {
-      "site": "https://enjoyooors.com/",
-      "twitter": "https://x.com/enjoyooors",
-      "discord": "https://discord.com/invite/tvb2UUxEwk"
+      "twitter": "https://x.com/MegalioETH",
+      "nft": "https://magiceden.io/collections/ethereum/megalio-16",
+      "discord": "https://discord.com/invite/Nr3Jak7nXt"
     },
-    "logo": "/logos/Enjoyooors.jpg"
+    "logo": "/logos/Megalio.jpg",
+    "linkedIds": [
+      "priority"
+    ]
   },
   {
     "id": "digitrabbits",
@@ -726,7 +690,6 @@
       "NFT",
       "Native"
     ],
-    "summary": "MegaMafia rabbit clan with on-chain adventures.",
     "networks": [
       "MegaETH"
     ],
@@ -745,7 +708,6 @@
       "NFT",
       "Native"
     ],
-    "summary": "Badly drawn Barry editions minted on MegaETH.",
     "networks": [
       "MegaETH"
     ],
@@ -762,7 +724,6 @@
       "NFT",
       "Native"
     ],
-    "summary": "404 bunny glitches spawning generative drops.",
     "networks": [
       "MegaETH"
     ],
@@ -773,25 +734,21 @@
     "logo": "/logos/Glitchy Bunnies.jpg"
   },
   {
-    "id": "megalio",
-    "name": "Megalio",
+    "id": "enjoyooors",
+    "name": "Enjoyooors",
     "categories": [
       "NFT",
       "Native"
     ],
-    "summary": "MegaMafia legendary avatars with stratified perks.",
     "networks": [
       "MegaETH"
     ],
     "links": {
-      "twitter": "https://x.com/MegalioETH",
-      "nft": "https://magiceden.io/collections/ethereum/megalio-16",
-      "discord": "https://discord.com/invite/Nr3Jak7nXt"
+      "site": "https://enjoyooors.com/",
+      "twitter": "https://x.com/enjoyooors",
+      "discord": "https://discord.com/invite/tvb2UUxEwk"
     },
-    "logo": "/logos/Megalio.jpg",
-    "linkedIds": [
-      "priority"
-    ]
+    "logo": "/logos/Enjoyooors.jpg"
   },
   {
     "id": "priority",
@@ -800,7 +757,6 @@
       "Tools",
       "Native"
     ],
-    "summary": "Priority trade bot wired into Megalio holders.",
     "networks": [
       "MegaETH"
     ],
@@ -820,7 +776,6 @@
       "Trading",
       "Native"
     ],
-    "summary": "Smart-order perps engine with curated strategies.",
     "networks": [
       "MegaETH"
     ],
@@ -836,7 +791,6 @@
     "categories": [
       "Trading"
     ],
-    "summary": "Social leverage desk with shareable trade scripts.",
     "networks": [
       "MegaETH"
     ],
@@ -854,7 +808,6 @@
       "DeFi",
       "Native"
     ],
-    "summary": "Unified perps, money markets, and strategy vaults.",
     "networks": [
       "MegaETH"
     ],
@@ -870,7 +823,6 @@
     "categories": [
       "Trading"
     ],
-    "summary": "Chips-based trading UX for MegaMafia perps.",
     "networks": [
       "MegaETH"
     ],
@@ -887,7 +839,6 @@
       "Launchpad",
       "Native"
     ],
-    "summary": "Launchpad infrastructure with curated staking flows.",
     "networks": [
       "MegaETH"
     ],
@@ -906,7 +857,6 @@
       "Tools",
       "Native"
     ],
-    "summary": "Bridge aggregator tuned for MegaMafia routes.",
     "networks": [
       "MegaETH"
     ],
@@ -923,7 +873,6 @@
       "Gaming",
       "Native"
     ],
-    "summary": "Perps meets high-stakes gaming with instant payouts.",
     "networks": [
       "MegaETH"
     ],
@@ -932,5 +881,134 @@
       "twitter": "https://x.com/hitdotone"
     },
     "logo": "/logos/Hitdotone.jpg"
+  },
+  {
+    "id": "sectorone",
+    "name": "SectorOne",
+    "categories": [
+      "DeFi",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://sectorone.xyz/",
+      "twitter": "https://x.com/SectorOneDEX",
+      "discord": "https://discord.com/invite/rfgMebUeV4"
+    },
+    "logo": "/logos/SectorOne.jpg"
+  },
+  {
+    "id": "valhalla",
+    "name": "Valhalla",
+    "categories": [
+      "Trading"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/valhalla_defi"
+    },
+    "logo": "/logos/Valhalla.jpg"
+  },
+  {
+    "id": "yokai",
+    "name": "Yokai",
+    "categories": [
+      "NFT",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://yokaisyndicate.com/",
+      "twitter": "https://x.com/YokaiSyndicate",
+      "discord": "https://discord.com/invite/8rKmnc9rMw",
+      "nft": "https://opensea.io/collection/yokaisyndicate"
+    },
+    "logo": "/logos/Yokai.jpg"
+  },
+  {
+    "id": "breadio",
+    "name": "Breadio",
+    "categories": [
+      "NFT",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/Tuteth_",
+      "discord": "https://discord.com/invite/DRkV2sKHDY",
+      "nft": "https://rarible.com/megaethtestnet/collections/0xd45ad5678fd51d3d6b4ce55c720817d9896bb269"
+    },
+    "logo": "/logos/Breadio.jpg"
+  },
+  {
+    "id": "tulpea",
+    "name": "Tulpea",
+    "categories": [
+      "DeFi",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://tulpea.org/",
+      "twitter": "https://x.com/Tulpea_org"
+    },
+    "logo": "/logos/Tulpea.jpg"
+  },
+  {
+    "id": "gmx",
+    "name": "GMX",
+    "categories": [
+      "Trading"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://gmx.io/#/",
+      "twitter": "https://x.com/GMX_IO",
+      "discord": "https://discord.com/invite/H5PeQru3Aa"
+    },
+    "logo": "/logos/GMX.jpg"
+  },
+  {
+    "id": "ren",
+    "name": "Ren",
+    "categories": [
+      "DeFi"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://renprotocol.org/",
+      "twitter": "https://x.com/renprotocol"
+    },
+    "logo": "/logos/Ren.jpg"
+  },
+  {
+    "id": "wrapx",
+    "name": "WrapX",
+    "categories": [
+      "DeFi"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://app.warpx.exchange/?tokenIn=NATIVE&tokenOut=0x28B7E77f82B25B95953825F1E3eA0E36c1c29861",
+      "twitter": "https://x.com/warpexchange",
+      "discord": "https://discord.com/invite/E7sZCw2gMS"
+    },
+    "logo": "/logos/WrapX.jpg"
   }
 ]

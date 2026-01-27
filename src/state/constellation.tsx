@@ -162,6 +162,19 @@ const cloneProject = (project: ConstellationProject): ConstellationProject => ({
 
 const cloneProjects = (projects: ConstellationProject[]) => projects.map(cloneProject);
 
+const toRawProjectSnapshot = (project: ConstellationProject): RawProject => ({
+  id: project.id,
+  name: project.name,
+  categories: [...project.categories],
+  networks: [...project.networks],
+  links: { ...project.links },
+  logo: project.logo,
+  incentives: project.incentives.length ? [...project.incentives] : undefined,
+  linkedIds: project.linkedIds.length ? [...project.linkedIds] : undefined
+});
+
+const toRawProjectSet = (projects: ConstellationProject[]) => projects.map(toRawProjectSnapshot);
+
 const computeProjectsCentroid = (projects: ConstellationProject[]) => {
   if (projects.length === 0) {
     return { x: 0, y: 0 };
@@ -177,21 +190,6 @@ const computeProjectsCentroid = (projects: ConstellationProject[]) => {
   return { x: totals.x / projects.length, y: totals.y / projects.length };
 };
 
-const arrangeProjectsIntoRing = (projects: ConstellationProject[]) => {
-  if (projects.length === 0) {
-    return projects;
-  }
-  const radius = Math.max(120, Math.min(260, projects.length * 32));
-  projects.forEach((project, index) => {
-    const angle = (index / projects.length) * Math.PI * 2 - Math.PI / 2;
-    project.position = {
-      x: Math.cos(angle) * radius,
-      y: Math.sin(angle) * radius
-    };
-    project.clusterOrigin = { x: 0, y: 0 };
-  });
-  return projects;
-};
 const deriveCategoryCounts = (projects: ConstellationProject[]): Record<string, number> => {
   const counts = CORE_CATEGORIES.reduce<Record<string, number>>((acc, category) => {
     acc[category] = 0;
@@ -613,11 +611,11 @@ const deriveProjectView = (
   category: string | null
 ) => {
   const filteredPool = applySpecialFilters(baseProjects, filters);
-  const pool = cloneProjects(filteredPool);
+  const pool = shouldAggregateFilters(filters)
+    ? computeLayout(toRawProjectSet(filteredPool)).projects
+    : cloneProjects(filteredPool);
   const visiblePool = filterProjectsByCategory(pool, category);
-  const visible = shouldAggregateFilters(filters)
-    ? arrangeProjectsIntoRing(visiblePool)
-    : visiblePool;
+  const visible = visiblePool;
   return { pool, visible, counts: deriveCategoryCounts(pool) };
 };
 
@@ -667,6 +665,7 @@ type ConstellationContextShape = ConstellationState & {
   zoomCamera: (deltaZoom: number, focus?: { x: number; y: number }) => void;
   resetCamera: () => void;
   toggleFilter: (filterKey: keyof SpecialFilters) => void;
+  resolveProjectById: (projectId: string | null) => ConstellationProject | null;
 };
 
 const ConstellationContext = createContext<ConstellationContextShape | undefined>(undefined);
@@ -865,20 +864,23 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
 
   const zoomCamera = useCallback((deltaZoom: number, focus?: { x: number; y: number }) => {
     setState((prev) => {
-      const nextZoom = clamp(prev.camera.targetZoom + deltaZoom, MIN_ZOOM, MAX_ZOOM);
-      if (nextZoom === prev.camera.targetZoom) {
+      const currentZoom = prev.camera.targetZoom;
+      const nextZoom = clamp(currentZoom + deltaZoom, MIN_ZOOM, MAX_ZOOM);
+      if (nextZoom === currentZoom) {
         return prev;
       }
 
       let targetX = prev.camera.targetX;
       let targetY = prev.camera.targetY;
-      const blend = 0.25;
-
       if (focus) {
-        targetX = focus.x * blend + targetX * (1 - blend);
-        targetY = focus.y * blend + targetY * (1 - blend);
+        const zoomRatio = currentZoom !== 0 ? nextZoom / currentZoom : 1;
+        if (zoomRatio > 0 && isFinite(zoomRatio)) {
+          targetX = focus.x - (focus.x - targetX) / zoomRatio;
+          targetY = focus.y - (focus.y - targetY) / zoomRatio;
+        }
       } else if (prev.projects.length > 0) {
         const centroid = computeProjectsCentroid(prev.projects);
+        const blend = 0.4;
         targetX = centroid.x * blend + targetX * (1 - blend);
         targetY = centroid.y * blend + targetY * (1 - blend);
       }
@@ -916,6 +918,20 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       };
     });
   }, [layout.projects]);
+
+  const resolveProjectById = useCallback(
+    (projectId: string | null) => {
+      if (!projectId) {
+        return null;
+      }
+      return (
+        state.projects.find((project) => project.id === projectId) ??
+        layout.projects.find((project) => project.id === projectId) ??
+        null
+      );
+    },
+    [state.projects, layout.projects]
+  );
 
   useEffect(() => {
     let animationFrame: number;
@@ -969,7 +985,8 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       panCamera,
       zoomCamera,
       resetCamera,
-      toggleFilter
+      toggleFilter,
+      resolveProjectById
     }),
     [
       state,
@@ -979,7 +996,8 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       panCamera,
       zoomCamera,
       resetCamera,
-      toggleFilter
+      toggleFilter,
+      resolveProjectById
     ]
   );
 

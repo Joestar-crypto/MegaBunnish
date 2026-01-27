@@ -94,6 +94,61 @@ const JOJO_DIALOGUE = {
         ],
         [textSegment("Maybe you\'re not the PMF here, but there\'s definitely an untouched one.")]
     ],
+    sectorone: [
+        [
+            textSegment('SectorOne is the only DEX using DLMM, an upgrade from classic AMMs where liquidity is placed strategically instead of everywhere.')
+        ],
+        [
+            textSegment("The goal is to deliver better quotes and deeper liquidity dynamically. I don't know much more yet, but I like the DLMM architecture.")
+        ]
+    ],
+    valhalla: [
+        [
+            textSegment('Valhally is a Perps, Spot and DeFi platform all in one, beneficiating from the composability of each service.')
+        ],
+        [
+            textSegment("Didn't hear from them since a month tho, I don't know if they are cooking and if they stopped.")
+        ]
+    ],
+    yokai: [
+        [
+            textSegment("Yokai is an NFT project that minted recently. I don't know much about them tbh, but I really like the art, and it looks like they're pretty respected in the community.")
+        ]
+    ],
+    breadio: [
+        [
+            textSegment("Tut is really an OG, and Legend of Breadio is a very respected collection. I didn't follow this collection that closely, there are just too many good NFT collections on this blockchain, damn.")
+        ]
+    ],
+    tulpea: [
+        [
+            textSegment("Tulpea is bringing undercollateralized loans onchain by using a DAO for risk management and by making debt and equity programmable.")
+        ],
+        [
+            textSegment("I don't know how, or if, it's going to work, but whenever a new actor tries to solve undercollateralized lending onchain, I'm listening.")
+        ]
+    ],
+    gmx: [
+        [
+            textSegment("The OG of perps trading is expanding to MegaETH, and that's big.")
+        ],
+        [
+            textSegment("Even though it's lost market share to Hyperliquid and competitors, it still sits at around $350M TVL, and its community is going to love the 10ms latency on MegaETH.")
+        ]
+    ],
+    ren: [
+        [
+            textSegment('Used to be the main protocol for cross-chain BTC/BCH/ZEC DeFi, then collapsed after the Alameda acquisition and the FTX crash.')
+        ],
+        [
+            textSegment("Since then, they've been rebuilding, and after years of waiting, they're about to unveil their v2 on MegaETH. I have no idea what this is about exactly, but I'm very excited to discover it.")
+        ]
+    ],
+    wrapx: [
+        [
+            textSegment('Another DEX, not much to say tbh.')
+        ]
+    ],
     blitzo: [
         [
             textSegment("Ngl I don\'t fully understand this one lol, it seems like a payment app coupled with something like TikTok, making every payment memeable and tradable. Idk, but it\'s a MegaMafia project, so don\'t fade it.")
@@ -324,11 +379,11 @@ const JojoOracle = ({ projectId, onNavigate }) => {
     if (!script) {
         return null;
     }
-    return (_jsxs("section", { className: "jojo-panel", children: [_jsx("div", { className: "jojo-avatar", children: _jsx("img", { src: "/logos/Jojo.png", alt: "Jojo avatar" }) }), _jsxs("div", { className: "jojo-bubble", children: [_jsx("p", { className: "jojo-title", children: "Jojo intel" }), _jsx("div", { className: "jojo-dialogue", children: script.map((block, blockIndex) => (_jsx("p", { children: block.map((segment, segmentIndex) => segment.kind === 'text' ? (_jsx("span", { children: segment.content }, `text-${segmentIndex}`)) : (_jsx("button", { type: "button", className: "jojo-link", onClick: () => onNavigate(segment.targetId), children: segment.label }, `link-${segmentIndex}-${segment.label}`))) }, `jojo-line-${blockIndex}`))) })] })] }));
+    return (_jsxs("section", { className: "jojo-panel", children: [_jsx("div", { className: "jojo-avatar", children: _jsx("img", { src: "/logos/Jojo2.jpg", alt: "Jojo avatar" }) }), _jsxs("div", { className: "jojo-bubble", children: [_jsx("p", { className: "jojo-title", children: "Jojo's Insight" }), _jsx("div", { className: "jojo-dialogue", children: script.map((block, blockIndex) => (_jsx("p", { children: block.map((segment, segmentIndex) => segment.kind === 'text' ? (_jsx("span", { children: segment.content }, `text-${segmentIndex}`)) : (_jsx("button", { type: "button", className: "jojo-link", onClick: () => onNavigate(segment.targetId), children: segment.label }, `link-${segmentIndex}-${segment.label}`))) }, `jojo-line-${blockIndex}`))) })] })] }));
 };
 export const ProjectDetailDrawer = () => {
-    const { projects, selectedProjectId, selectProject, setActiveCategory } = useConstellation();
-    const project = useMemo(() => projects.find((entry) => entry.id === selectedProjectId), [projects, selectedProjectId]);
+    const { selectedProjectId, selectProject, setActiveCategory, resolveProjectById } = useConstellation();
+    const project = useMemo(() => resolveProjectById(selectedProjectId), [resolveProjectById, selectedProjectId]);
     const socialLinks = useMemo(() => project
         ? SOCIAL_LINKS.filter(({ key }) => Boolean(project.links[key])).map((entry) => ({
             ...entry,
@@ -336,5 +391,5 @@ export const ProjectDetailDrawer = () => {
         }))
         : [], [project]);
     const isVisible = Boolean(project);
-    return (_jsx("aside", { className: `detail-drawer ${isVisible ? 'is-active' : 'is-hidden'}`, "aria-hidden": !isVisible, children: project ? (_jsxs("div", { className: "drawer-content", children: [_jsxs("header", { children: [_jsxs("div", { children: [_jsx("p", { className: "eyebrow", children: project.primaryCategory }), _jsx("h2", { children: project.name })] }), _jsx("button", { className: "ghost", type: "button", onClick: () => selectProject(null), children: "Close" })] }), socialLinks.length ? (_jsxs("section", { children: [_jsx("h3", { children: "Access" }), _jsx("div", { className: "icon-link-row", children: socialLinks.map(({ key, label, icon, href }) => (_jsxs("a", { className: "icon-link", href: href, target: "_blank", rel: "noreferrer", "aria-label": label, children: [_jsx("img", { src: icon, alt: "", "aria-hidden": true }), _jsx("span", { children: label })] }, key))) })] })) : null, _jsx(JojoOracle, { projectId: project.id, onNavigate: selectProject }), _jsx("p", { className: "summary", children: project.summary }), _jsxs("section", { children: [_jsx("h3", { children: "Categories" }), _jsx("div", { className: "badge-row", children: project.categories.map((category) => (_jsx("button", { type: "button", className: "badge badge--link", style: { borderColor: getCategoryColor(category) }, onClick: () => setActiveCategory(category), children: category }, category))) })] }), _jsxs("section", { children: [_jsx("h3", { children: "Active incentives" }), project.incentives.length === 0 ? (_jsx("p", { className: "muted", children: "Nothing live right now. Check back soon." })) : (_jsx("ul", { className: "incentive-list", children: project.incentives.map((incentive) => (_jsxs("li", { children: [_jsx("h4", { children: incentive.title }), _jsx("p", { children: incentive.reward }), _jsxs("span", { className: "muted", children: ["Ends ", new Date(incentive.expiresAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })] })] }, incentive.id))) }))] })] })) : null }));
+    return (_jsx("aside", { className: `detail-drawer ${isVisible ? 'is-active' : 'is-hidden'}`, "aria-hidden": !isVisible, children: project ? (_jsxs("div", { className: "drawer-content", children: [_jsxs("header", { children: [_jsxs("div", { className: "detail-heading", children: [_jsx("p", { className: "eyebrow", children: project.primaryCategory }), _jsxs("div", { className: "detail-title", children: [_jsx("img", { src: project.logo, alt: `${project.name} logo`, loading: "lazy" }), _jsx("h2", { children: project.name })] })] }), _jsx("button", { className: "ghost", type: "button", onClick: () => selectProject(null), children: "Close" })] }), socialLinks.length ? (_jsxs("section", { children: [_jsx("h3", { children: "Access" }), _jsx("div", { className: "icon-link-row", children: socialLinks.map(({ key, label, icon, href }) => (_jsxs("a", { className: "icon-link", href: href, target: "_blank", rel: "noreferrer", "aria-label": label, children: [_jsx("img", { src: icon, alt: "", "aria-hidden": true }), _jsx("span", { children: label })] }, key))) })] })) : null, _jsx(JojoOracle, { projectId: project.id, onNavigate: selectProject }), _jsxs("section", { children: [_jsx("h3", { children: "Categories" }), _jsx("div", { className: "badge-row", children: project.categories.map((category) => (_jsx("button", { type: "button", className: "badge badge--link", style: { borderColor: getCategoryColor(category) }, onClick: () => setActiveCategory(category), children: category }, category))) })] }), _jsxs("section", { children: [_jsx("h3", { children: "Active incentives" }), project.incentives.length === 0 ? (_jsx("p", { className: "muted", children: "Nothing live right now. Check back soon." })) : (_jsx("ul", { className: "incentive-list", children: project.incentives.map((incentive) => (_jsxs("li", { children: [_jsx("h4", { children: incentive.title }), _jsx("p", { children: incentive.reward }), _jsxs("span", { className: "muted", children: ["Ends ", new Date(incentive.expiresAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })] })] }, incentive.id))) }))] })] })) : null }));
 };

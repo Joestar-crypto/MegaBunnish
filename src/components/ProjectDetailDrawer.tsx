@@ -122,6 +122,61 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
     ],
     [textSegment("Maybe you\'re not the PMF here, but there\'s definitely an untouched one.")]
   ],
+  sectorone: [
+    [
+      textSegment('SectorOne is the only DEX using DLMM, an upgrade from classic AMMs where liquidity is placed strategically instead of everywhere.')
+    ],
+    [
+      textSegment("The goal is to deliver better quotes and deeper liquidity dynamically. I don't know much more yet, but I like the DLMM architecture.")
+    ]
+  ],
+  valhalla: [
+    [
+      textSegment('Valhally is a Perps, Spot and DeFi platform all in one, beneficiating from the composability of each service.')
+    ],
+    [
+      textSegment("Didn't hear from them since a month tho, I don't know if they are cooking and if they stopped.")
+    ]
+  ],
+  yokai: [
+    [
+      textSegment("Yokai is an NFT project that minted recently. I don't know much about them tbh, but I really like the art, and it looks like they're pretty respected in the community.")
+    ]
+  ],
+  breadio: [
+    [
+      textSegment("Tut is really an OG, and Legend of Breadio is a very respected collection. I didn't follow this collection that closely, there are just too many good NFT collections on this blockchain, damn.")
+    ]
+  ],
+  tulpea: [
+    [
+      textSegment("Tulpea is bringing undercollateralized loans onchain by using a DAO for risk management and by making debt and equity programmable.")
+    ],
+    [
+      textSegment("I don't know how, or if, it's going to work, but whenever a new actor tries to solve undercollateralized lending onchain, I'm listening.")
+    ]
+  ],
+  gmx: [
+    [
+      textSegment("The OG of perps trading is expanding to MegaETH, and that's big.")
+    ],
+    [
+      textSegment("Even though it's lost market share to Hyperliquid and competitors, it still sits at around $350M TVL, and its community is going to love the 10ms latency on MegaETH.")
+    ]
+  ],
+  ren: [
+    [
+      textSegment('Used to be the main protocol for cross-chain BTC/BCH/ZEC DeFi, then collapsed after the Alameda acquisition and the FTX crash.')
+    ],
+    [
+      textSegment("Since then, they've been rebuilding, and after years of waiting, they're about to unveil their v2 on MegaETH. I have no idea what this is about exactly, but I'm very excited to discover it.")
+    ]
+  ],
+  wrapx: [
+    [
+      textSegment('Another DEX, not much to say tbh.')
+    ]
+  ],
   blitzo: [
     [
       textSegment(
@@ -382,10 +437,10 @@ const JojoOracle = ({ projectId, onNavigate }: { projectId: string; onNavigate: 
   return (
     <section className="jojo-panel">
       <div className="jojo-avatar">
-        <img src="/logos/Jojo.png" alt="Jojo avatar" />
+        <img src="/logos/Jojo2.jpg" alt="Jojo avatar" />
       </div>
       <div className="jojo-bubble">
-        <p className="jojo-title">Jojo intel</p>
+        <p className="jojo-title">Jojo's Insight</p>
         <div className="jojo-dialogue">
           {script.map((block, blockIndex) => (
             <p key={`jojo-line-${blockIndex}`}>
@@ -412,10 +467,10 @@ const JojoOracle = ({ projectId, onNavigate }: { projectId: string; onNavigate: 
 };
 
 export const ProjectDetailDrawer = () => {
-  const { projects, selectedProjectId, selectProject, setActiveCategory } = useConstellation();
+  const { selectedProjectId, selectProject, setActiveCategory, resolveProjectById } = useConstellation();
   const project = useMemo(
-    () => projects.find((entry) => entry.id === selectedProjectId),
-    [projects, selectedProjectId]
+    () => resolveProjectById(selectedProjectId),
+    [resolveProjectById, selectedProjectId]
   );
   const socialLinks = useMemo(
     () =>
@@ -435,9 +490,12 @@ export const ProjectDetailDrawer = () => {
       {project ? (
         <div className="drawer-content">
           <header>
-            <div>
+            <div className="detail-heading">
               <p className="eyebrow">{project.primaryCategory}</p>
-              <h2>{project.name}</h2>
+              <div className="detail-title">
+                <img src={project.logo} alt={`${project.name} logo`} loading="lazy" />
+                <h2>{project.name}</h2>
+              </div>
             </div>
             <button className="ghost" type="button" onClick={() => selectProject(null)}>
               Close
@@ -457,7 +515,6 @@ export const ProjectDetailDrawer = () => {
             </section>
           ) : null}
           <JojoOracle projectId={project.id} onNavigate={selectProject} />
-          <p className="summary">{project.summary}</p>
           <section>
             <h3>Categories</h3>
             <div className="badge-row">

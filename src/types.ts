@@ -18,7 +18,6 @@ export type RawProject = {
   id: string;
   name: string;
   categories: string[];
-  summary: string;
   networks: string[];
   links: ConstellationLinkMap;
   logo: string;
