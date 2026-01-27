@@ -1,28 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useConstellation } from '../state/constellation';
 import { ConstellationProject, HighlightVariant } from '../types';
-
-const palette = [
-  '#4ef1ff',
-  '#ff9a62',
-  '#9b6bff',
-  '#6fffc8',
-  '#ff6f91',
-  '#f8d477',
-  '#66f2a2',
-  '#b992ff',
-  '#ff7ad9',
-  '#ffd966',
-  '#7ad6ff',
-  '#9ff7c1',
-  '#ffb6c1',
-  '#c4a2ff'
-];
-
-const categoryAccentMap: Record<string, string> = {
-  'DeFi': '#66f2a2',
-  'Perps/Trading': '#ff9a62'
-};
+import { getCategoryColor } from '../utils/colors';
 
 const highlightStyles: Record<HighlightVariant, { stroke: string; glow: string; halo: string }> = {
   badbunnz: {
@@ -35,17 +14,6 @@ const highlightStyles: Record<HighlightVariant, { stroke: string; glow: string; 
     glow: 'rgba(181, 139, 255, 0.45)',
     halo: 'rgba(181, 139, 255, 0.22)'
   }
-};
-
-const categoryColor = (category: string) => {
-  const preset = categoryAccentMap[category];
-  if (preset) {
-    return preset;
-  }
-  const hash = category
-    .split('')
-    .reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return palette[hash % palette.length];
 };
 
 type PointerState = {
@@ -440,8 +408,9 @@ export const ConstellationCanvas = ({
           context.restore();
         }
 
+        const nodeColor = getCategoryColor(project.primaryCategory);
         context.beginPath();
-        context.strokeStyle = categoryColor(project.primaryCategory);
+        context.strokeStyle = nodeColor;
         context.lineWidth = baseLineWidth;
         context.arc(x, y, radius, 0, Math.PI * 2);
         context.stroke();
@@ -468,7 +437,7 @@ export const ConstellationCanvas = ({
           context.drawImage(image, x - (radius - 6), y - (radius - 6), (radius - 6) * 2, (radius - 6) * 2);
           context.restore();
         } else {
-          context.fillStyle = categoryColor(project.primaryCategory);
+          context.fillStyle = nodeColor;
           context.beginPath();
           context.arc(x, y, radius - 6, 0, Math.PI * 2);
           context.fill();
@@ -709,6 +678,22 @@ export const ConstellationCanvas = ({
     const normalizedDelta = Math.min(Math.abs(event.deltaY) / 500, 0.3);
     zoomCamera(direction * normalizedDelta, { x: worldX, y: worldY });
   };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+    const handleCtrlWheel = (event: WheelEvent) => {
+      if (event.ctrlKey) {
+        event.preventDefault();
+      }
+    };
+    canvas.addEventListener('wheel', handleCtrlWheel, { passive: false });
+    return () => {
+      canvas.removeEventListener('wheel', handleCtrlWheel);
+    };
+  }, []);
 
   return (
     <canvas

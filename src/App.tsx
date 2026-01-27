@@ -33,6 +33,9 @@ const AppContent = () => {
         <FilterOrbitPanel isInteracting={isInteracting} />
         <ProjectDetailDrawer />
       </div>
+      <div className="mobile-overlay">
+        Please visit this site on desktop for the ultimate experience.
+      </div>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useConstellation } from '../state/constellation';
+import { getCategoryColor } from '../utils/colors';
 
 const SOCIAL_LINKS: { key: 'site' | 'twitter' | 'discord' | 'telegram' | 'nft'; label: string; icon: string }[] = [
   { key: 'site', label: 'Website', icon: '/icons/globe.svg' },
@@ -10,7 +11,7 @@ const SOCIAL_LINKS: { key: 'site' | 'twitter' | 'discord' | 'telegram' | 'nft'; 
 ];
 
 export const ProjectDetailDrawer = () => {
-  const { projects, selectedProjectId, selectProject } = useConstellation();
+  const { projects, selectedProjectId, selectProject, setActiveCategory } = useConstellation();
   const project = useMemo(
     () => projects.find((entry) => entry.id === selectedProjectId),
     [projects, selectedProjectId]
@@ -36,9 +37,15 @@ export const ProjectDetailDrawer = () => {
             <h3>Categories</h3>
             <div className="badge-row">
               {project.categories.map((category) => (
-                <span key={category} className="badge">
+                <button
+                  key={category}
+                  type="button"
+                  className="badge badge--link"
+                  style={{ borderColor: getCategoryColor(category) }}
+                  onClick={() => setActiveCategory(category)}
+                >
                   {category}
-                </span>
+                </button>
               ))}
             </div>
           </section>

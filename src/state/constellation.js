@@ -111,6 +111,40 @@ const applySpecialFilters = (projects, filters) => {
         return true;
     });
 };
+const shouldAggregateFilters = (filters) => filters.megamafia || filters.mobile;
+const cloneProject = (project) => ({
+    ...project,
+    position: { ...project.position },
+    clusterOrigin: { ...project.clusterOrigin },
+    linkedIds: [...project.linkedIds]
+});
+const cloneProjects = (projects) => projects.map(cloneProject);
+const computeProjectsCentroid = (projects) => {
+    if (projects.length === 0) {
+        return { x: 0, y: 0 };
+    }
+    const totals = projects.reduce((acc, project) => {
+        acc.x += project.position.x;
+        acc.y += project.position.y;
+        return acc;
+    }, { x: 0, y: 0 });
+    return { x: totals.x / projects.length, y: totals.y / projects.length };
+};
+const arrangeProjectsIntoRing = (projects) => {
+    if (projects.length === 0) {
+        return projects;
+    }
+    const radius = Math.max(120, Math.min(260, projects.length * 32));
+    projects.forEach((project, index) => {
+        const angle = (index / projects.length) * Math.PI * 2 - Math.PI / 2;
+        project.position = {
+            x: Math.cos(angle) * radius,
+            y: Math.sin(angle) * radius
+        };
+        project.clusterOrigin = { x: 0, y: 0 };
+    });
+    return projects;
+};
 const deriveCategoryCounts = (projects) => {
     const counts = CORE_CATEGORIES.reduce((acc, category) => {
         acc[category] = 0;
@@ -458,38 +492,25 @@ const computeLayout = (projects) => {
     return { projects: positionedProjects, categories, categoryCounts };
 };
 const deriveProjectView = (baseProjects, filters, category) => {
-    const pool = applySpecialFilters(baseProjects, filters);
-    const visible = filterProjectsByCategory(pool, category);
+    const filteredPool = applySpecialFilters(baseProjects, filters);
+    const pool = cloneProjects(filteredPool);
+    const visiblePool = filterProjectsByCategory(pool, category);
+    const visible = shouldAggregateFilters(filters)
+        ? arrangeProjectsIntoRing(visiblePool)
+        : visiblePool;
     return { pool, visible, counts: deriveCategoryCounts(pool) };
 };
-const computeProjectsCentroid = (projects) => {
-    if (projects.length === 0) {
-        return { x: 0, y: 0 };
-    }
-    const totals = projects.reduce((acc, project) => {
-        acc.x += project.position.x;
-        acc.y += project.position.y;
-        return acc;
-    }, { x: 0, y: 0 });
-    return { x: totals.x / projects.length, y: totals.y / projects.length };
-};
-const computeCameraFocus = (category, focusProjects) => {
-    if (!category || focusProjects.length === 0) {
+const computeCameraFocus = (category, focusProjects, forceFocus = false) => {
+    if ((!category && !forceFocus) || focusProjects.length === 0) {
         return { x: 0, y: 0, zoom: 1 };
     }
-    const centroid = focusProjects.reduce((acc, project) => {
-        acc.x += project.position.x;
-        acc.y += project.position.y;
-        return acc;
-    }, { x: 0, y: 0 });
-    centroid.x /= focusProjects.length;
-    centroid.y /= focusProjects.length;
+    const centroid = computeProjectsCentroid(focusProjects);
     const spread = focusProjects.reduce((max, project) => {
         const dx = project.position.x - centroid.x;
         const dy = project.position.y - centroid.y;
         return Math.max(max, Math.hypot(dx, dy));
     }, 0);
-    const zoom = clamp(CAMERA_BASE_ZOOM / (spread + CAMERA_SPREAD_PADDING), 0.7, 1.9);
+    const zoom = clamp(CAMERA_BASE_ZOOM / (spread + CAMERA_SPREAD_PADDING), forceFocus ? 0.8 : 0.7, 1.9);
     return { x: centroid.x, y: centroid.y, zoom };
 };
 const defaultCamera = () => ({
@@ -554,8 +575,11 @@ export const ConstellationProvider = ({ children }) => {
                 nextVisible = pool;
             }
             const visibleIds = new Set(nextVisible.map((project) => project.id));
-            const focus = computeCameraFocus(nextActiveCategory, nextVisible);
-            const shouldUpdateCamera = Boolean(nextActiveCategory) || prev.activeCategory !== nextActiveCategory;
+            const forceFocus = shouldAggregateFilters(nextFilters) && !nextActiveCategory;
+            const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
+            const shouldUpdateCamera = Boolean(nextActiveCategory) ||
+                prev.activeCategory !== nextActiveCategory ||
+                forceFocus;
             return {
                 ...prev,
                 filters: nextFilters,
@@ -593,9 +617,27 @@ export const ConstellationProvider = ({ children }) => {
             if (prev.selectedProjectId === projectId) {
                 return prev;
             }
-            return { ...prev, selectedProjectId: projectId };
+            let nextCamera = prev.camera;
+            if (projectId) {
+                const targetProject = prev.projects.find((project) => project.id === projectId) ??
+                    layout.projects.find((project) => project.id === projectId);
+                if (targetProject) {
+                    const drawerOffset = 220;
+                    const offset = drawerOffset / Math.max(prev.camera.zoom, 0.6);
+                    nextCamera = {
+                        ...prev.camera,
+                        targetX: targetProject.position.x - offset,
+                        targetY: targetProject.position.y
+                    };
+                }
+            }
+            return {
+                ...prev,
+                selectedProjectId: projectId,
+                camera: projectId ? nextCamera : prev.camera
+            };
         });
-    }, []);
+    }, [layout.projects]);
     const panCamera = useCallback((deltaX, deltaY) => {
         setState((prev) => {
             const speedFactor = 1 / prev.camera.zoom;
@@ -640,11 +682,11 @@ export const ConstellationProvider = ({ children }) => {
     }, []);
     const resetCamera = useCallback(() => {
         setState((prev) => {
-            const { pool, counts } = deriveProjectView(layout.projects, prev.filters, null);
-            const visibleIds = new Set(pool.map((project) => project.id));
+            const { pool, visible, counts } = deriveProjectView(layout.projects, prev.filters, null);
+            const visibleIds = new Set(visible.map((project) => project.id));
             return {
                 ...prev,
-                projects: pool,
+                projects: visible,
                 projectPoolSize: pool.length,
                 categoryCounts: counts,
                 activeCategory: null,

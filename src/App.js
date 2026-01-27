@@ -12,7 +12,7 @@ const AppContent = () => {
     const handleInteractionEnd = useCallback(() => {
         setIsInteracting(false);
     }, []);
-    return (_jsx("div", { className: "app-shell app-shell--immersive", children: _jsxs("div", { className: "immersive-stage", children: [_jsx("div", { className: "immersive-stage__background", children: _jsx(ConstellationCanvas, { onInteractionStart: handleInteractionStart, onInteractionEnd: handleInteractionEnd }) }), _jsx("div", { className: `hero-overlay ${isInteracting ? 'hero-overlay--hidden' : ''}`, children: _jsxs("div", { className: "hero-overlay__content", children: [_jsx("p", { className: "eyebrow", children: "MegaETH ecosystem" }), _jsx("h1", { children: "MegaBunnish" })] }) }), _jsx(FilterOrbitPanel, { isInteracting: isInteracting }), _jsx(ProjectDetailDrawer, {})] }) }));
+    return (_jsxs("div", { className: "app-shell app-shell--immersive", children: [_jsxs("div", { className: "immersive-stage", children: [_jsx("div", { className: "immersive-stage__background", children: _jsx(ConstellationCanvas, { onInteractionStart: handleInteractionStart, onInteractionEnd: handleInteractionEnd }) }), _jsx("div", { className: `hero-overlay ${isInteracting ? 'hero-overlay--hidden' : ''}`, children: _jsxs("div", { className: "hero-overlay__content", children: [_jsx("p", { className: "eyebrow", children: "MegaETH ecosystem" }), _jsx("h1", { children: "MegaBunnish" })] }) }), _jsx(FilterOrbitPanel, { isInteracting: isInteracting }), _jsx(ProjectDetailDrawer, {})] }), _jsx("div", { className: "mobile-overlay", children: "Please visit this site on desktop for the ultimate experience." })] }));
 };
 const App = () => {
     return (_jsx(ConstellationProvider, { children: _jsx(AppContent, {}) }));

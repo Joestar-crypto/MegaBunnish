@@ -47,6 +47,7 @@ select {
   min-height: 0;
   overflow: hidden;
   padding: 0;
+  background: #010106;
 }
 
 .app-shell--immersive {
@@ -63,6 +64,7 @@ select {
   position: absolute;
   inset: 0;
   z-index: 1;
+  background: var(--page-bg);
 }
 
 .constellation-canvas {
@@ -154,12 +156,40 @@ select {
   transition: opacity 0.35s ease;
 }
 
-.category-rail {
+.filter-stack {
   position: absolute;
   left: clamp(0.75rem, 2vw, 1.5rem);
   top: clamp(0.75rem, 3vw, 2.5rem);
-  transform: none;
   z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  pointer-events: auto;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.filter-stack--hidden {
+  opacity: 0;
+  transform: translate(-10px, -10px);
+  pointer-events: none;
+}
+
+.trait-menu {
+  display: inline-flex;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  border-radius: 999px;
+  background: rgba(5, 8, 20, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.trait-menu .chip {
+  width: auto;
+}
+
+.category-rail {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -170,22 +200,8 @@ select {
   background: rgba(5, 8, 20, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(18px);
-  pointer-events: auto;
-  transition: opacity 0.25s ease, transform 0.25s ease;
   max-height: calc(100vh - 5rem);
   overflow-y: auto;
-}
-
-.category-rail--hidden {
-  opacity: 0;
-  transform: translate(-10px, -10px);
-  pointer-events: none;
-}
-
-.category-rail__section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
 }
 
 .category-rail__section-heading {
@@ -194,12 +210,6 @@ select {
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
-}
-
-.category-rail__special-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
 }
 
 .category-rail__list {
@@ -263,10 +273,12 @@ select {
   color: var(--accent);
 }
 
-.chip__leading-icon svg {
+.chip__leading-icon svg,
+.chip__leading-icon img {
   width: 16px;
   height: 16px;
   display: block;
+  object-fit: contain;
 }
 
 .chip__stack {
@@ -381,6 +393,19 @@ select {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
   font-size: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text);
+}
+
+.badge--link {
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.badge--link:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
 }
 
 .link-grid {
@@ -473,6 +498,19 @@ select {
   align-items: center;
 }
 
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 3, 8, 0.92);
+  color: var(--text);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  z-index: 10;
+}
+
 @media (max-width: 1100px) {
   body {
     height: auto;
@@ -486,20 +524,19 @@ select {
     overflow: visible;
   }
 
-  .category-rail {
+  .filter-stack {
     position: static;
     transform: none;
     width: 100%;
     max-width: none;
-    margin: 1rem;
-    max-height: none;
-    overflow: visible;
+    margin: 1rem 0;
   }
 
-  .category-rail--hidden {
-    opacity: 1;
-    transform: none;
-    pointer-events: auto;
+  .category-rail {
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
   }
 
   .hero-overlay {
@@ -521,7 +558,7 @@ select {
     position: static;
     width: 100%;
     max-width: none;
-    margin: 1rem;
+    margin: 1rem 0;
     box-shadow: none;
   }
 
@@ -530,9 +567,14 @@ select {
   }
 }
 
+@media (max-width: 780px) {
+  .mobile-overlay {
+    display: flex;
+  }
+}
+
 @media (max-width: 640px) {
   .category-rail {
-    flex-direction: column;
     border-radius: 1.25rem;
   }
 

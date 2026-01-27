@@ -1,20 +1,6 @@
 import { useConstellation } from '../state/constellation';
 import { SpecialFilters } from '../types';
-
-const MegamafiaIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-    <path d="M4 9h16" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" opacity={0.4} />
-    <path
-      d="M7 11h10l-1 5a4 4 0 0 1-8 0z"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinejoin="round"
-    />
-    <circle cx={9.5} cy={15} r={1} fill="currentColor" />
-    <circle cx={14.5} cy={15} r={1} fill="currentColor" />
-  </svg>
-);
+import { getCategoryColor } from '../utils/colors';
 
 const MobileIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -29,13 +15,16 @@ type SpecialFilterKey = keyof SpecialFilters;
 const formatCategoryLabel = (category: string) =>
   category === 'Prediction Market' ? 'Prediction M.' : category;
 
-const SPECIAL_FILTERS: Array<{
+type SpecialFilterDefinition = {
   key: SpecialFilterKey;
   label: string;
   hint?: string;
-  Icon: () => JSX.Element;
-}> = [
-  { key: 'megamafia', label: 'Megamafia', Icon: MegamafiaIcon },
+  iconSrc?: string;
+  Icon?: () => JSX.Element;
+};
+
+const SPECIAL_FILTERS: SpecialFilterDefinition[] = [
+  { key: 'megamafia', label: 'Megamafia', iconSrc: '/logos/Megamafia.png' },
   { key: 'mobile', label: 'Mobile', hint: 'Phone-native', Icon: MobileIcon }
 ];
 
@@ -64,37 +53,31 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
   };
 
   return (
-    <aside
-      className={`category-rail ${isInteracting ? 'category-rail--hidden' : ''}`}
-      aria-label="Constellation filters"
-    >
-      <section className="category-rail__section" aria-label="Special traits">
-        <p className="category-rail__section-heading">Signal traits</p>
-        <div className="category-rail__special-grid">
-          {SPECIAL_FILTERS.map(({ key, label, hint, Icon }) => (
-            <button
-              key={key}
-              type="button"
-              className={filters[key] ? 'chip chip--trait active' : 'chip chip--trait'}
-              onClick={() => toggleFilter(key)}
-              aria-pressed={filters[key]}
-            >
-              <span className="chip__leading-icon">
-                <Icon />
-              </span>
-              <span className="chip__stack">
-                <span className="chip-label">{label}</span>
-                {hint ? <span className="chip-hint">{hint}</span> : null}
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
-      <section className="category-rail__section" aria-label="Categories">
+    <div className={`filter-stack ${isInteracting ? 'filter-stack--hidden' : ''}`}>
+      <div className="trait-menu" role="group" aria-label="Signal traits">
+        {SPECIAL_FILTERS.map(({ key, label, hint, Icon, iconSrc }) => (
+          <button
+            key={key}
+            type="button"
+            className={filters[key] ? 'chip chip--trait active' : 'chip chip--trait'}
+            onClick={() => toggleFilter(key)}
+            aria-pressed={filters[key]}
+          >
+            <span className="chip__leading-icon">
+              {iconSrc ? <img src={iconSrc} alt="" aria-hidden /> : Icon ? <Icon /> : null}
+            </span>
+            <span className="chip__stack">
+              <span className="chip-label">{label}</span>
+              {hint ? <span className="chip-hint">{hint}</span> : null}
+            </span>
+          </button>
+        ))}
+      </div>
+      <aside className="category-rail" aria-label="Categories">
         <p className="category-rail__section-heading">Sectors</p>
         <div className="category-rail__list" role="tablist">
           <button
-            className={activeCategory === null ? 'chip active' : 'chip'}
+            className={activeCategory === null ? 'chip chip--category active' : 'chip chip--category'}
             type="button"
             onClick={() => quickSelect(null)}
             aria-pressed={activeCategory === null}
@@ -102,20 +85,28 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
             <span className="chip-label">All</span>
             <span className="chip-count">{totalProjects}</span>
           </button>
-          {categories.map((category) => (
-            <button
-              key={category}
-              className={activeCategory === category ? 'chip active' : 'chip'}
-              type="button"
-              onClick={() => quickSelect(category)}
-              aria-pressed={activeCategory === category}
-            >
-              <span className="chip-label">{formatCategoryLabel(category)}</span>
-              <span className="chip-count">{categoryCounts[category] ?? 0}</span>
-            </button>
-          ))}
+          {categories.map((category) => {
+            const accent = getCategoryColor(category);
+            const style =
+              activeCategory === category
+                ? { backgroundColor: accent, color: '#05060f', borderColor: accent }
+                : { borderColor: accent };
+            return (
+              <button
+                key={category}
+                className={activeCategory === category ? 'chip chip--category active' : 'chip chip--category'}
+                type="button"
+                style={style}
+                onClick={() => quickSelect(category)}
+                aria-pressed={activeCategory === category}
+              >
+                <span className="chip-label">{formatCategoryLabel(category)}</span>
+                <span className="chip-count">{categoryCounts[category] ?? 0}</span>
+              </button>
+            );
+          })}
         </div>
-      </section>
-    </aside>
+      </aside>
+    </div>
   );
 };
