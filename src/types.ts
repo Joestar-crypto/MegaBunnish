@@ -61,5 +61,6 @@ export type ConstellationState = {
   hoveredProjectId: string | null;
   selectedProjectId: string | null;
   camera: CameraState;
+  cameraReturnPoint: { x: number; y: number; zoom: number } | null;
   filters: SpecialFilters;
 };

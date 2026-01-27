@@ -179,6 +179,7 @@ const NODE_RELAX_ITERATIONS = 6;
 const MIN_NODE_SPACING = 90;
 const CAMERA_BASE_ZOOM = 640;
 const CAMERA_SPREAD_PADDING = 260;
+const SELECT_FOCUS_ZOOM = 1.55;
 const SPECIAL_LINKS = {
     'bad-bunnz': ['prismfi', 'bunnzpaw', 'faster'],
     megalio: ['priority']
@@ -521,6 +522,11 @@ const defaultCamera = () => ({
     targetY: 0,
     targetZoom: 1
 });
+const createReturnPoint = (camera) => ({
+    x: camera.targetX,
+    y: camera.targetY,
+    zoom: camera.targetZoom
+});
 const ConstellationContext = createContext(undefined);
 export const ConstellationProvider = ({ children }) => {
     const layout = useMemo(() => computeLayout(rawProjects), []);
@@ -536,6 +542,7 @@ export const ConstellationProvider = ({ children }) => {
             hoveredProjectId: null,
             selectedProjectId: null,
             camera: defaultCamera(),
+            cameraReturnPoint: null,
             filters
         };
     });
@@ -555,6 +562,7 @@ export const ConstellationProvider = ({ children }) => {
                 activeCategory: category,
                 hoveredProjectId: prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId) ? prev.hoveredProjectId : null,
                 selectedProjectId: prev.selectedProjectId && visibleIds.has(prev.selectedProjectId) ? prev.selectedProjectId : null,
+                cameraReturnPoint: null,
                 camera: {
                     ...prev.camera,
                     targetX: focus.x,
@@ -593,6 +601,7 @@ export const ConstellationProvider = ({ children }) => {
                 selectedProjectId: prev.selectedProjectId && visibleIds.has(prev.selectedProjectId)
                     ? prev.selectedProjectId
                     : null,
+                cameraReturnPoint: null,
                 camera: shouldUpdateCamera
                     ? {
                         ...prev.camera,
@@ -618,23 +627,49 @@ export const ConstellationProvider = ({ children }) => {
                 return prev;
             }
             let nextCamera = prev.camera;
+            let nextReturnPoint = prev.cameraReturnPoint;
             if (projectId) {
                 const targetProject = prev.projects.find((project) => project.id === projectId) ??
                     layout.projects.find((project) => project.id === projectId);
-                if (targetProject) {
-                    const drawerOffset = 220;
-                    const offset = drawerOffset / Math.max(prev.camera.zoom, 0.6);
-                    nextCamera = {
-                        ...prev.camera,
-                        targetX: targetProject.position.x - offset,
-                        targetY: targetProject.position.y
-                    };
+                if (!targetProject) {
+                    return prev;
                 }
+                if (!nextReturnPoint) {
+                    nextReturnPoint = createReturnPoint(prev.camera);
+                }
+                const focusZoom = Math.max(prev.camera.targetZoom, SELECT_FOCUS_ZOOM);
+                nextCamera = {
+                    ...prev.camera,
+                    targetX: targetProject.position.x,
+                    targetY: targetProject.position.y,
+                    targetZoom: focusZoom
+                };
+            }
+            else if (prev.cameraReturnPoint) {
+                nextCamera = {
+                    ...prev.camera,
+                    targetX: prev.cameraReturnPoint.x,
+                    targetY: prev.cameraReturnPoint.y,
+                    targetZoom: prev.cameraReturnPoint.zoom
+                };
+                nextReturnPoint = null;
+            }
+            else if (prev.selectedProjectId) {
+                const forceFocus = shouldAggregateFilters(prev.filters) && !prev.activeCategory;
+                const focus = computeCameraFocus(prev.activeCategory, prev.projects, forceFocus);
+                nextCamera = {
+                    ...prev.camera,
+                    targetX: focus.x,
+                    targetY: focus.y,
+                    targetZoom: focus.zoom
+                };
+                nextReturnPoint = null;
             }
             return {
                 ...prev,
                 selectedProjectId: projectId,
-                camera: projectId ? nextCamera : prev.camera
+                camera: nextCamera,
+                cameraReturnPoint: nextReturnPoint
             };
         });
     }, [layout.projects]);
@@ -694,6 +729,7 @@ export const ConstellationProvider = ({ children }) => {
                 selectedProjectId: prev.selectedProjectId && visibleIds.has(prev.selectedProjectId)
                     ? prev.selectedProjectId
                     : null,
+                cameraReturnPoint: null,
                 camera: { ...prev.camera, targetX: 0, targetY: 0, targetZoom: 1 }
             };
         });

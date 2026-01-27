@@ -51,6 +51,14 @@ type HyperLane = {
   sweep: number;
 };
 
+type DustParticle = {
+  angle: number;
+  orbit: number;
+  speed: number;
+  size: number;
+  alpha: number;
+};
+
 type ClientLikeEvent = { clientX: number; clientY: number };
 
 type PinchState = {
@@ -78,28 +86,29 @@ const useImageCache = (projects: ConstellationProject[]) => {
 };
 
 const generateStars = () =>
-  Array.from({ length: 120 }, () => ({
+  Array.from({ length: 160 }, () => ({
     x: Math.random(),
     y: Math.random(),
-    radius: Math.random() * 1.5 + 0.2,
-    speed: Math.random() * 0.6 + 0.2
+    radius: Math.random() * 1.2 + 0.3,
+    speed: Math.random() * 0.4 + 0.2,
+    twinkle: Math.random() * Math.PI * 2
   }));
 
 const generateNebulae = (): NebulaLayer[] =>
   Array.from({ length: 4 }, (_, index) => {
     const palettes = [
-      ['rgba(78, 241, 255, 0.2)', 'rgba(78, 241, 255, 0)'],
-      ['rgba(255, 154, 98, 0.18)', 'rgba(255, 154, 98, 0)'],
-      ['rgba(155, 107, 255, 0.22)', 'rgba(155, 107, 255, 0)'],
-      ['rgba(111, 255, 200, 0.16)', 'rgba(111, 255, 200, 0)']
+      ['rgba(82, 108, 255, 0.18)', 'rgba(82, 108, 255, 0)'],
+      ['rgba(91, 243, 255, 0.12)', 'rgba(91, 243, 255, 0)'],
+      ['rgba(150, 120, 255, 0.16)', 'rgba(150, 120, 255, 0)'],
+      ['rgba(255, 255, 255, 0.07)', 'rgba(255, 255, 255, 0)']
     ];
     const paletteIndex = index % palettes.length;
     return {
       x: Math.random(),
       y: Math.random(),
-      radius: 320 + Math.random() * 420,
-      speed: 0.00005 + Math.random() * 0.00008,
-      wobble: 40 + Math.random() * 50,
+      radius: 360 + Math.random() * 460,
+      speed: 0.00004 + Math.random() * 0.00006,
+      wobble: 30 + Math.random() * 60,
       innerColor: palettes[paletteIndex][0],
       outerColor: palettes[paletteIndex][1]
     };
@@ -113,6 +122,15 @@ const generateHyperLanes = (): HyperLane[] =>
     width: 0.4 + Math.random() * 1.2,
     phase: Math.random() * Math.PI * 2,
     sweep: Math.PI / 3 + Math.random() * (Math.PI / 2)
+  }));
+
+const generateDust = (): DustParticle[] =>
+  Array.from({ length: 65 }, () => ({
+    angle: Math.random() * Math.PI * 2,
+    orbit: 180 + Math.random() * 520,
+    speed: 0.00005 + Math.random() * 0.0001,
+    size: Math.random() * 1.3 + 0.2,
+    alpha: 0.03 + Math.random() * 0.07
   }));
 
 const worldFromClient = (
@@ -173,6 +191,7 @@ export const ConstellationCanvas = ({
   const stars = useMemo(generateStars, []);
   const nebulae = useMemo(generateNebulae, []);
   const hyperLanes = useMemo(generateHyperLanes, []);
+  const dust = useMemo(generateDust, []);
   const {
     projects,
     camera,
@@ -234,7 +253,7 @@ export const ConstellationCanvas = ({
       context.clearRect(0, 0, canvas.width, canvas.height);
       context.scale(dpr, dpr);
 
-      context.fillStyle = 'rgba(5, 8, 20, 0.92)';
+      context.fillStyle = '#010106';
       context.fillRect(0, 0, width, height);
 
       context.save();
@@ -268,8 +287,8 @@ export const ConstellationCanvas = ({
         const orbitRadius = lane.radius + oscillation;
         const startAngle = lane.phase + (time * lane.speed) / 2;
         const gradient = context.createLinearGradient(0, 0, orbitRadius, 0);
-        gradient.addColorStop(0, 'rgba(78, 241, 255, 0)');
-        gradient.addColorStop(1, 'rgba(78, 241, 255, 0.4)');
+        gradient.addColorStop(0, 'rgba(38, 70, 140, 0)');
+        gradient.addColorStop(1, 'rgba(120, 188, 255, 0.35)');
         context.strokeStyle = gradient;
         context.lineWidth = lane.width;
         context.beginPath();
@@ -278,10 +297,29 @@ export const ConstellationCanvas = ({
       });
       context.restore();
 
-      stars.forEach((star) => {
-        const drift = Math.sin(time * 0.0002 * star.speed) * 5;
+      context.save();
+      context.translate(width / 2, height / 2);
+      dust.forEach((particle, index) => {
+        const angle = particle.angle + time * particle.speed + index * 0.0008;
+        const wobble = Math.sin(time * 0.0003 + index) * 8;
+        const radius = particle.orbit + wobble;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        const gradient = context.createRadialGradient(x, y, 0, x, y, particle.size * 14);
+        gradient.addColorStop(0, `rgba(148, 189, 255, ${particle.alpha})`);
+        gradient.addColorStop(1, 'rgba(148, 189, 255, 0)');
+        context.fillStyle = gradient;
         context.beginPath();
-        context.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        context.arc(x, y, particle.size * 14, 0, Math.PI * 2);
+        context.fill();
+      });
+      context.restore();
+
+      stars.forEach((star, idx) => {
+        const drift = Math.sin(time * 0.0002 * star.speed + idx) * 4;
+        const brightness = 0.35 + ((Math.sin(time * 0.001 * star.speed + star.twinkle) + 1) / 2) * 0.45;
+        context.beginPath();
+        context.fillStyle = `rgba(255, 255, 255, ${brightness})`;
         context.arc(star.x * width + drift, star.y * height + drift, star.radius, 0, Math.PI * 2);
         context.fill();
       });
@@ -674,9 +712,9 @@ export const ConstellationCanvas = ({
     event.preventDefault();
     const rect = canvasRef.current.getBoundingClientRect();
     const { worldX, worldY } = worldFromClient(event.nativeEvent, rect, camera.x, camera.y, camera.zoom);
-    const direction = event.deltaY > 0 ? 1 : -1;
-    const normalizedDelta = Math.min(Math.abs(event.deltaY) / 500, 0.3);
-    zoomCamera(direction * normalizedDelta, { x: worldX, y: worldY });
+    const baseDelta = event.deltaY / (event.ctrlKey ? 350 : 650);
+    const normalizedDelta = Math.max(Math.min(baseDelta, 0.35), -0.35);
+    zoomCamera(-normalizedDelta, { x: worldX, y: worldY });
   };
 
   useEffect(() => {

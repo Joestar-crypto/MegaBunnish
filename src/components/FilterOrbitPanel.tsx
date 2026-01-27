@@ -89,7 +89,7 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
             const accent = getCategoryColor(category);
             const style =
               activeCategory === category
-                ? { backgroundColor: accent, color: '#05060f', borderColor: accent }
+                ? { borderColor: accent, color: accent }
                 : { borderColor: accent };
             return (
               <button
