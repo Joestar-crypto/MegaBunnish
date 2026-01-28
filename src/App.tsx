@@ -35,7 +35,10 @@ const AppContent = () => {
               target="_blank"
               rel="noreferrer noopener"
             >
-              Made by Joestar
+              <span className="hero-overlay__credit-label">Made by Joestar</span>
+              <span className="hero-overlay__credit-avatar" aria-hidden="true">
+                <img src="/logos/Jojo2.webp" alt="" />
+              </span>
             </a>
           </div>
         </div>

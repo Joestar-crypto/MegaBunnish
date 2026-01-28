@@ -393,20 +393,6 @@ const pruneIncentives = (entries: Incentive[] | undefined): Incentive[] => {
   return entries.filter((entry) => new Date(entry.expiresAt).getTime() > current);
 };
 
-const registerAdjacency = (
-  adjacency: Record<string, Set<string>>,
-  source: string,
-  target: string
-) => {
-  if (source === target) {
-    return;
-  }
-  if (!adjacency[source]) {
-    adjacency[source] = new Set<string>();
-  }
-  adjacency[source]!.add(target);
-};
-
 const clamp = (value: number, min: number, max: number) => {
   if (value < min) {
     return min;
@@ -447,7 +433,6 @@ const computeLayout = (
     };
   });
 
-  const categoryAdjacency: Record<string, Set<string>> = {};
   const positionedProjects: ConstellationProject[] = [];
   const clusterAssignments: Record<string, ConstellationProject[]> = {};
   categories.forEach((category) => {
@@ -457,7 +442,6 @@ const computeLayout = (
     }
 
     const anchor = categoryAnchors[category] ?? { x: 0, y: 0 };
-    const arrangedIds: string[] = [];
     let processed = 0;
     let ringIndex = 0;
     let maxOrbitRadius = 0;
@@ -470,6 +454,7 @@ const computeLayout = (
       );
       const rotationOffset =
         (((category.charCodeAt(0) + ringIndex * 17) % 360) * Math.PI) / 180;
+      const angleStep = (Math.PI * 2) / Math.max(slotsInRing, 1);
 
       for (let slot = 0; slot < slotsInRing; slot += 1) {
         const project = group[processed + slot];
@@ -479,13 +464,13 @@ const computeLayout = (
         }
         const categoriesForProject = meta.categories;
         const primaryCategory = meta.primary;
-        const baseAngle = (slot / slotsInRing) * Math.PI * 2 + rotationOffset;
-        const jitter = (((project.id.charCodeAt(0) + slot * 31) % 100) / 100 - 0.5) * 0.25;
-        const radiusJitter = ((project.id.length * 13) % 9) - 4;
-        const orbitRadius = ORBIT_BASE_RADIUS + ringIndex * ORBIT_RING_GAP + radiusJitter;
-        const angle = baseAngle + jitter;
-        const x = anchor.x + Math.cos(angle) * orbitRadius;
-        const y = anchor.y + Math.sin(angle) * orbitRadius;
+        const baseAngle = rotationOffset + slot * angleStep;
+        const normalizedSlot = slotsInRing > 1 ? slot / (slotsInRing - 1) : 0.5;
+        const petalLift = Math.sin(normalizedSlot * Math.PI) ** 2 * 28;
+        const wave = Math.sin(baseAngle * 3) * 10;
+        const orbitRadius = ORBIT_BASE_RADIUS + ringIndex * ORBIT_RING_GAP + petalLift + wave;
+        const x = anchor.x + Math.cos(baseAngle) * orbitRadius;
+        const y = anchor.y + Math.sin(baseAngle) * orbitRadius;
 
         maxOrbitRadius = Math.max(maxOrbitRadius, orbitRadius);
 
@@ -502,7 +487,6 @@ const computeLayout = (
         };
         positionedProjects.push(positionedProject);
         clusterAssignments[category]!.push(positionedProject);
-        arrangedIds.push(project.id);
       }
 
       processed += slotsInRing;
@@ -513,15 +497,6 @@ const computeLayout = (
       anchor,
       radius: maxOrbitRadius + CLUSTER_RADIUS_PADDING
     };
-
-    if (arrangedIds.length > 1) {
-      arrangedIds.forEach((projectId, index) => {
-        const prev = arrangedIds[(index - 1 + arrangedIds.length) % arrangedIds.length];
-        const next = arrangedIds[(index + 1) % arrangedIds.length];
-        registerAdjacency(categoryAdjacency, projectId, prev);
-        registerAdjacency(categoryAdjacency, projectId, next);
-      });
-    }
   });
 
   const adjustedAnchors = resolveClusterAnchors(clusterStats);
@@ -547,14 +522,6 @@ const computeLayout = (
   relaxClusterDensity(clusterAssignments, adjustedAnchors);
 
   const byId = new Map(positionedProjects.map((project) => [project.id, project]));
-
-  Object.entries(categoryAdjacency).forEach(([projectId, neighbors]) => {
-    const project = byId.get(projectId);
-    if (!project) {
-      return;
-    }
-    project.linkedIds = Array.from(new Set([...project.linkedIds, ...neighbors]));
-  });
 
   Object.entries(SPECIAL_LINKS).forEach(([sourceId, targets]) => {
     const source = byId.get(sourceId);

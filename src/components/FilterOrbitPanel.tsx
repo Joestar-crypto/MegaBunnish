@@ -45,8 +45,8 @@ type SpecialFilterDefinition = {
 };
 
 const SPECIAL_FILTERS: SpecialFilterDefinition[] = [
-  { key: 'megamafia', label: 'Megamafia', Icon: MegamafiaIcon },
-  { key: 'native', label: 'Native', hint: 'MegaETH core', Icon: NativeCoreIcon },
+  { key: 'megamafia', label: 'Megamafia', iconSrc: '/logos/Megamafia.webp', Icon: MegamafiaIcon },
+  { key: 'native', label: 'Native', hint: 'MegaETH core', iconSrc: '/logos/MegaETH.webp', Icon: NativeCoreIcon },
   { key: 'mobile', label: 'Mobile', hint: 'Phone-native', Icon: MobileIcon }
 ];
 
@@ -104,18 +104,32 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
             <button
               className={activeCategory === null ? 'chip chip--category active' : 'chip chip--category'}
               type="button"
+              style={
+                activeCategory === null
+                  ? {
+                      borderColor: 'var(--accent)',
+                      backgroundColor: 'var(--accent)',
+                      color: '#05060f'
+                    }
+                  : { borderColor: 'var(--accent)', backgroundColor: 'transparent' }
+              }
               onClick={() => quickSelect(null)}
               aria-pressed={activeCategory === null}
             >
               <span className="chip-label">All</span>
-              <span className="chip-count">{totalProjects}</span>
+              <span
+                className="chip-count"
+                style={activeCategory === null ? { color: '#05060f' } : undefined}
+              >
+                {totalProjects}
+              </span>
             </button>
             {categories.map((category) => {
               const accent = getCategoryColor(category);
-              const style =
-                activeCategory === category
-                  ? { borderColor: accent, color: accent }
-                  : { borderColor: accent };
+              const isActive = activeCategory === category;
+              const style = isActive
+                ? { borderColor: accent, backgroundColor: accent, color: '#05060f' }
+                : { borderColor: accent, backgroundColor: 'transparent' };
               return (
                 <button
                   key={category}
@@ -126,7 +140,9 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
                   aria-pressed={activeCategory === category}
                 >
                   <span className="chip-label">{formatCategoryLabel(category)}</span>
-                  <span className="chip-count">{categoryCounts[category] ?? 0}</span>
+                  <span className="chip-count" style={isActive ? { color: '#05060f' } : undefined}>
+                    {categoryCounts[category] ?? 0}
+                  </span>
                 </button>
               );
             })}

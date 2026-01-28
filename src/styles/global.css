@@ -110,21 +110,45 @@ select {
 
 .hero-overlay__credit {
   margin-top: 0.3rem;
-  padding: 0.2rem 0.75rem;
+  padding: 0.2rem 0.85rem 0.2rem 1rem;
   border-radius: 999px;
-  font-size: 0.85rem;
-  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--accent);
-  background: rgba(5, 8, 20, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffd84d;
+  background: rgba(5, 8, 20, 0.75);
+  border: 1px solid #ffd84d;
   text-decoration: none;
-  transition: border-color 0.2s ease, color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .hero-overlay__credit:hover {
-  border-color: var(--accent);
-  color: var(--text);
+  border-color: #fff4b6;
+  color: #fff4b6;
+  transform: translateY(-1px);
+}
+
+.hero-overlay__credit-label {
+  letter-spacing: inherit;
+}
+
+.hero-overlay__credit-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.hero-overlay__credit-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .camera-controls {
@@ -317,7 +341,9 @@ select {
 
 .chip--category {
   border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.05);
+  background: transparent;
+  color: var(--text);
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .chip--trait {
@@ -384,13 +410,12 @@ select {
 }
 
 .chip--category.chip.active {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--text);
   font-weight: 600;
+  color: inherit;
 }
 
 .chip--category.chip.active .chip-count {
-  color: var(--text-dim);
+  color: inherit;
 }
 
 .chip-count {
