@@ -467,11 +467,20 @@ const JojoOracle = ({ projectId, onNavigate }: { projectId: string; onNavigate: 
 };
 
 export const ProjectDetailDrawer = () => {
-  const { selectedProjectId, selectProject, setActiveCategory, resolveProjectById } = useConstellation();
+  const {
+    selectedProjectId,
+    selectProject,
+    setActiveCategory,
+    resolveProjectById,
+    favoriteIds,
+    toggleFavorite
+  } = useConstellation();
   const project = useMemo(
     () => resolveProjectById(selectedProjectId),
     [resolveProjectById, selectedProjectId]
   );
+  const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
+  const isFavorite = project ? favoriteSet.has(project.id) : false;
   const socialLinks = useMemo(
     () =>
       project
@@ -494,7 +503,26 @@ export const ProjectDetailDrawer = () => {
               <p className="eyebrow">{project.primaryCategory}</p>
               <div className="detail-title">
                 <img src={project.logo} alt={`${project.name} logo`} loading="lazy" />
-                <h2>{project.name}</h2>
+                <div className="detail-title__heading">
+                  <h2>{project.name}</h2>
+                  <button
+                    type="button"
+                    className={isFavorite ? 'favorite-toggle is-active' : 'favorite-toggle'}
+                    aria-pressed={isFavorite}
+                    aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                    onClick={() => toggleFavorite(project.id)}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                      <path
+                        d="M12 3.5 14.4 9l5.6.5-4.2 3.6 1.3 5.7L12 15.9l-5.1 2.9 1.3-5.7L4 9.5l5.6-.5Z"
+                        fill="currentColor"
+                        stroke="currentColor"
+                        strokeWidth={0.9}
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
             <button className="ghost" type="button" onClick={() => selectProject(null)}>

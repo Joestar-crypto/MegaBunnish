@@ -63,4 +63,6 @@ export type ConstellationState = {
   camera: CameraState;
   cameraReturnPoint: { x: number; y: number; zoom: number } | null;
   filters: SpecialFilters;
+  favoriteIds: string[];
+  favoritesOnly: boolean;
 };

@@ -16,6 +16,39 @@ const highlightStyles: Record<HighlightVariant, { stroke: string; glow: string; 
   }
 };
 
+const STAR_RADIUS = 9;
+
+const drawFavoriteStar = (
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  isFavorite: boolean
+) => {
+  const spikes = 5;
+  const outerRadius = STAR_RADIUS;
+  const innerRadius = STAR_RADIUS * 0.5;
+  const step = Math.PI / spikes;
+
+  context.save();
+  context.translate(x, y);
+  context.beginPath();
+  context.moveTo(0, -outerRadius);
+  for (let i = 0; i < spikes * 2; i += 1) {
+    const radius = i % 2 === 0 ? outerRadius : innerRadius;
+    const angle = i * step - Math.PI / 2;
+    context.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius);
+  }
+  context.closePath();
+  context.fillStyle = isFavorite ? '#ffd84d' : 'rgba(255, 255, 255, 0.08)';
+  context.strokeStyle = isFavorite ? '#ffeaa0' : 'rgba(255, 255, 255, 0.35)';
+  context.lineWidth = isFavorite ? 1.6 : 1.2;
+  context.shadowColor = isFavorite ? 'rgba(255, 216, 77, 0.65)' : 'transparent';
+  context.shadowBlur = isFavorite ? 18 : 0;
+  context.fill();
+  context.stroke();
+  context.restore();
+};
+
 type PointerState = {
   isDragging: boolean;
   pointerId: number | null;
@@ -131,13 +164,15 @@ export const ConstellationCanvas = ({
     setHoveredProject,
     selectProject,
     panCamera,
-    zoomCamera
+    zoomCamera,
+    favoriteIds
   } = useConstellation();
   const images = useImageCache(projects);
   const cameraRef = useRef(camera);
   const hoveredRef = useRef(hoveredProjectId);
   const selectedRef = useRef(selectedProjectId);
   const interactionActiveRef = useRef(false);
+  const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
 
   useEffect(() => {
     cameraRef.current = camera;
@@ -299,6 +334,7 @@ export const ConstellationCanvas = ({
         const radius = baseRadius + pulse + (project.id === hoveredId ? 6 : 0);
         const highlightStyle = project.highlight ? highlightStyles[project.highlight] : null;
         const baseLineWidth = project.id === selectedId ? 4 : 2;
+        const isFavorite = favoriteSet.has(project.id);
 
         context.beginPath();
         context.fillStyle = 'rgba(255, 255, 255, 0.08)';
@@ -377,6 +413,13 @@ export const ConstellationCanvas = ({
         context.font = '12px Space Grotesk, sans-serif';
         context.textAlign = 'center';
         context.fillText(project.name, x, y + radius + 14);
+
+        if (isFavorite) {
+          const starOffset = Math.max(radius * 0.65, radius - 12);
+          const starX = x + starOffset;
+          const starY = y - starOffset;
+          drawFavoriteStar(context, starX, starY, true);
+        }
       });
 
       animationFrame = requestAnimationFrame(render);
@@ -388,7 +431,7 @@ export const ConstellationCanvas = ({
       cancelAnimationFrame(animationFrame);
       window.removeEventListener('resize', handleResize);
     };
-  }, [projects, images, stars]);
+  }, [projects, images, stars, favoriteSet]);
 
   const endInteraction = () => {
     if (interactionActiveRef.current) {

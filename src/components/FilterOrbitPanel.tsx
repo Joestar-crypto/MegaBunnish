@@ -1,14 +1,17 @@
+const FavoriteIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path
+      d="M12 3.5 14.4 9l5.6.5-4.2 3.6 1.3 5.7L12 15.9l-5.1 2.9 1.3-5.7L4 9.5l5.6-.5Z"
+      fill="currentColor"
+      stroke="currentColor"
+      strokeWidth={0.8}
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 import { useConstellation } from '../state/constellation';
 import { SpecialFilters } from '../types';
 import { getCategoryColor } from '../utils/colors';
-
-const MobileIcon = () => (
-  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-    <rect x={7.5} y={3.5} width={9} height={17} rx={2} stroke="currentColor" strokeWidth={1.5} />
-    <line x1={7.5} y1={7.5} x2={16.5} y2={7.5} stroke="currentColor" strokeWidth={1.5} opacity={0.5} />
-    <circle cx={12} cy={17.5} r={0.9} fill="currentColor" />
-  </svg>
-);
 
 const MegamafiaIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -46,8 +49,7 @@ type SpecialFilterDefinition = {
 
 const SPECIAL_FILTERS: SpecialFilterDefinition[] = [
   { key: 'megamafia', label: 'Megamafia', iconSrc: '/logos/Megamafia.webp', Icon: MegamafiaIcon },
-  { key: 'native', label: 'Native', hint: 'MegaETH core', iconSrc: '/logos/MegaETH.webp', Icon: NativeCoreIcon },
-  { key: 'mobile', label: 'Mobile', hint: 'Phone-native', Icon: MobileIcon }
+  { key: 'native', label: 'MegaETH', hint: 'Core native', iconSrc: '/logos/MegaETH.webp', Icon: NativeCoreIcon }
 ];
 
 type FilterOrbitPanelProps = {
@@ -62,9 +64,14 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
     activeCategory,
     setActiveCategory,
     filters,
-    toggleFilter
+    toggleFilter,
+    favoriteIds,
+    favoritesOnly,
+    toggleFavoritesOnly
   } = useConstellation();
   const totalProjects = projectPoolSize;
+  const hasFavorites = favoriteIds.length > 0;
+  const favoritesDisabled = !favoritesOnly && !hasFavorites;
 
   const quickSelect = (category: string | null) => {
     if (category && activeCategory === category) {
@@ -95,6 +102,21 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
               </span>
             </button>
           ))}
+          <button
+            type="button"
+            className={favoritesOnly ? 'chip chip--trait chip--favorites active' : 'chip chip--trait chip--favorites'}
+            onClick={toggleFavoritesOnly}
+            aria-pressed={favoritesOnly}
+            disabled={favoritesDisabled}
+          >
+            <span className="chip__leading-icon">
+              <FavoriteIcon />
+            </span>
+            <span className="chip__stack">
+              <span className="chip-label">Favorites</span>
+              <span className="chip-hint">{hasFavorites ? `${favoriteIds.length} saved` : 'Add stars'}</span>
+            </span>
+          </button>
         </div>
       </div>
       <div className={`category-dock ${isInteracting ? 'ui-panel--hidden' : ''}`}>

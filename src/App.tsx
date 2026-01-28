@@ -49,7 +49,7 @@ const AppContent = () => {
         <ProjectDetailDrawer />
       </div>
       <div className="mobile-overlay">
-        Please visit this site on desktop for the ultimate experience.
+        Please visit the site on desktop for the best experience.
       </div>
     </div>
   );

@@ -13,9 +13,10 @@ export const CORE_CATEGORIES = [
     'Launchpad',
     'Tools',
     'Prediction M.',
-    'AI'
+    'AI',
+    'Mobile'
 ];
-const SPECIAL_CATEGORIES = ['Megamafia', 'Mobile', 'Native'];
+const SPECIAL_CATEGORIES = ['Megamafia', 'Native'];
 const DEFAULT_CORE_CATEGORY = 'DeFi';
 const CORE_LOOKUP = CORE_CATEGORIES.reduce((acc, category) => {
     acc[category.toLowerCase()] = category;
@@ -85,13 +86,12 @@ const toCategoryMeta = (labels) => {
             traits.megamafia = true;
             return;
         }
-        if (canonical === 'Mobile') {
-            traits.mobile = true;
-            return;
-        }
         if (canonical === 'Native') {
             traits.native = true;
             return;
+        }
+        if (canonical === 'Mobile') {
+            traits.mobile = true;
         }
         if (!categories.includes(canonical)) {
             categories.push(canonical);
@@ -149,6 +149,23 @@ const computeProjectsCentroid = (projects) => {
     }, { x: 0, y: 0 });
     return { x: totals.x / projects.length, y: totals.y / projects.length };
 };
+const compressProjects = (projects, scale) => {
+    if (projects.length === 0 || scale === 1) {
+        return projects;
+    }
+    const centroid = computeProjectsCentroid(projects);
+    return projects.map((project) => ({
+        ...project,
+        position: {
+            x: (project.position.x - centroid.x) * scale,
+            y: (project.position.y - centroid.y) * scale
+        },
+        clusterOrigin: {
+            x: (project.clusterOrigin.x - centroid.x) * scale,
+            y: (project.clusterOrigin.y - centroid.y) * scale
+        }
+    }));
+};
 const deriveCategoryCounts = (projects) => {
     const counts = CORE_CATEGORIES.reduce((acc, category) => {
         acc[category] = 0;
@@ -184,6 +201,7 @@ const MIN_NODE_SPACING = 90;
 const CAMERA_BASE_ZOOM = 640;
 const CAMERA_SPREAD_PADDING = 260;
 const SELECT_FOCUS_ZOOM = 1.55;
+const FAVORITES_CLUSTER_SCALE = 0.55;
 const SPECIAL_LINKS = {
     'bad-bunnz': ['prismfi', 'bunnzpaw', 'faster'],
     megalio: ['priority']
@@ -198,6 +216,26 @@ const ECOSYSTEM_HIGHLIGHTS = {
     bunnzpaw: 'badbunnz',
     megalio: 'megalio',
     priority: 'megalio'
+};
+const FAVORITES_STORAGE_KEY = 'constellation:favorites';
+const readStoredFavorites = () => {
+    if (typeof window === 'undefined') {
+        return [];
+    }
+    try {
+        const raw = window.localStorage.getItem(FAVORITES_STORAGE_KEY);
+        if (!raw) {
+            return [];
+        }
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) {
+            return [];
+        }
+        return parsed.filter((entry) => typeof entry === 'string');
+    }
+    catch {
+        return [];
+    }
 };
 const resolveClusterAnchors = (clusters) => {
     const entries = Object.entries(clusters).map(([category, meta]) => ({
@@ -470,13 +508,22 @@ const computeLayout = (projects) => {
     });
     return { projects: positionedProjects, categories, categoryCounts };
 };
-const deriveProjectView = (baseProjects, filters, category) => {
-    const filteredPool = applySpecialFilters(baseProjects, filters);
+const deriveProjectView = (baseProjects, filters, category, options) => {
+    let workingPool = baseProjects;
+    if (options?.favoritesOnly) {
+        const favoriteSet = options.favoriteIds ?? new Set();
+        const favoritesSubset = workingPool.filter((project) => favoriteSet.has(project.id));
+        if (favoritesSubset.length === 0) {
+            const emptyCounts = deriveCategoryCounts([]);
+            return { pool: [], visible: [], counts: emptyCounts };
+        }
+        workingPool = compressProjects(computeLayout(toRawProjectSet(favoritesSubset)).projects, FAVORITES_CLUSTER_SCALE);
+    }
+    const filteredPool = applySpecialFilters(workingPool, filters);
     const pool = shouldAggregateFilters(filters)
         ? computeLayout(toRawProjectSet(filteredPool)).projects
         : cloneProjects(filteredPool);
-    const visiblePool = filterProjectsByCategory(pool, category);
-    const visible = visiblePool;
+    const visible = filterProjectsByCategory(pool, category);
     return { pool, visible, counts: deriveCategoryCounts(pool) };
 };
 const computeCameraFocus = (category, focusProjects, forceFocus = false) => {
@@ -510,7 +557,12 @@ export const ConstellationProvider = ({ children }) => {
     const layout = useMemo(() => computeLayout(rawProjects), []);
     const [state, setState] = useState(() => {
         const filters = { ...SPECIAL_DEFAULTS };
-        const { pool, visible, counts } = deriveProjectView(layout.projects, filters, null);
+        const favoriteIds = readStoredFavorites();
+        const favoritesOnly = false;
+        const { pool, visible, counts } = deriveProjectView(layout.projects, filters, null, {
+            favoritesOnly,
+            favoriteIds: new Set(favoriteIds)
+        });
         return {
             projects: visible,
             projectPoolSize: pool.length,
@@ -521,7 +573,9 @@ export const ConstellationProvider = ({ children }) => {
             selectedProjectId: null,
             camera: defaultCamera(),
             cameraReturnPoint: null,
-            filters
+            filters,
+            favoriteIds,
+            favoritesOnly
         };
     });
     const setActiveCategory = useCallback((category) => {
@@ -529,7 +583,10 @@ export const ConstellationProvider = ({ children }) => {
             if (prev.activeCategory === category) {
                 return prev;
             }
-            const { pool, visible, counts } = deriveProjectView(layout.projects, prev.filters, category);
+            const { pool, visible, counts } = deriveProjectView(layout.projects, prev.filters, category, {
+                favoritesOnly: prev.favoritesOnly,
+                favoriteIds: new Set(prev.favoriteIds)
+            });
             const visibleIds = new Set(visible.map((project) => project.id));
             const focus = computeCameraFocus(category, visible);
             return {
@@ -553,7 +610,10 @@ export const ConstellationProvider = ({ children }) => {
     const toggleFilter = useCallback((filterKey) => {
         setState((prev) => {
             const nextFilters = { ...prev.filters, [filterKey]: !prev.filters[filterKey] };
-            const { pool, visible, counts } = deriveProjectView(layout.projects, nextFilters, prev.activeCategory);
+            const { pool, visible, counts } = deriveProjectView(layout.projects, nextFilters, prev.activeCategory, {
+                favoritesOnly: prev.favoritesOnly,
+                favoriteIds: new Set(prev.favoriteIds)
+            });
             let nextActiveCategory = prev.activeCategory;
             let nextVisible = visible;
             if (nextActiveCategory && visible.length === 0) {
@@ -561,7 +621,8 @@ export const ConstellationProvider = ({ children }) => {
                 nextVisible = pool;
             }
             const visibleIds = new Set(nextVisible.map((project) => project.id));
-            const forceFocus = shouldAggregateFilters(nextFilters) && !nextActiveCategory;
+            const forceFocus = (shouldAggregateFilters(nextFilters) && !nextActiveCategory) ||
+                (prev.favoritesOnly && !nextActiveCategory);
             const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
             const shouldUpdateCamera = Boolean(nextActiveCategory) ||
                 prev.activeCategory !== nextActiveCategory ||
@@ -569,6 +630,106 @@ export const ConstellationProvider = ({ children }) => {
             return {
                 ...prev,
                 filters: nextFilters,
+                projects: nextVisible,
+                projectPoolSize: pool.length,
+                categoryCounts: counts,
+                activeCategory: nextActiveCategory,
+                hoveredProjectId: prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId)
+                    ? prev.hoveredProjectId
+                    : null,
+                selectedProjectId: prev.selectedProjectId && visibleIds.has(prev.selectedProjectId)
+                    ? prev.selectedProjectId
+                    : null,
+                cameraReturnPoint: null,
+                camera: shouldUpdateCamera
+                    ? {
+                        ...prev.camera,
+                        targetX: focus.x,
+                        targetY: focus.y,
+                        targetZoom: focus.zoom
+                    }
+                    : prev.camera
+            };
+        });
+    }, [layout.projects]);
+    const toggleFavoritesOnly = useCallback(() => {
+        setState((prev) => {
+            if (!prev.favoritesOnly && prev.favoriteIds.length === 0) {
+                return prev;
+            }
+            const nextFavoritesOnly = !prev.favoritesOnly;
+            const { pool, visible, counts } = deriveProjectView(layout.projects, prev.filters, prev.activeCategory, {
+                favoritesOnly: nextFavoritesOnly,
+                favoriteIds: new Set(prev.favoriteIds)
+            });
+            let nextActiveCategory = prev.activeCategory;
+            let nextVisible = visible;
+            if (nextActiveCategory && visible.length === 0) {
+                nextActiveCategory = null;
+                nextVisible = pool;
+            }
+            const visibleIds = new Set(nextVisible.map((project) => project.id));
+            const forceFocus = (shouldAggregateFilters(prev.filters) && !nextActiveCategory) ||
+                (nextFavoritesOnly && !nextActiveCategory);
+            const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
+            const shouldUpdateCamera = Boolean(nextActiveCategory) ||
+                prev.activeCategory !== nextActiveCategory ||
+                forceFocus ||
+                prev.favoritesOnly !== nextFavoritesOnly;
+            return {
+                ...prev,
+                favoritesOnly: nextFavoritesOnly,
+                projects: nextVisible,
+                projectPoolSize: pool.length,
+                categoryCounts: counts,
+                activeCategory: nextActiveCategory,
+                hoveredProjectId: prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId)
+                    ? prev.hoveredProjectId
+                    : null,
+                selectedProjectId: prev.selectedProjectId && visibleIds.has(prev.selectedProjectId)
+                    ? prev.selectedProjectId
+                    : null,
+                cameraReturnPoint: null,
+                camera: shouldUpdateCamera
+                    ? {
+                        ...prev.camera,
+                        targetX: focus.x,
+                        targetY: focus.y,
+                        targetZoom: focus.zoom
+                    }
+                    : prev.camera
+            };
+        });
+    }, [layout.projects]);
+    const toggleFavorite = useCallback((projectId) => {
+        setState((prev) => {
+            const isFavorite = prev.favoriteIds.includes(projectId);
+            const nextFavoriteIds = isFavorite
+                ? prev.favoriteIds.filter((id) => id !== projectId)
+                : [...prev.favoriteIds, projectId];
+            const nextFavoritesOnly = prev.favoritesOnly && nextFavoriteIds.length > 0 ? prev.favoritesOnly : false;
+            const { pool, visible, counts } = deriveProjectView(layout.projects, prev.filters, prev.activeCategory, {
+                favoritesOnly: nextFavoritesOnly,
+                favoriteIds: new Set(nextFavoriteIds)
+            });
+            let nextActiveCategory = prev.activeCategory;
+            let nextVisible = visible;
+            if (nextActiveCategory && visible.length === 0) {
+                nextActiveCategory = null;
+                nextVisible = pool;
+            }
+            const visibleIds = new Set(nextVisible.map((project) => project.id));
+            const forceFocus = (shouldAggregateFilters(prev.filters) && !nextActiveCategory) ||
+                (nextFavoritesOnly && !nextActiveCategory);
+            const shouldUpdateCamera = Boolean(nextActiveCategory) ||
+                prev.activeCategory !== nextActiveCategory ||
+                forceFocus ||
+                prev.favoritesOnly !== nextFavoritesOnly;
+            const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
+            return {
+                ...prev,
+                favoriteIds: nextFavoriteIds,
+                favoritesOnly: nextFavoritesOnly,
                 projects: nextVisible,
                 projectPoolSize: pool.length,
                 categoryCounts: counts,
@@ -699,7 +860,10 @@ export const ConstellationProvider = ({ children }) => {
     }, []);
     const resetCamera = useCallback(() => {
         setState((prev) => {
-            const { pool, visible, counts } = deriveProjectView(layout.projects, prev.filters, null);
+            const { pool, visible, counts } = deriveProjectView(layout.projects, prev.filters, null, {
+                favoritesOnly: prev.favoritesOnly,
+                favoriteIds: new Set(prev.favoriteIds)
+            });
             const visibleIds = new Set(visible.map((project) => project.id));
             return {
                 ...prev,
@@ -724,6 +888,17 @@ export const ConstellationProvider = ({ children }) => {
             layout.projects.find((project) => project.id === projectId) ??
             null);
     }, [state.projects, layout.projects]);
+    useEffect(() => {
+        if (typeof window === 'undefined') {
+            return;
+        }
+        try {
+            window.localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(state.favoriteIds));
+        }
+        catch {
+            // Ignore storage errors
+        }
+    }, [state.favoriteIds]);
     useEffect(() => {
         let animationFrame;
         const tick = () => {
@@ -766,6 +941,8 @@ export const ConstellationProvider = ({ children }) => {
         zoomCamera,
         resetCamera,
         toggleFilter,
+        toggleFavoritesOnly,
+        toggleFavorite,
         resolveProjectById
     }), [
         state,
@@ -776,6 +953,8 @@ export const ConstellationProvider = ({ children }) => {
         zoomCamera,
         resetCamera,
         toggleFilter,
+        toggleFavoritesOnly,
+        toggleFavorite,
         resolveProjectById
     ]);
     return _jsx(ConstellationContext.Provider, { value: value, children: children });
