@@ -1,6 +1,6 @@
-# Constellation Explorer
+# MegaBunnish
 
-A 2D blockchain application navigator that renders a constellation of project nodes from local JSON data. Users can filter by primitive, orbit the canvas with a left-click drag gesture, and inspect detailed resources plus incentive campaigns per project.
+MegaBunnish is a 2D blockchain application navigator that renders a constellation of project nodes from local JSON data. Users can filter by primitive, orbit the canvas with a left-click drag gesture, and inspect detailed resources plus incentive campaigns per project.
 
 ## Requirements
 

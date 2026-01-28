@@ -32,7 +32,7 @@ export const FilterOrbitPanel = ({ isInteracting = false }) => {
                                         : {
                                             borderColor: ALL_CATEGORY_BORDER,
                                             backgroundColor: 'transparent',
-                                            color: 'rgba(200, 204, 221, 0.9)'
+                                            color: ALL_CATEGORY_ACCENT
                                         }, onClick: () => quickSelect(null), "aria-pressed": activeCategory === null, children: [_jsx("span", { className: "chip-label", children: "All" }), _jsx("span", { className: "chip-count", style: activeCategory === null
                                                 ? { color: '#05060f' }
                                                 : { color: 'rgba(200, 204, 221, 0.9)' }, children: totalProjects })] }), categories.map((category) => {
