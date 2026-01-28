@@ -481,6 +481,8 @@ export const ProjectDetailDrawer = () => {
   );
   const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
   const isFavorite = project ? favoriteSet.has(project.id) : false;
+  const hasLiveIncentives = Boolean(project?.incentives.length);
+  const showIncentiveBell = hasLiveIncentives;
   const socialLinks = useMemo(
     () =>
       project
@@ -505,6 +507,17 @@ export const ProjectDetailDrawer = () => {
                 <img src={project.logo} alt={`${project.name} logo`} loading="lazy" />
                 <div className="detail-title__heading">
                   <h2>{project.name}</h2>
+                  {showIncentiveBell ? (
+                    <span className="incentive-bell" aria-label="Incentives actives" title="Incentives actives">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path
+                          d="M12 4a4 4 0 0 1 4 4v3.2l1.2 2.6a1 1 0 0 1-.9 1.4H7.7a1 1 0 0 1-.9-1.4L8 11.2V8a4 4 0 0 1 4-4Z"
+                          fill="currentColor"
+                        />
+                        <path d="M10 17.5a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" />
+                      </svg>
+                    </span>
+                  ) : null}
                   <button
                     type="button"
                     className={isFavorite ? 'favorite-toggle is-active' : 'favorite-toggle'}

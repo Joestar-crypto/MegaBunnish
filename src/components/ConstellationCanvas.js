@@ -39,6 +39,30 @@ const drawFavoriteStar = (context, x, y, isFavorite) => {
     context.stroke();
     context.restore();
 };
+const drawIncentiveBell = (context, x, y) => {
+    context.save();
+    context.translate(x, y);
+    context.beginPath();
+    context.fillStyle = '#ff5d77';
+    context.strokeStyle = '#ff9fb1';
+    context.lineWidth = 1.5;
+    context.moveTo(0, -8);
+    context.quadraticCurveTo(8, -8, 8, 0);
+    context.lineTo(10, 6);
+    context.quadraticCurveTo(10.5, 8, 8.5, 8);
+    context.lineTo(-8.5, 8);
+    context.quadraticCurveTo(-10.5, 8, -10, 6);
+    context.lineTo(-8, 0);
+    context.quadraticCurveTo(-8, -8, 0, -8);
+    context.closePath();
+    context.fill();
+    context.stroke();
+    context.beginPath();
+    context.moveTo(-4, 12);
+    context.quadraticCurveTo(0, 14, 4, 12);
+    context.stroke();
+    context.restore();
+};
 const defaultPointerState = {
     isDragging: false,
     pointerId: null,
@@ -310,6 +334,10 @@ export const ConstellationCanvas = ({ onInteractionStart, onInteractionEnd } = {
                     const starX = x + starOffset;
                     const starY = y - starOffset;
                     drawFavoriteStar(context, starX, starY, true);
+                }
+                if (project.incentives.length > 0) {
+                    const bellOffset = Math.max(radius * 0.7, radius - 8);
+                    drawIncentiveBell(context, x - bellOffset, y - bellOffset);
                 }
             });
             animationFrame = requestAnimationFrame(render);

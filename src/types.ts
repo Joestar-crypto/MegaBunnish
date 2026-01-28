@@ -14,6 +14,8 @@ export type Incentive = {
   expiresAt: string;
 };
 
+export type IncentiveMap = Record<string, Incentive[]>;
+
 export type RawProject = {
   id: string;
   name: string;

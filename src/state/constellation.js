@@ -218,6 +218,7 @@ const ECOSYSTEM_HIGHLIGHTS = {
     priority: 'megalio'
 };
 const FAVORITES_STORAGE_KEY = 'constellation:favorites';
+const baseProjects = rawProjects;
 const readStoredFavorites = () => {
     if (typeof window === 'undefined') {
         return [];
@@ -554,7 +555,7 @@ const createReturnPoint = (camera) => ({
 });
 const ConstellationContext = createContext(undefined);
 export const ConstellationProvider = ({ children }) => {
-    const layout = useMemo(() => computeLayout(rawProjects), []);
+    const layout = useMemo(() => computeLayout(baseProjects), []);
     const [state, setState] = useState(() => {
         const filters = { ...SPECIAL_DEFAULTS };
         const favoriteIds = readStoredFavorites();
@@ -578,6 +579,25 @@ export const ConstellationProvider = ({ children }) => {
             favoritesOnly
         };
     });
+    useEffect(() => {
+        setState((prev) => {
+            const { pool, visible, counts } = deriveProjectView(layout.projects, prev.filters, prev.activeCategory, {
+                favoritesOnly: prev.favoritesOnly,
+                favoriteIds: new Set(prev.favoriteIds)
+            });
+            const visibleIds = new Set(visible.map((project) => project.id));
+            return {
+                ...prev,
+                projects: visible,
+                projectPoolSize: pool.length,
+                categoryCounts: counts,
+                hoveredProjectId: prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId) ? prev.hoveredProjectId : null,
+                selectedProjectId: prev.selectedProjectId && visibleIds.has(prev.selectedProjectId)
+                    ? prev.selectedProjectId
+                    : null
+            };
+        });
+    }, [layout.projects]);
     const setActiveCategory = useCallback((category) => {
         setState((prev) => {
             if (prev.activeCategory === category) {

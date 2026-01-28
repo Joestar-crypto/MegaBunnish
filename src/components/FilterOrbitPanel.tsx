@@ -56,6 +56,9 @@ type FilterOrbitPanelProps = {
   isInteracting?: boolean;
 };
 
+const ALL_CATEGORY_ACCENT = '#c8ccdd';
+const ALL_CATEGORY_BORDER = 'rgba(200, 204, 221, 0.45)';
+
 export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProps) => {
   const {
     projectPoolSize,
@@ -108,6 +111,7 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
             onClick={toggleFavoritesOnly}
             aria-pressed={favoritesOnly}
             disabled={favoritesDisabled}
+            title="To add favorites, open a project and tap the star in its details."
           >
             <span className="chip__leading-icon">
               <FavoriteIcon />
@@ -129,11 +133,15 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
               style={
                 activeCategory === null
                   ? {
-                      borderColor: 'var(--accent)',
-                      backgroundColor: 'var(--accent)',
+                      borderColor: ALL_CATEGORY_ACCENT,
+                      backgroundColor: ALL_CATEGORY_ACCENT,
                       color: '#05060f'
                     }
-                  : { borderColor: 'var(--accent)', backgroundColor: 'transparent' }
+                  : {
+                      borderColor: ALL_CATEGORY_BORDER,
+                      backgroundColor: 'transparent',
+                      color: ALL_CATEGORY_ACCENT
+                    }
               }
               onClick={() => quickSelect(null)}
               aria-pressed={activeCategory === null}
@@ -141,7 +149,11 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
               <span className="chip-label">All</span>
               <span
                 className="chip-count"
-                style={activeCategory === null ? { color: '#05060f' } : undefined}
+                style={
+                  activeCategory === null
+                    ? { color: '#05060f' }
+                    : { color: 'rgba(200, 204, 221, 0.9)' }
+                }
               >
                 {totalProjects}
               </span>

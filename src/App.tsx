@@ -28,7 +28,9 @@ const AppContent = () => {
         <div className={`hero-overlay ${isInteracting ? 'hero-overlay--hidden' : ''}`}>
           <div className="hero-overlay__content">
             <p className="eyebrow">MegaETH ecosystem</p>
-            <h1>MegaBunnish</h1>
+            <h1 className="hero-overlay__title">
+              <img src="/logos/MegaBunnish3.png" alt="MegaBunnish" />
+            </h1>
             <a
               className="hero-overlay__credit"
               href="https://x.com/JoestarCrypto"

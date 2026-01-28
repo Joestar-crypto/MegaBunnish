@@ -268,6 +268,7 @@ const ECOSYSTEM_HIGHLIGHTS: Record<string, HighlightVariant> = {
 };
 
 const FAVORITES_STORAGE_KEY = 'constellation:favorites';
+const baseProjects = rawProjects as RawProject[];
 
 const readStoredFavorites = (): string[] => {
   if (typeof window === 'undefined') {
@@ -695,7 +696,7 @@ type ConstellationContextShape = ConstellationState & {
 const ConstellationContext = createContext<ConstellationContextShape | undefined>(undefined);
 
 export const ConstellationProvider = ({ children }: { children: ReactNode }) => {
-  const layout = useMemo(() => computeLayout(rawProjects as RawProject[]), []);
+  const layout = useMemo(() => computeLayout(baseProjects), []);
   const [state, setState] = useState<ConstellationState>(() => {
     const filters = { ...SPECIAL_DEFAULTS };
     const favoriteIds = readStoredFavorites();
@@ -719,6 +720,33 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       favoritesOnly
     };
   });
+
+  useEffect(() => {
+    setState((prev) => {
+      const { pool, visible, counts } = deriveProjectView(
+        layout.projects,
+        prev.filters,
+        prev.activeCategory,
+        {
+          favoritesOnly: prev.favoritesOnly,
+          favoriteIds: new Set(prev.favoriteIds)
+        }
+      );
+      const visibleIds = new Set(visible.map((project) => project.id));
+      return {
+        ...prev,
+        projects: visible,
+        projectPoolSize: pool.length,
+        categoryCounts: counts,
+        hoveredProjectId:
+          prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId) ? prev.hoveredProjectId : null,
+        selectedProjectId:
+          prev.selectedProjectId && visibleIds.has(prev.selectedProjectId)
+            ? prev.selectedProjectId
+            : null
+      };
+    });
+  }, [layout.projects]);
 
   const setActiveCategory = useCallback(
     (category: string | null) => {

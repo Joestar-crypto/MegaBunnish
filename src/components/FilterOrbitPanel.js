@@ -9,6 +9,8 @@ const SPECIAL_FILTERS = [
     { key: 'megamafia', label: 'Megamafia', iconSrc: '/logos/Megamafia.webp', Icon: MegamafiaIcon },
     { key: 'native', label: 'MegaETH', hint: 'Core native', iconSrc: '/logos/MegaETH.webp', Icon: NativeCoreIcon }
 ];
+const ALL_CATEGORY_ACCENT = '#c8ccdd';
+const ALL_CATEGORY_BORDER = 'rgba(200, 204, 221, 0.45)';
 export const FilterOrbitPanel = ({ isInteracting = false }) => {
     const { projectPoolSize, categories, categoryCounts, activeCategory, setActiveCategory, filters, toggleFilter, favoriteIds, favoritesOnly, toggleFavoritesOnly } = useConstellation();
     const totalProjects = projectPoolSize;
@@ -21,13 +23,19 @@ export const FilterOrbitPanel = ({ isInteracting = false }) => {
         }
         setActiveCategory(category);
     };
-    return (_jsxs(_Fragment, { children: [_jsx("div", { className: `trait-dock ${isInteracting ? 'ui-panel--hidden' : ''}`, children: _jsxs("div", { className: "trait-menu", role: "group", "aria-label": "Signal traits", children: [SPECIAL_FILTERS.map(({ key, label, hint, Icon, iconSrc }) => (_jsxs("button", { type: "button", className: filters[key] ? 'chip chip--trait active' : 'chip chip--trait', onClick: () => toggleFilter(key), "aria-pressed": filters[key], children: [_jsx("span", { className: "chip__leading-icon", children: iconSrc ? _jsx("img", { src: iconSrc, alt: "", "aria-hidden": true }) : Icon ? _jsx(Icon, {}) : null }), _jsxs("span", { className: "chip__stack", children: [_jsx("span", { className: "chip-label", children: label }), hint ? _jsx("span", { className: "chip-hint", children: hint }) : null] })] }, key))), _jsxs("button", { type: "button", className: favoritesOnly ? 'chip chip--trait chip--favorites active' : 'chip chip--trait chip--favorites', onClick: toggleFavoritesOnly, "aria-pressed": favoritesOnly, disabled: favoritesDisabled, children: [_jsx("span", { className: "chip__leading-icon", children: _jsx(FavoriteIcon, {}) }), _jsxs("span", { className: "chip__stack", children: [_jsx("span", { className: "chip-label", children: "Favorites" }), _jsx("span", { className: "chip-hint", children: hasFavorites ? `${favoriteIds.length} saved` : 'Add stars' })] })] })] }) }), _jsx("div", { className: `category-dock ${isInteracting ? 'ui-panel--hidden' : ''}`, children: _jsxs("aside", { className: "category-rail", "aria-label": "Categories", children: [_jsx("p", { className: "category-rail__section-heading", children: "Sectors" }), _jsxs("div", { className: "category-rail__list", role: "tablist", children: [_jsxs("button", { className: activeCategory === null ? 'chip chip--category active' : 'chip chip--category', type: "button", style: activeCategory === null
+    return (_jsxs(_Fragment, { children: [_jsx("div", { className: `trait-dock ${isInteracting ? 'ui-panel--hidden' : ''}`, children: _jsxs("div", { className: "trait-menu", role: "group", "aria-label": "Signal traits", children: [SPECIAL_FILTERS.map(({ key, label, hint, Icon, iconSrc }) => (_jsxs("button", { type: "button", className: filters[key] ? 'chip chip--trait active' : 'chip chip--trait', onClick: () => toggleFilter(key), "aria-pressed": filters[key], children: [_jsx("span", { className: "chip__leading-icon", children: iconSrc ? _jsx("img", { src: iconSrc, alt: "", "aria-hidden": true }) : Icon ? _jsx(Icon, {}) : null }), _jsxs("span", { className: "chip__stack", children: [_jsx("span", { className: "chip-label", children: label }), hint ? _jsx("span", { className: "chip-hint", children: hint }) : null] })] }, key))), _jsxs("button", { type: "button", className: favoritesOnly ? 'chip chip--trait chip--favorites active' : 'chip chip--trait chip--favorites', onClick: toggleFavoritesOnly, "aria-pressed": favoritesOnly, disabled: favoritesDisabled, title: "To add favorites, open a project and tap the star in its details.", children: [_jsx("span", { className: "chip__leading-icon", children: _jsx(FavoriteIcon, {}) }), _jsxs("span", { className: "chip__stack", children: [_jsx("span", { className: "chip-label", children: "Favorites" }), _jsx("span", { className: "chip-hint", children: hasFavorites ? `${favoriteIds.length} saved` : 'Add stars' })] })] })] }) }), _jsx("div", { className: `category-dock ${isInteracting ? 'ui-panel--hidden' : ''}`, children: _jsxs("aside", { className: "category-rail", "aria-label": "Categories", children: [_jsx("p", { className: "category-rail__section-heading", children: "Sectors" }), _jsxs("div", { className: "category-rail__list", role: "tablist", children: [_jsxs("button", { className: activeCategory === null ? 'chip chip--category active' : 'chip chip--category', type: "button", style: activeCategory === null
                                         ? {
-                                            borderColor: 'var(--accent)',
-                                            backgroundColor: 'var(--accent)',
+                                            borderColor: ALL_CATEGORY_ACCENT,
+                                            backgroundColor: ALL_CATEGORY_ACCENT,
                                             color: '#05060f'
                                         }
-                                        : { borderColor: 'var(--accent)', backgroundColor: 'transparent' }, onClick: () => quickSelect(null), "aria-pressed": activeCategory === null, children: [_jsx("span", { className: "chip-label", children: "All" }), _jsx("span", { className: "chip-count", style: activeCategory === null ? { color: '#05060f' } : undefined, children: totalProjects })] }), categories.map((category) => {
+                                        : {
+                                            borderColor: ALL_CATEGORY_BORDER,
+                                            backgroundColor: 'transparent',
+                                            color: 'rgba(200, 204, 221, 0.9)'
+                                        }, onClick: () => quickSelect(null), "aria-pressed": activeCategory === null, children: [_jsx("span", { className: "chip-label", children: "All" }), _jsx("span", { className: "chip-count", style: activeCategory === null
+                                                ? { color: '#05060f' }
+                                                : { color: 'rgba(200, 204, 221, 0.9)' }, children: totalProjects })] }), categories.map((category) => {
                                     const accent = getCategoryColor(category);
                                     const isActive = activeCategory === category;
                                     const style = isActive
