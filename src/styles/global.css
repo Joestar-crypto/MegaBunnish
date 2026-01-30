@@ -448,6 +448,36 @@ select {
   font-weight: 600;
 }
 
+.chip--trait-megamafia.active {
+  background: #ffffff;
+  color: #111217;
+}
+
+.chip--trait-megamafia.active .chip__leading-icon {
+  background: rgba(5, 6, 18, 0.15);
+  color: inherit;
+}
+
+.chip--trait-jojo.active {
+  background: #fff533;
+  color: #1f1f1f;
+}
+
+.chip--trait-jojo.active .chip__leading-icon {
+  background: rgba(31, 31, 31, 0.12);
+  color: inherit;
+}
+
+.chip--trait-native.active {
+  background: #e0d9d9;
+  color: #1a1a1a;
+}
+
+.chip--trait-native.active .chip__leading-icon {
+  background: rgba(26, 26, 26, 0.12);
+  color: inherit;
+}
+
 .chip:not(.chip--category).active .chip__leading-icon {
   background: rgba(5, 6, 18, 0.18);
   color: #05060f;

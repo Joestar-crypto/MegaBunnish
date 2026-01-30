@@ -9,6 +9,7 @@ const FavoriteIcon = () => (
     />
   </svg>
 );
+import type { CSSProperties } from 'react';
 import { useConstellation } from '../state/constellation';
 import { SpecialFilters } from '../types';
 import { getCategoryColor } from '../utils/colors';
@@ -45,6 +46,37 @@ type SpecialFilterDefinition = {
   hint?: string;
   iconSrc?: string;
   Icon?: () => JSX.Element;
+};
+
+const buildTraitClassName = (key: SpecialFilterKey, isActive: boolean) => {
+  const classes = ['chip', 'chip--trait', `chip--trait-${key}`];
+  if (isActive) {
+    classes.push('active');
+  }
+  return classes.join(' ');
+};
+
+const SPECIAL_FILTER_ACTIVE_THEME: Partial<Record<SpecialFilterKey, { background: string; color: string }>> = {
+  megamafia: { background: '#ffffff', color: '#111217' },
+  jojo: { background: '#fff533', color: '#1f1f1f' },
+  native: { background: '#e0d9d9', color: '#1a1a1a' }
+};
+
+type TraitStyleBundle = { button?: CSSProperties; icon?: CSSProperties };
+
+const getTraitStyles = (key: SpecialFilterKey, isActive: boolean): TraitStyleBundle => {
+  if (!isActive) {
+    return { button: undefined, icon: undefined };
+  }
+  const theme = SPECIAL_FILTER_ACTIVE_THEME[key];
+  if (!theme) {
+    return { button: undefined, icon: undefined };
+  }
+  const iconBackground = key === 'jojo' ? 'rgba(31, 31, 31, 0.12)' : 'rgba(5, 6, 18, 0.15)';
+  return {
+    button: { backgroundColor: theme.background, color: theme.color },
+    icon: { background: iconBackground, color: theme.color }
+  };
 };
 
 const SPECIAL_FILTERS: SpecialFilterDefinition[] = [
@@ -95,23 +127,27 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
     <>
       <div className={`trait-dock ${isInteracting ? 'ui-panel--hidden' : ''}`}>
         <div className="trait-menu" role="group" aria-label="Signal traits">
-          {SPECIAL_FILTERS.map(({ key, label, hint, Icon, iconSrc }) => (
-            <button
-              key={key}
-              type="button"
-              className={filters[key] ? 'chip chip--trait active' : 'chip chip--trait'}
-              onClick={() => toggleFilter(key)}
-              aria-pressed={filters[key]}
-            >
-              <span className="chip__leading-icon">
-                {iconSrc ? <img src={iconSrc} alt="" aria-hidden /> : Icon ? <Icon /> : null}
-              </span>
-              <span className="chip__stack">
-                <span className="chip-label">{label}</span>
-                {hint ? <span className="chip-hint">{hint}</span> : null}
-              </span>
-            </button>
-          ))}
+          {SPECIAL_FILTERS.map(({ key, label, hint, Icon, iconSrc }) => {
+            const traitStyles = getTraitStyles(key, filters[key]);
+            return (
+              <button
+                key={key}
+                type="button"
+                className={buildTraitClassName(key, filters[key])}
+                onClick={() => toggleFilter(key)}
+                aria-pressed={filters[key]}
+                style={traitStyles.button}
+              >
+                <span className="chip__leading-icon" style={traitStyles.icon}>
+                  {iconSrc ? <img src={iconSrc} alt="" aria-hidden /> : Icon ? <Icon /> : null}
+                </span>
+                <span className="chip__stack">
+                  <span className="chip-label">{label}</span>
+                  {hint ? <span className="chip-hint">{hint}</span> : null}
+                </span>
+              </button>
+            );
+          })}
           <button
             type="button"
             className={favoritesOnly ? 'chip chip--trait chip--favorites active' : 'chip chip--trait chip--favorites'}
@@ -119,6 +155,11 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
             aria-pressed={favoritesOnly}
             disabled={favoritesDisabled}
             title="To add favorites, open a project and tap the star in its details."
+            style={
+              favoritesOnly
+                ? { backgroundColor: '#ffd84d', borderColor: '#ffd84d', color: '#05060f' }
+                : undefined
+            }
           >
             <span className="chip__leading-icon">
               <FavoriteIcon />
