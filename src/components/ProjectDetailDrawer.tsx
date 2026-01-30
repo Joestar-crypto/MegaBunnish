@@ -3,11 +3,11 @@ import { useConstellation } from '../state/constellation';
 import { getCategoryColor } from '../utils/colors';
 
 const SOCIAL_LINKS: { key: 'site' | 'twitter' | 'discord' | 'telegram' | 'nft'; label: string; icon: string }[] = [
-  { key: 'site', label: 'Website', icon: '/icons/globe.svg' },
+  { key: 'site', label: 'Website', icon: '/logos/Website.webp' },
   { key: 'twitter', label: 'X', icon: '/icons/x.svg' },
-  { key: 'discord', label: 'Discord', icon: '/icons/discord.svg' },
-  { key: 'telegram', label: 'Telegram', icon: '/icons/telegram.svg' },
-  { key: 'nft', label: 'NFT', icon: '/icons/nft.svg' }
+  { key: 'discord', label: 'Discord', icon: '/logos/Discord.webp' },
+  { key: 'telegram', label: 'Telegram', icon: '/logos/Telegram.webp' },
+  { key: 'nft', label: 'NFT', icon: '/logos/NFT.webp' }
 ];
 
 type DialogueSegment =
