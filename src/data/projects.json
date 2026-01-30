@@ -171,25 +171,6 @@
     ]
   },
   {
-    "id": "legend",
-    "name": "Legend",
-    "categories": [
-      "Trading",
-      "Megamafia",
-      "Native"
-    ],
-    "networks": [
-      "MegaETH"
-    ],
-    "links": {
-      "site": "https://www.legend.trade/",
-      "twitter": "https://x.com/legendtrade",
-      "discord": "https://discord.com/invite/tcy4pT7guV",
-      "telegram": "https://t.me/+mGMVS-seE0gwNzkx"
-    },
-    "logo": "/logos/Legend.webp"
-  },
-  {
     "id": "brix",
     "name": "Brix",
     "categories": [
@@ -475,21 +456,6 @@
       "twitter": "https://x.com/MethMegaeth"
     },
     "logo": "/logos/METH.webp"
-  },
-  {
-    "id": "megarafia",
-    "name": "Megarafia",
-    "categories": [
-      "Meme",
-      "Native"
-    ],
-    "networks": [
-      "MegaETH"
-    ],
-    "links": {
-      "twitter": "https://x.com/MegaRafia"
-    },
-    "logo": "/logos/Megarafia.webp"
   },
   {
     "id": "cilium",
@@ -1025,5 +991,255 @@
       "discord": "https://discord.com/invite/E7sZCw2gMS"
     },
     "logo": "/logos/WrapX.webp"
+  },
+  {
+    "id": "1perday",
+    "name": "1PerDay",
+    "categories": [
+      "Launchpad",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://1pd.fun/",
+      "twitter": "https://x.com/1pdfun",
+      "telegram": "https://t.me/onepdfun"
+    },
+    "logo": "/logos/1PerDay.webp"
+  },
+  {
+    "id": "redstone",
+    "name": "Redstone",
+    "categories": [
+      "Tools",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://www.redstone.finance/",
+      "twitter": "https://x.com/redstone_defi",
+      "discord": "https://discord.com/invite/redstonedefi",
+      "telegram": "https://t.me/redstonefinance"
+    },
+    "logo": "/logos/Redstone.webp"
+  },
+  {
+    "id": "megatruther",
+    "name": "MegaTruther",
+    "categories": [
+      "Social",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/megatruther"
+    },
+    "logo": "/logos/MegaTruther.webp"
+  },
+  {
+    "id": "huntertales",
+    "name": "Huntertales",
+    "categories": [
+      "Gaming",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/playhuntertales",
+      "discord": "https://discord.com/invite/playhuntertales"
+    },
+    "logo": "/logos/HunterTales.webp"
+  },
+  {
+    "id": "dead-bit-nation",
+    "name": "Dead Bit Nation",
+    "categories": [
+      "NFT",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/deadbitnation",
+      "discord": "https://discord.gg/ADPVhSM2"
+    },
+    "logo": "/logos/DeadBitNation.webp"
+  },
+  {
+    "id": "megarebel",
+    "name": "MegaRebel",
+    "categories": [
+      "NFT",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/MegaRebelNFT",
+      "discord": "https://discord.com/invite/67WPZwdFeX"
+    },
+    "logo": "/logos/MegaRebel.webp",
+    "linkedIds": [
+      "odds"
+    ]
+  },
+  {
+    "id": "odds",
+    "name": "Odds",
+    "categories": [
+      "Launchpad",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://www.oddslaunchpad.com/",
+      "twitter": "https://x.com/oddslaunchpad"
+    },
+    "logo": "/logos/Odds.webp",
+    "linkedIds": [
+      "megarebel"
+    ]
+  },
+  {
+    "id": "gmega",
+    "name": "gMega",
+    "categories": [
+      "Meme",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/gMegaEth",
+      "telegram": "https://t.me/gMegaEth_tg"
+    },
+    "logo": "/logos/gMega.webp"
+  },
+  {
+    "id": "gearbox",
+    "name": "Gearbox",
+    "categories": [
+      "DeFi"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://gearbox.finance/",
+      "twitter": "https://x.com/GearboxProtocol",
+      "discord": "https://discord.com/invite/gearbox",
+      "telegram": "https://t.me/GearboxProtocol"
+    },
+    "logo": "/logos/Gearbox.webp"
+  },
+  {
+    "id": "syndicate",
+    "name": "Syndicate",
+    "categories": [
+      "Social",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/joinsyndicate_",
+      "discord": "https://discord.com/invite/5CtepFcZs2"
+    },
+    "logo": "/logos/Syndicate.webp"
+  },
+  {
+    "id": "rarible",
+    "name": "Rarible",
+    "categories": [
+      "NFT"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://rarible.com/all",
+      "twitter": "https://x.com/rarible",
+      "telegram": "https://t.me/+U6KEojWy3ntjYTM0"
+    },
+    "logo": "/logos/Rarible.webp"
+  },
+  {
+    "id": "smasher",
+    "name": "Smasher",
+    "categories": [
+      "Gaming"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://smasher.fun/",
+      "twitter": "https://x.com/smasherdotfun"
+    },
+    "logo": "/logos/Smasher.webp"
+  },
+  {
+    "id": "megabeers",
+    "name": "MegaBeers",
+    "categories": [
+      "Gaming",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://www.megabeers.com/",
+      "twitter": "https://x.com/mega_beers",
+      "discord": "https://discord.com/invite/ZBEPaZJMSK"
+    },
+    "logo": "/logos/MegaBeers.webp"
+  },
+  {
+    "id": "survivors",
+    "name": "Survivors",
+    "categories": [
+      "Gaming",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://www.joinsurvivors.com/",
+      "twitter": "https://x.com/JoinSurvivors"
+    },
+    "logo": "/logos/Survivors.webp"
+  },
+  {
+    "id": "reach",
+    "name": "Reach",
+    "categories": [
+      "Social",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://megareach.xyz/links",
+      "twitter": "https://x.com/reach_eth",
+      "discord": "https://discord.com/invite/megareach"
+    },
+    "logo": "/logos/Reach.webp"
   }
 ]

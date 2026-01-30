@@ -45,11 +45,6 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
       textSegment(
         'Rocket is redefining prediction markets with redistribution markets. Instead of keeping capital idle until long-term resolution, everyone wins or loses a portion of their bet every 5 seconds.'
       )
-    ],
-    [
-      textSegment(
-        'This, coupled with margin on every bet, creates high capital efficiency and a real-time prediction market that constantly adjusts. Even if Trump tweets something dumb and makes you lose your bet at the last minute, you would still have made a lot of money on Rocket by being directionally right, unlike on Polymarket. That\'s one of my favorites tbh.'
-      )
     ]
   ],
   aveforge: [
@@ -106,14 +101,6 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
     ],
     [textSegment('Built by BadBunnz, it totally matches their vibe lol.')]
   ],
-  legend: [
-    [
-      textSegment(
-        'Still not sure this one will launch on MegaETH, as it was incubated by GTE, which is moving to its own L1. It\'s still a solid PvP trading project that deserves to be highlighted.'
-      )
-    ],
-    [textSegment('Would just love to get a bit of an update please.')]
-  ],
   brix: [
     [
       textSegment(
@@ -168,16 +155,6 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
     [
       textSegment('Used to be the main protocol for cross-chain BTC/BCH/ZEC DeFi, then collapsed after the Alameda acquisition and the FTX crash.')
     ],
-    [
-      textSegment("Since then, they've been rebuilding, and after years of waiting, they're about to unveil their v2 on MegaETH. I have no idea what this is about exactly, but I'm very excited to discover it.")
-    ]
-  ],
-  wrapx: [
-    [
-      textSegment('Another DEX, not much to say tbh.')
-    ]
-  ],
-  blitzo: [
     [
       textSegment(
         "Ngl I don\'t fully understand this one lol, it seems like a payment app coupled with something like TikTok, making every payment memeable and tradable. Idk, but it\'s a MegaMafia project, so don\'t fade it."
@@ -424,6 +401,101 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
       textSegment('The full degen app, it\'s like a lottery machine, but it chooses the asset, the size, and the direction for you.')
     ],
     [textSegment("Usually people think this is useless because they\'re not the PMF. I\'m not the PMF either, but I think this kind of casino product can be really strong and adopted fast.")]
+  ],
+  '1perday': [
+    [
+      textSegment('An interesting launchpad concept that only lists one memecoin per day, making each drop far less competitive and protecting it from the usual sniper swarm.')
+    ],
+    [textSegment("Sounds great on paper but I don\'t know the founder yet, so I\'m keeping some caution until we see execution.")]
+  ],
+  redstone: [
+    [
+      textSegment('You\'re going to enjoy full MegaETH scalability because the Redstone team built the fastest oracle exactly for that use case.')
+    ],
+    [textSegment("Just for that alone they\'re basically GOATED, so yeah, show them some love.")]
+  ],
+  megatruther: [
+    [
+      textSegment('MegaTruther is a cryptic community crafting games, puzzles, and IRL events across MegaETH.')
+    ],
+    [textSegment("It\'s honestly one of the biggest active squads around Mega, so keep tabs on whatever they tease.")]
+  ],
+  huntertales: [
+    [
+      textSegment('Huntertales is a pixel-art battlefield where you recruit hunters, form parties, and deploy them to earn the REDACTED token for packs.')
+    ],
+    [textSegment("I don\'t know them deeply yet, but the following is solid so I\'ll dig deeper and keep an eye on it.")]
+  ],
+  'dead-bit-nation': [
+    [
+      textSegment('Another NFT collection planning to launch the HOMIE memecoin and use trading fees to buy back NFTs, kind of a Punk strategy.')
+    ],
+    [textSegment("Didn\'t follow it closely but it\'s definitely an interesting one.")]
+  ],
+  megarebel: [
+    [
+      textSegment('Rebel is a low-supply NFT that isn\'t as hyped as others but clearly worked hard to win the MegaETH community.')
+    ],
+    [
+      textSegment("They\'re even building a launchpad called "),
+      linkSegment('Odds', 'odds'),
+      textSegment(', so watch how that duo evolves.')
+    ]
+  ],
+  odds: [
+    [
+      textSegment('Odds looks like an NFT launchpad to create, mint, and trade collections built by '),
+      linkSegment('MegaRebel', 'megarebel'),
+      textSegment('.')
+    ],
+    [textSegment('If they nail UX it could quickly become the native mint hub.')]
+  ],
+  gmega: [
+    [
+      textSegment('gMega is a gamified memecoin with mini games that plans to airdrop the $GMEGA token to users.')
+    ],
+    [textSegment("I just discovered them, and as always with memecoins you need to be careful with this type of asset.")]
+  ],
+  gearbox: [
+    [
+      textSegment('Gearbox is a lending infra for tokens and RWAs that used to sit near $400M TVL and still has about $60M while deploying on MegaETH.')
+    ],
+    [textSegment("That\'s a strong signal OG protocols see MegaETH as a real opportunity.")]
+  ],
+  syndicate: [
+    [
+      textSegment('Syndicate is the biggest MegaETH community I know of, period.')
+    ],
+    [textSegment('If you need help navigating the ecosystem, that\'s the Discord you want.')]
+  ],
+  rarible: [
+    [
+      textSegment("You don\'t know Rarible? Come on bro... seriously???")
+    ]
+  ],
+  smasher: [
+    [
+      textSegment('Smasher was one of the only apps live during the MegaETH stress test with slick 3D art.')
+    ],
+    [textSegment('Not much alpha yet but I\'m curious to see how it evolves.')]
+  ],
+  megabeers: [
+    [
+      textSegment('MegaBeers is an NFT project fused with a gacha game.')
+    ],
+    [textSegment("Pretty intriguing even though I don\'t know that much about them tbh.")]
+  ],
+  survivors: [
+    [
+      textSegment('Survivors is a beautifully animated series where you can chat directly with the protagonist on a webpage.')
+    ],
+    [textSegment('I was honestly surprised by the quality when I tried it and still wonder how I missed it for months.')]
+  ],
+  reach: [
+    [
+      textSegment('Reach is a social growth and engagement platform using LLMs to help creators maximize visibility and monetization.')
+    ],
+    [textSegment("First time I come across a protocol like this so I\'m curious even if I don\'t know much yet.")]
   ]
 };
 
