@@ -201,7 +201,7 @@ export const ConstellationCanvas = ({
   const selectedRef = useRef(selectedProjectId);
   const hoveredCategoryRef = useRef<string | null>(null);
   const categoryRingsRef = useRef<
-    { category: string; origin: { x: number; y: number }; radius: number }
+    Array<{ category: string; origin: { x: number; y: number }; radius: number }>
   >([]);
   const interactionActiveRef = useRef(false);
   const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);

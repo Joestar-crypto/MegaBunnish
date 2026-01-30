@@ -105,7 +105,6 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
     categoryCounts,
     activeCategory,
     setActiveCategory,
-    focusCamera,
     filters,
     toggleFilter,
     favoriteIds,
