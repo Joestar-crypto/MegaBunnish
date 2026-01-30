@@ -49,6 +49,12 @@ type SpecialFilterDefinition = {
 
 const SPECIAL_FILTERS: SpecialFilterDefinition[] = [
   { key: 'megamafia', label: 'Megamafia', iconSrc: '/logos/Megamafia.webp', Icon: MegamafiaIcon },
+  {
+    key: 'jojo',
+    label: "Jojo's Selection",
+    hint: 'Personal farming list',
+    iconSrc: '/logos/Jojo2.webp'
+  },
   { key: 'native', label: 'MegaETH', hint: 'Core native', iconSrc: '/logos/MegaETH.webp', Icon: NativeCoreIcon }
 ];
 
@@ -58,6 +64,7 @@ type FilterOrbitPanelProps = {
 
 const ALL_CATEGORY_ACCENT = '#c8ccdd';
 const ALL_CATEGORY_BORDER = 'rgba(200, 204, 221, 0.45)';
+const NOISE_PROJECT_OFFSET = 1;
 
 export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProps) => {
   const {
@@ -66,16 +73,16 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
     categoryCounts,
     activeCategory,
     setActiveCategory,
+    focusCamera,
     filters,
     toggleFilter,
     favoriteIds,
     favoritesOnly,
     toggleFavoritesOnly
   } = useConstellation();
-  const totalProjects = projectPoolSize;
+  const totalProjects = projectPoolSize + NOISE_PROJECT_OFFSET;
   const hasFavorites = favoriteIds.length > 0;
   const favoritesDisabled = !favoritesOnly && !hasFavorites;
-
   const quickSelect = (category: string | null) => {
     if (category && activeCategory === category) {
       setActiveCategory(null);
@@ -145,6 +152,7 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
               }
               onClick={() => quickSelect(null)}
               aria-pressed={activeCategory === null}
+              title="Also reveals the distant Noise signal"
             >
               <span className="chip-label">All</span>
               <span
@@ -181,6 +189,7 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
               );
             })}
           </div>
+          <p className="category-rail__note" aria-hidden="true" />
         </aside>
       </div>
     </>

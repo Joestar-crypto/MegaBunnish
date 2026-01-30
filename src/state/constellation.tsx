@@ -26,7 +26,7 @@ export const CORE_CATEGORIES = [
   'Mobile'
 ] as const;
 
-const SPECIAL_CATEGORIES = ['Megamafia', 'Native'] as const;
+const SPECIAL_CATEGORIES = ['Megamafia', 'Native', 'Jojo'] as const;
 
 type CoreCategory = (typeof CORE_CATEGORIES)[number];
 type SpecialCategory = (typeof SPECIAL_CATEGORIES)[number];
@@ -74,6 +74,7 @@ const CATEGORY_ALIASES: Record<string, CanonicalCategory> = {
   megamafia: 'Megamafia',
   'badbunnz': 'Megamafia',
   payment: 'Megamafia',
+  jojo: 'Jojo',
   mobile: 'Mobile',
   native: 'Native'
 };
@@ -92,7 +93,7 @@ const canonicalizeCategory = (label: string): CanonicalCategory | null => {
   return null;
 };
 
-const SPECIAL_DEFAULTS: SpecialFilters = { megamafia: false, mobile: false, native: false };
+const SPECIAL_DEFAULTS: SpecialFilters = { megamafia: false, jojo: false, mobile: false, native: false };
 
 type ProjectCategoryMeta = {
   primary: CoreCategory;
@@ -111,6 +112,10 @@ const toCategoryMeta = (labels: string[]): ProjectCategoryMeta => {
     }
     if (canonical === 'Megamafia') {
       traits.megamafia = true;
+      return;
+    }
+    if (canonical === 'Jojo') {
+      traits.jojo = true;
       return;
     }
     if (canonical === 'Native') {
@@ -133,11 +138,14 @@ const toCategoryMeta = (labels: string[]): ProjectCategoryMeta => {
 };
 
 const applySpecialFilters = (projects: ConstellationProject[], filters: SpecialFilters) => {
-  if (!filters.megamafia && !filters.mobile && !filters.native) {
+  if (!filters.megamafia && !filters.jojo && !filters.mobile && !filters.native) {
     return projects;
   }
   return projects.filter((project) => {
     if (filters.megamafia && !project.traits.megamafia) {
+      return false;
+    }
+    if (filters.jojo && !project.traits.jojo) {
       return false;
     }
     if (filters.mobile && !project.traits.mobile) {
@@ -151,7 +159,7 @@ const applySpecialFilters = (projects: ConstellationProject[], filters: SpecialF
 };
 
 const shouldAggregateFilters = (filters: SpecialFilters) =>
-  filters.megamafia || filters.mobile || filters.native;
+  filters.megamafia || filters.jojo || filters.mobile || filters.native;
 
 const cloneProject = (project: ConstellationProject): ConstellationProject => ({
   ...project,

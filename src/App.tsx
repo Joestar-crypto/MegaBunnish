@@ -6,7 +6,8 @@ import { ConstellationProvider, useConstellation } from './state/constellation';
 
 const AppContent = () => {
   const [isInteracting, setIsInteracting] = useState(false);
-  const { resetCamera } = useConstellation();
+  const { resetCamera, filters } = useConstellation();
+  const showJojoBanner = filters.jojo;
 
   const handleInteractionStart = useCallback(() => {
     setIsInteracting(true);
@@ -48,6 +49,20 @@ const AppContent = () => {
         <button type="button" className="reset-anchor" onClick={resetCamera} aria-label="Reset camera view">
           Reset
         </button>
+        {showJojoBanner ? (
+          <div
+            className={`jojo-banner ${isInteracting ? 'jojo-banner--hidden' : ''}`}
+            role="note"
+            aria-live="polite"
+          >
+            <p>
+              This is my purely personal farming list with teams I trust, projects that will most likely launch a token,
+              and apps I'll use organically.
+              <br />
+              Being outside this list doesn't mean it's not worth it, I had to make hard choices for this one
+            </p>
+          </div>
+        ) : null}
         <ProjectDetailDrawer />
       </div>
       <div className="mobile-overlay">

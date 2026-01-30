@@ -20,6 +20,7 @@
     "id": "euphoria",
     "name": "Euphoria",
     "categories": [
+      "Jojo",
       "Megamafia",
       "Trading",
       "Mobile",
@@ -40,6 +41,7 @@
     "id": "rocket",
     "name": "Rocket",
     "categories": [
+      "Jojo",
       "Megamafia",
       "Prediction Market",
       "Native"
@@ -57,6 +59,7 @@
     "id": "aveforge",
     "name": "Aveforge",
     "categories": [
+      "Jojo",
       "Gaming",
       "Native"
     ],
@@ -74,6 +77,7 @@
     "id": "hello-trade",
     "name": "HelloTrade",
     "categories": [
+      "Jojo",
       "Trading",
       "Mobile",
       "Native"
@@ -112,6 +116,7 @@
     "id": "prismfi",
     "name": "PrismFi",
     "categories": [
+      "Jojo",
       "DeFi",
       "Native"
     ],
@@ -206,6 +211,7 @@
     "id": "blitzo",
     "name": "Blitzo",
     "categories": [
+      "Jojo",
       "Social",
       "Megamafia",
       "Mobile",
@@ -224,6 +230,7 @@
     "id": "lemonade",
     "name": "Lemonade",
     "categories": [
+      "Jojo",
       "Social",
       "Megamafia",
       "Mobile",
@@ -242,6 +249,7 @@
     "id": "dorado",
     "name": "Dorado",
     "categories": [
+      "Jojo",
       "Megamafia",
       "Gambling",
       "Native"
@@ -276,6 +284,7 @@
     "id": "worldmarkets",
     "name": "WorldMarkets",
     "categories": [
+      "Jojo",
       "Trading",
       "Megamafia",
       "Native"
@@ -310,6 +319,7 @@
     "id": "avon",
     "name": "Avon",
     "categories": [
+      "Jojo",
       "Megamafia",
       "DeFi",
       "Native"
@@ -328,6 +338,7 @@
     "id": "blackhaven",
     "name": "BlackHaven",
     "categories": [
+      "Jojo",
       "Megamafia",
       "DeFi",
       "Native"
@@ -346,6 +357,7 @@
     "id": "aqua",
     "name": "Aqua",
     "categories": [
+      "Jojo",
       "DeFi",
       "Native"
     ],
@@ -381,6 +393,7 @@
     "id": "topstrike",
     "name": "TopStrike",
     "categories": [
+      "Jojo",
       "Mobile",
       "Gaming",
       "Native"
@@ -433,6 +446,7 @@
     "id": "kumbaya",
     "name": "Kumbaya",
     "categories": [
+      "Jojo",
       "Launchpad",
       "DeFi",
       "Megamafia",
@@ -532,6 +546,7 @@
     "id": "hunch",
     "name": "Hunch",
     "categories": [
+      "Jojo",
       "Megamafia",
       "Prediction Market",
       "Native"
@@ -853,6 +868,7 @@
     "id": "telis",
     "name": "Telis",
     "categories": [
+      "Jojo",
       "Tools",
       "Native"
     ],

@@ -17,6 +17,9 @@ const highlightStyles: Record<HighlightVariant, { stroke: string; glow: string; 
 };
 
 const STAR_RADIUS = 9;
+const CATEGORY_RING_PADDING = 70;
+const CATEGORY_RING_MIN_RADIUS = 60;
+const CATEGORY_LABEL_INSET = 18;
 
 const drawFavoriteStar = (
   context: CanvasRenderingContext2D,
@@ -196,8 +199,41 @@ export const ConstellationCanvas = ({
   const cameraRef = useRef(camera);
   const hoveredRef = useRef(hoveredProjectId);
   const selectedRef = useRef(selectedProjectId);
+  const hoveredCategoryRef = useRef<string | null>(null);
+  const categoryRingsRef = useRef<
+    { category: string; origin: { x: number; y: number }; radius: number }
+  >([]);
   const interactionActiveRef = useRef(false);
   const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
+
+  const updateCategoryHoverState = (clientX: number, clientY: number, rect?: DOMRect) => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+    const bounds = rect ?? canvas.getBoundingClientRect();
+    const { worldX, worldY } = worldFromClient(
+      { clientX, clientY },
+      bounds,
+      cameraRef.current.x,
+      cameraRef.current.y,
+      cameraRef.current.zoom
+    );
+    const rings = categoryRingsRef.current;
+    let nextCategory: string | null = null;
+    for (const ring of rings) {
+      const dx = worldX - ring.origin.x;
+      const dy = worldY - ring.origin.y;
+      const distance = Math.hypot(dx, dy);
+      if (distance <= ring.radius) {
+        nextCategory = ring.category;
+        break;
+      }
+    }
+    if (hoveredCategoryRef.current !== nextCategory) {
+      hoveredCategoryRef.current = nextCategory;
+    }
+  };
 
   useEffect(() => {
     cameraRef.current = camera;
@@ -263,45 +299,63 @@ export const ConstellationCanvas = ({
         x: (point.x - cameraState.x) * cameraState.zoom + width / 2,
         y: (point.y - cameraState.y) * cameraState.zoom + height / 2
       });
+      const hoveredCategory = hoveredCategoryRef.current;
 
-      const orbitMeta = new Map<string, { origin: { x: number; y: number }; radius: number }>();
+      const orbitMeta = new Map<
+        string,
+        { origin: { x: number; y: number }; radius: number; color: string }
+      >();
       projects.forEach((project) => {
         const key = project.primaryCategory;
         const origin = project.clusterOrigin;
         const distance = Math.hypot(project.position.x - origin.x, project.position.y - origin.y);
         const existing = orbitMeta.get(key);
-        const nextRadius = Math.max(distance + 50, existing?.radius ?? 0);
         if (!existing) {
-          orbitMeta.set(key, { origin, radius: nextRadius });
-        } else if (nextRadius > existing.radius) {
-          orbitMeta.set(key, { origin, radius: nextRadius });
+          orbitMeta.set(key, {
+            origin,
+            radius: distance,
+            color: getCategoryColor(key)
+          });
+          return;
+        }
+        if (distance > existing.radius) {
+          existing.radius = distance;
         }
       });
 
-      orbitMeta.forEach(({ origin, radius }) => {
+      const categoryLabels: { x: number; y: number; text: string; color: string; fontSize: number }[] = [];
+      const nextCategoryRings: {
+        category: string;
+        origin: { x: number; y: number };
+        radius: number;
+      }[] = [];
+
+      orbitMeta.forEach(({ origin, radius, color }, category) => {
         const center = toScreen(origin);
-        const screenRadius = Math.max((radius + 20) * cameraState.zoom, 30);
+        const paddedRadius = radius + CATEGORY_RING_PADDING;
+        const screenRadius = Math.max(paddedRadius * cameraState.zoom, CATEGORY_RING_MIN_RADIUS);
+
+        nextCategoryRings.push({ category, origin, radius: paddedRadius });
+
+        context.save();
         context.beginPath();
-        context.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-        context.lineWidth = 1;
+        context.strokeStyle = color;
+        context.globalAlpha = 0.22;
+        context.lineWidth = 1.25;
+        context.shadowColor = color;
+        context.shadowBlur = 14;
         context.arc(center.x, center.y, screenRadius, 0, Math.PI * 2);
         context.stroke();
+        context.restore();
 
-        const gradient = context.createRadialGradient(
-          center.x,
-          center.y,
-          0,
-          center.x,
-          center.y,
-          screenRadius
-        );
-        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.015)');
-        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        context.beginPath();
-        context.fillStyle = gradient;
-        context.arc(center.x, center.y, screenRadius, 0, Math.PI * 2);
-        context.fill();
+        if (hoveredCategory === category) {
+          const fontSize = Math.max(11, 11.5 * Math.min(1.25, cameraState.zoom + 0.2));
+          const labelY = center.y - screenRadius + CATEGORY_LABEL_INSET;
+          categoryLabels.push({ x: center.x, y: labelY, text: category, color, fontSize });
+        }
       });
+
+      categoryRingsRef.current = nextCategoryRings;
 
       const drawnLinks = new Set<string>();
       projects.forEach((project, index) => {
@@ -450,6 +504,21 @@ export const ConstellationCanvas = ({
           const bellOffset = Math.max(radius * 0.7, radius - 8);
           drawIncentiveBell(context, x - bellOffset, y - bellOffset);
         }
+      });
+
+      categoryLabels.forEach(({ x, y, text, color, fontSize }) => {
+        context.save();
+        context.font = `600 ${fontSize}px Space Grotesk, sans-serif`;
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.lineWidth = 4;
+        context.strokeStyle = 'rgba(5, 6, 18, 0.85)';
+        context.globalAlpha = 0.9;
+        context.strokeText(text, x, y);
+        context.fillStyle = color;
+        context.globalAlpha = 0.95;
+        context.fillText(text, x, y);
+        context.restore();
       });
 
       animationFrame = requestAnimationFrame(render);
@@ -624,6 +693,7 @@ export const ConstellationCanvas = ({
     const rect = canvasRef.current.getBoundingClientRect();
     const hit = findHitProject(event.nativeEvent, rect, projects, camera.x, camera.y, camera.zoom);
     setHoveredProject(hit?.id ?? null);
+    updateCategoryHoverState(event.clientX, event.clientY, rect);
   };
 
   const handlePointerUp = (event: React.PointerEvent<HTMLCanvasElement>) => {
@@ -657,6 +727,7 @@ export const ConstellationCanvas = ({
 
   const handlePointerLeave = () => {
     setHoveredProject(null);
+    hoveredCategoryRef.current = null;
     if (canvasRef.current && pointerState.pointerId !== null) {
       canvasRef.current.releasePointerCapture(pointerState.pointerId);
     }
