@@ -229,7 +229,6 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
               );
             })}
           </div>
-          <p className="category-rail__note" aria-hidden="true" />
         </aside>
       </div>
     </>

@@ -77,6 +77,49 @@ const drawIncentiveBell = (context: CanvasRenderingContext2D, x: number, y: numb
   context.restore();
 };
 
+const BEAD_RADIUS = 4;
+const BEAD_ORBIT_OFFSET = 16;
+const MAX_VISIBLE_BEADS = 20;
+const BEAD_GROWTH_STEP = 0.8;
+const ORBIT_SPEED = 0.0006;
+
+const drawInteractionBeads = (
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  totalInteractions: number,
+  projectRadius: number,
+  time: number
+) => {
+  if (!totalInteractions) {
+    return;
+  }
+
+  const visibleBeads = Math.min(totalInteractions, MAX_VISIBLE_BEADS);
+  const extraTransactions = Math.max(0, totalInteractions - visibleBeads);
+  const fullGrowthCycles = Math.floor(extraTransactions / MAX_VISIBLE_BEADS);
+  const incrementalGrowth = extraTransactions % MAX_VISIBLE_BEADS;
+  const rotation = time * ORBIT_SPEED;
+  const orbitRadius = projectRadius + BEAD_ORBIT_OFFSET;
+  const angleStep = (Math.PI * 2) / visibleBeads;
+
+  for (let idx = 0; idx < visibleBeads; idx += 1) {
+    const growthBoost = fullGrowthCycles * BEAD_GROWTH_STEP + (idx < incrementalGrowth ? BEAD_GROWTH_STEP : 0);
+    const radius = BEAD_RADIUS + growthBoost;
+    const angle = rotation + idx * angleStep;
+    const beadX = x + Math.cos(angle) * orbitRadius;
+    const beadY = y + Math.sin(angle) * orbitRadius;
+    context.save();
+    context.beginPath();
+    context.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    context.shadowColor = 'rgba(255, 255, 255, 0.7)';
+    context.shadowBlur = 10 + growthBoost * 2;
+    context.arc(beadX, beadY, radius, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+  }
+};
+
 type PointerState = {
   isDragging: boolean;
   pointerId: number | null;
@@ -193,7 +236,8 @@ export const ConstellationCanvas = ({
     selectProject,
     panCamera,
     zoomCamera,
-    favoriteIds
+    favoriteIds,
+    walletBeadLevels
   } = useConstellation();
   const images = useImageCache(projects);
   const cameraRef = useRef(camera);
@@ -414,6 +458,7 @@ export const ConstellationCanvas = ({
         const highlightStyle = project.highlight ? highlightStyles[project.highlight] : null;
         const baseLineWidth = project.id === selectedId ? 4 : 2;
         const isFavorite = favoriteSet.has(project.id);
+        const beadCount = walletBeadLevels[project.id] ?? 0;
 
         context.beginPath();
         context.fillStyle = 'rgba(255, 255, 255, 0.08)';
@@ -488,6 +533,10 @@ export const ConstellationCanvas = ({
           context.fillText(project.name[0]?.toUpperCase() ?? '?', x, y);
         }
 
+        if (beadCount > 0) {
+          drawInteractionBeads(context, x, y, beadCount, radius, time);
+        }
+
         context.fillStyle = 'rgba(255, 255, 255, 0.7)';
         context.font = '12px Space Grotesk, sans-serif';
         context.textAlign = 'center';
@@ -530,7 +579,7 @@ export const ConstellationCanvas = ({
       cancelAnimationFrame(animationFrame);
       window.removeEventListener('resize', handleResize);
     };
-  }, [projects, images, stars, favoriteSet]);
+  }, [projects, images, stars, favoriteSet, walletBeadLevels]);
 
   const endInteraction = () => {
     if (interactionActiveRef.current) {

@@ -41,3 +41,21 @@ Expired incentives are hidden automatically at runtime.
 - **Category chips** recenter the view on that cluster.
 
 Logos are simple SVG placeholders stored in `public/logos`. Replace them with real project artwork as needed.
+
+## Wallet Checker & NFT Beads
+
+The Wallet Checker (top-right pill) lets you enter any MegaETH wallet to:
+
+- Scan recent transactions via the Blockscout/Etherscan-compatible API.
+- Detect verified smart-contract interactions mapped to constellation projects.
+- Fetch NFT balances for tracked collections such as **BadBunnz** (`0xbdb13add477e76c1df52192d4f5f4dd67f6a40d8`). Owning multiple NFTs produces multiple “white bead” indicators on the corresponding node.
+
+### API Key (optional)
+
+If you have an Etherscan-style API key, expose it as `VITE_ETHERSCAN_API_KEY` in a `.env` file:
+
+```
+VITE_ETHERSCAN_API_KEY=your-key-here
+```
+
+The app works without a key, but adding one helps avoid shared rate limits when scanning wallets or NFT balances.

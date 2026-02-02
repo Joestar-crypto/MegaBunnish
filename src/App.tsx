@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { ConstellationCanvas } from './components/ConstellationCanvas';
 import { FilterOrbitPanel } from './components/FilterOrbitPanel';
 import { ProjectDetailDrawer } from './components/ProjectDetailDrawer';
+import { WalletChecker } from './components/WalletChecker';
 import { ConstellationProvider, useConstellation } from './state/constellation';
 
 const AppContent = () => {
@@ -64,6 +65,7 @@ const AppContent = () => {
           </div>
         ) : null}
         <ProjectDetailDrawer />
+        <WalletChecker />
       </div>
       <div className="mobile-overlay">
         Please visit the site on desktop for the best experience.

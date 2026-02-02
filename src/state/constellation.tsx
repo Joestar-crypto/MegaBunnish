@@ -9,6 +9,7 @@ import {
   RawProject,
   SpecialFilters
 } from '../types';
+import { useWalletInsights, WalletInsights } from './useWalletInsights';
 
 export const CORE_CATEGORIES = [
   'Gambling',
@@ -688,7 +689,8 @@ const createReturnPoint = (camera: CameraState) => ({
   zoom: camera.targetZoom
 });
 
-type ConstellationContextShape = ConstellationState & {
+type ConstellationContextShape = ConstellationState &
+  WalletInsights & {
   setActiveCategory: (category: string | null) => void;
   setHoveredProject: (projectId: string | null) => void;
   selectProject: (projectId: string | null) => void;
@@ -699,7 +701,7 @@ type ConstellationContextShape = ConstellationState & {
   toggleFavoritesOnly: () => void;
   toggleFavorite: (projectId: string) => void;
   resolveProjectById: (projectId: string | null) => ConstellationProject | null;
-};
+  };
 
 const ConstellationContext = createContext<ConstellationContextShape | undefined>(undefined);
 
@@ -728,6 +730,21 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       favoritesOnly
     };
   });
+  const {
+    walletAddress,
+    walletInput,
+    walletStatus,
+    walletError,
+    walletInteractionCounts,
+    walletNftHoldings,
+    walletBeadLevels,
+    walletUpdatedAt,
+    contractDirectoryStatus,
+    setWalletInput: setWalletInputValue,
+    submitWallet,
+    clearWallet,
+    refreshWalletInsights
+  } = useWalletInsights();
 
   useEffect(() => {
     setState((prev) => {
@@ -1201,6 +1218,19 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
   const value = useMemo(
     () => ({
       ...state,
+      walletAddress,
+      walletInput,
+      walletStatus,
+      walletError,
+      walletInteractionCounts,
+      walletNftHoldings,
+      walletBeadLevels,
+      walletUpdatedAt,
+      contractDirectoryStatus,
+      setWalletInput: setWalletInputValue,
+      submitWallet,
+      clearWallet,
+      refreshWalletInsights,
       setActiveCategory,
       setHoveredProject,
       selectProject,
@@ -1214,6 +1244,19 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
     }),
     [
       state,
+      walletAddress,
+      walletInput,
+      walletStatus,
+      walletError,
+      walletInteractionCounts,
+      walletNftHoldings,
+      walletBeadLevels,
+      walletUpdatedAt,
+      contractDirectoryStatus,
+      setWalletInputValue,
+      submitWallet,
+      clearWallet,
+      refreshWalletInsights,
       setActiveCategory,
       setHoveredProject,
       selectProject,
