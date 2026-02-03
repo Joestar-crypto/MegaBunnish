@@ -34,6 +34,14 @@ export type SpecialFilters = {
   native: boolean;
 };
 
+export type JojoProfile = {
+  id: string;
+  label: string;
+  hint?: string;
+  description?: string;
+  projectIds?: string[];
+};
+
 export type ConstellationProject = RawProject & {
   position: { x: number; y: number };
   incentives: Incentive[];
@@ -68,4 +76,5 @@ export type ConstellationState = {
   filters: SpecialFilters;
   favoriteIds: string[];
   favoritesOnly: boolean;
+  jojoProfileId: string;
 };

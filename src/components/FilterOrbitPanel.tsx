@@ -13,6 +13,7 @@ import type { CSSProperties } from 'react';
 import { useConstellation } from '../state/constellation';
 import { SpecialFilters } from '../types';
 import { getCategoryColor } from '../utils/colors';
+import { JOJO_PROFILES } from '../data/jojoProfiles';
 
 const MegamafiaIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -106,6 +107,8 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
     activeCategory,
     setActiveCategory,
     filters,
+    jojoProfileId,
+    setJojoProfile,
     toggleFilter,
     favoriteIds,
     favoritesOnly,
@@ -114,6 +117,7 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
   const totalProjects = projectPoolSize + NOISE_PROJECT_OFFSET;
   const hasFavorites = favoriteIds.length > 0;
   const favoritesDisabled = !favoritesOnly && !hasFavorites;
+  const showJojoProfiles = filters.jojo && JOJO_PROFILES.length > 1;
   const quickSelect = (category: string | null) => {
     if (category && activeCategory === category) {
       setActiveCategory(null);
@@ -124,7 +128,11 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
 
   return (
     <>
-      <div className={`trait-dock ${isInteracting ? 'ui-panel--hidden' : ''}`}>
+      <div
+        className={`trait-dock ${isInteracting ? 'ui-panel--hidden' : ''} ${
+          showJojoProfiles ? 'trait-dock--jojo-active' : ''
+        }`}
+      >
         <div className="trait-menu" role="group" aria-label="Signal traits">
           {SPECIAL_FILTERS.map(({ key, label, hint, Icon, iconSrc }) => {
             const traitStyles = getTraitStyles(key, filters[key]);
@@ -169,6 +177,29 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
             </span>
           </button>
         </div>
+          {showJojoProfiles ? (
+            <div className="jojo-profile-menu" role="group" aria-label="Profile options">
+              <div className="jojo-profile-menu__header">
+                <span>Profile</span>
+              </div>
+              <div className="jojo-profile-menu__options">
+                {JOJO_PROFILES.map((profile) => (
+                  <button
+                    key={profile.id}
+                    type="button"
+                    className={
+                      profile.id === jojoProfileId ? 'jojo-profile-button active' : 'jojo-profile-button'
+                    }
+                    onClick={() => setJojoProfile(profile.id)}
+                    aria-pressed={profile.id === jojoProfileId}
+                  >
+                    <span className="jojo-profile-button__label">{profile.label}</span>
+                    {profile.hint ? <span className="jojo-profile-button__hint">{profile.hint}</span> : null}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
       </div>
       <div className={`category-dock ${isInteracting ? 'ui-panel--hidden' : ''}`}>
         <aside className="category-rail" aria-label="Categories">

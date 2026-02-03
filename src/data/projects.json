@@ -136,6 +136,7 @@
     "id": "bunnzpaw",
     "name": "BunnzPaw",
     "categories": [
+      "Jojo",
       "Gambling",
       "Native"
     ],
@@ -155,6 +156,7 @@
     "id": "faster",
     "name": "Faster",
     "categories": [
+      "Jojo",
       "Launchpad",
       "Native"
     ],
@@ -174,6 +176,7 @@
     "id": "brix",
     "name": "Brix",
     "categories": [
+      "Jojo",
       "Megamafia",
       "DeFi",
       "Native"
@@ -266,6 +269,7 @@
     "id": "benchmark",
     "name": "Benchmark",
     "categories": [
+      "Jojo",
       "DeFi",
       "Megamafia",
       "Native"
@@ -339,6 +343,7 @@
     "id": "showdown",
     "name": "Showdown",
     "categories": [
+      "Jojo",
       "Gaming",
       "Megamafia",
       "Native"
@@ -376,6 +381,7 @@
     "id": "stomp",
     "name": "Stomp",
     "categories": [
+      "Jojo",
       "Gaming",
       "Megamafia",
       "Native"
@@ -444,6 +450,7 @@
     "id": "cilium",
     "name": "Cilium",
     "categories": [
+      "Jojo",
       "Megamafia",
       "Depin",
       "Native"
@@ -461,6 +468,7 @@
     "id": "ubitel",
     "name": "Ubitel",
     "categories": [
+      "Jojo",
       "Megamafia",
       "Depin",
       "Native"
@@ -719,6 +727,7 @@
     "id": "lora-finance",
     "name": "LoraFinance",
     "categories": [
+      "Jojo",
       "Trading",
       "Native"
     ],
@@ -751,6 +760,7 @@
     "id": "supernova",
     "name": "Supernova",
     "categories": [
+      "Jojo",
       "DeFi",
       "Native"
     ],
@@ -782,6 +792,7 @@
     "id": "sirio",
     "name": "Sirio",
     "categories": [
+      "Jojo",
       "Launchpad",
       "Native"
     ],
@@ -899,6 +910,7 @@
     "id": "tulpea",
     "name": "Tulpea",
     "categories": [
+      "Jojo",
       "DeFi",
       "Native"
     ],
@@ -979,8 +991,7 @@
     "id": "redstone",
     "name": "Redstone",
     "categories": [
-      "Tools",
-      "Native"
+      "Tools"
     ],
     "networks": [
       "MegaETH"
@@ -1310,7 +1321,9 @@
     "id": "clutch",
     "name": "Clutch",
     "categories": [
-      "Prediction Market"
+      "Jojo",
+      "Prediction Market",
+      "Native"
     ],
     "networks": [
       "MegaETH"
@@ -1324,6 +1337,7 @@
     "id": "premarket",
     "name": "Premarket",
     "categories": [
+      "Jojo",
       "Trading",
       "Native"
     ],
@@ -1340,6 +1354,7 @@
     "id": "offshore",
     "name": "Offshore",
     "categories": [
+      "Jojo",
       "Gambling",
       "Native"
     ],
@@ -1420,6 +1435,7 @@
     "id": "canonic",
     "name": "Canonic",
     "categories": [
+      "Jojo",
       "Trading",
       "Native"
     ],

@@ -232,12 +232,21 @@ select {
 .trait-dock {
   top: clamp(0.75rem, 3vw, 2.5rem);
   width: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  align-items: flex-start;
+  z-index: 6;
 }
 
 .category-dock {
   top: calc(clamp(0.75rem, 3vw, 2.5rem) + 5rem);
   bottom: auto;
   width: clamp(120px, 14vw, 190px);
+}
+
+.trait-dock--jojo-active + .category-dock {
+  top: calc(clamp(0.75rem, 3vw, 2.5rem) + 8.75rem);
 }
 
 .ui-panel--hidden {
@@ -315,6 +324,78 @@ select {
 
 .trait-menu .chip {
   width: auto;
+}
+
+.jojo-profile-menu {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 0.95rem;
+  border-radius: 1rem;
+  background: rgba(5, 8, 20, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  max-width: min(360px, calc(100vw - 2rem));
+  position: relative;
+  z-index: 6;
+}
+
+.jojo-profile-menu__header {
+  display: flex;
+  gap: 0.45rem;
+  align-items: baseline;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(233, 235, 255, 0.85);
+}
+
+.jojo-profile-menu__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.jojo-profile-button {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.9rem;
+  background: rgba(13, 16, 34, 0.82);
+  color: #f7f8ff;
+  padding: 0.4rem 0.75rem;
+  min-width: 110px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  font-size: 0.78rem;
+}
+
+.jojo-profile-button:hover {
+  border-color: rgba(255, 255, 255, 0.38);
+  transform: translateY(-1px);
+}
+
+.jojo-profile-button__label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.jojo-profile-button__hint {
+  display: block;
+  font-size: 0.6rem;
+  color: rgba(233, 235, 255, 0.7);
+}
+
+.jojo-profile-button.active {
+  background: #fff533;
+  border-color: #fff533;
+  color: #111217;
+}
+
+.jojo-profile-button.active .jojo-profile-button__hint {
+  color: rgba(17, 18, 23, 0.68);
 }
 
 .category-dock .category-rail {
@@ -1207,6 +1288,19 @@ select {
 
   .category-dock {
     margin-bottom: 0;
+  }
+
+  .jojo-profile-menu {
+    width: 100%;
+  }
+
+  .jojo-profile-menu__options {
+    flex-direction: column;
+  }
+
+  .jojo-profile-button {
+    width: 100%;
+    min-width: 0;
   }
 
   .category-rail {

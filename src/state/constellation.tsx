@@ -1,11 +1,13 @@
 import { ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import rawProjects from '../data/projects.json';
+import { DEFAULT_JOJO_PROFILE_ID, JOJO_PROFILES } from '../data/jojoProfiles';
 import {
   CameraState,
   ConstellationProject,
   ConstellationState,
   HighlightVariant,
   Incentive,
+  JojoProfile,
   RawProject,
   SpecialFilters
 } from '../types';
@@ -96,6 +98,18 @@ const canonicalizeCategory = (label: string): CanonicalCategory | null => {
 
 const SPECIAL_DEFAULTS: SpecialFilters = { megamafia: false, jojo: false, mobile: false, native: false };
 
+const JOJO_PROFILE_LOOKUP = JOJO_PROFILES.reduce<Record<string, JojoProfile>>((acc, profile) => {
+  acc[profile.id] = profile;
+  return acc;
+}, {});
+
+const resolveJojoProfile = (profileId?: string): JojoProfile => {
+  if (profileId && JOJO_PROFILE_LOOKUP[profileId]) {
+    return JOJO_PROFILE_LOOKUP[profileId];
+  }
+  return JOJO_PROFILE_LOOKUP[DEFAULT_JOJO_PROFILE_ID];
+};
+
 type ProjectCategoryMeta = {
   primary: CoreCategory;
   categories: CoreCategory[];
@@ -138,7 +152,11 @@ const toCategoryMeta = (labels: string[]): ProjectCategoryMeta => {
   return { primary: categories[0], categories, traits };
 };
 
-const applySpecialFilters = (projects: ConstellationProject[], filters: SpecialFilters) => {
+const applySpecialFilters = (
+  projects: ConstellationProject[],
+  filters: SpecialFilters,
+  jojoProfileId: string
+) => {
   if (!filters.megamafia && !filters.jojo && !filters.mobile && !filters.native) {
     return projects;
   }
@@ -146,8 +164,14 @@ const applySpecialFilters = (projects: ConstellationProject[], filters: SpecialF
     if (filters.megamafia && !project.traits.megamafia) {
       return false;
     }
-    if (filters.jojo && !project.traits.jojo) {
-      return false;
+    if (filters.jojo) {
+      if (!project.traits.jojo) {
+        return false;
+      }
+      const profile = resolveJojoProfile(jojoProfileId);
+      if (profile.projectIds?.length && !profile.projectIds.includes(project.id)) {
+        return false;
+      }
     }
     if (filters.mobile && !project.traits.mobile) {
       return false;
@@ -626,6 +650,7 @@ const deriveProjectView = (
   baseProjects: ConstellationProject[],
   filters: SpecialFilters,
   category: string | null,
+  jojoProfileId: string,
   options?: { favoritesOnly?: boolean; favoriteIds?: Set<string> }
 ) => {
   let workingPool = baseProjects;
@@ -643,7 +668,7 @@ const deriveProjectView = (
     );
   }
 
-  const filteredPool = applySpecialFilters(workingPool, filters);
+  const filteredPool = applySpecialFilters(workingPool, filters, jojoProfileId);
   const pool = shouldAggregateFilters(filters)
     ? computeLayout(toRawProjectSet(filteredPool)).projects
     : cloneProjects(filteredPool);
@@ -697,6 +722,7 @@ type ConstellationContextShape = ConstellationState &
   panCamera: (deltaX: number, deltaY: number) => void;
   zoomCamera: (deltaZoom: number, focus?: { x: number; y: number }) => void;
   resetCamera: () => void;
+  setJojoProfile: (profileId: string) => void;
   toggleFilter: (filterKey: keyof SpecialFilters) => void;
   toggleFavoritesOnly: () => void;
   toggleFavorite: (projectId: string) => void;
@@ -711,7 +737,8 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
     const filters = { ...SPECIAL_DEFAULTS };
     const favoriteIds = readStoredFavorites();
     const favoritesOnly = false;
-    const { pool, visible, counts } = deriveProjectView(layout.projects, filters, null, {
+    const jojoProfileId = DEFAULT_JOJO_PROFILE_ID;
+    const { pool, visible, counts } = deriveProjectView(layout.projects, filters, null, jojoProfileId, {
       favoritesOnly,
       favoriteIds: new Set(favoriteIds)
     });
@@ -727,7 +754,8 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       cameraReturnPoint: null,
       filters,
       favoriteIds,
-      favoritesOnly
+      favoritesOnly,
+      jojoProfileId
     };
   });
   const {
@@ -752,6 +780,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         layout.projects,
         prev.filters,
         prev.activeCategory,
+        prev.jojoProfileId,
         {
           favoritesOnly: prev.favoritesOnly,
           favoriteIds: new Set(prev.favoriteIds)
@@ -780,7 +809,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
           return prev;
         }
 
-        const { pool, visible, counts } = deriveProjectView(layout.projects, prev.filters, category, {
+        const { pool, visible, counts } = deriveProjectView(layout.projects, prev.filters, category, prev.jojoProfileId, {
           favoritesOnly: prev.favoritesOnly,
           favoriteIds: new Set(prev.favoriteIds)
         });
@@ -818,6 +847,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
           layout.projects,
           nextFilters,
           prev.activeCategory,
+          prev.jojoProfileId,
           {
             favoritesOnly: prev.favoritesOnly,
             favoriteIds: new Set(prev.favoriteIds)
@@ -872,6 +902,70 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
     [layout.projects]
   );
 
+  const setJojoProfile = useCallback((profileId: string) => {
+    setState((prev) => {
+      const resolvedProfileId = resolveJojoProfile(profileId).id;
+      if (prev.jojoProfileId === resolvedProfileId) {
+        return prev;
+      }
+
+      const { pool, visible, counts } = deriveProjectView(
+        layout.projects,
+        prev.filters,
+        prev.activeCategory,
+        resolvedProfileId,
+        {
+          favoritesOnly: prev.favoritesOnly,
+          favoriteIds: new Set(prev.favoriteIds)
+        }
+      );
+
+      let nextActiveCategory = prev.activeCategory;
+      let nextVisible = visible;
+
+      if (nextActiveCategory && visible.length === 0) {
+        nextActiveCategory = null;
+        nextVisible = pool;
+      }
+
+      const visibleIds = new Set(nextVisible.map((project) => project.id));
+      const forceFocus =
+        (shouldAggregateFilters(prev.filters) && !nextActiveCategory) ||
+        (prev.favoritesOnly && !nextActiveCategory);
+      const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
+      const shouldUpdateCamera =
+        Boolean(nextActiveCategory) ||
+        prev.activeCategory !== nextActiveCategory ||
+        forceFocus;
+
+      return {
+        ...prev,
+        jojoProfileId: resolvedProfileId,
+        projects: nextVisible,
+        projectPoolSize: pool.length,
+        categoryCounts: counts,
+        activeCategory: nextActiveCategory,
+        hoveredProjectId:
+          prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId)
+            ? prev.hoveredProjectId
+            : null,
+        selectedProjectId:
+          prev.selectedProjectId && visibleIds.has(prev.selectedProjectId)
+            ? prev.selectedProjectId
+            : null,
+        cameraReturnPoint: shouldUpdateCamera ? null : prev.cameraReturnPoint,
+        camera: shouldUpdateCamera
+          ? {
+              ...prev.camera,
+              targetX: focus.x,
+              targetY: focus.y,
+              targetZoom: focus.zoom
+            }
+          : prev.camera
+      };
+    });
+  }, [layout.projects]);
+
   const toggleFavoritesOnly = useCallback(() => {
     setState((prev) => {
       if (!prev.favoritesOnly && prev.favoriteIds.length === 0) {
@@ -882,6 +976,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         layout.projects,
         prev.filters,
         prev.activeCategory,
+        prev.jojoProfileId,
         {
           favoritesOnly: nextFavoritesOnly,
           favoriteIds: new Set(prev.favoriteIds)
@@ -948,6 +1043,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
           layout.projects,
           prev.filters,
           prev.activeCategory,
+          prev.jojoProfileId,
           {
             favoritesOnly: nextFavoritesOnly,
             favoriteIds: new Set(nextFavoriteIds)
@@ -1124,10 +1220,16 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
 
   const resetCamera = useCallback(() => {
     setState((prev) => {
-      const { pool, visible, counts } = deriveProjectView(layout.projects, prev.filters, null, {
-        favoritesOnly: prev.favoritesOnly,
-        favoriteIds: new Set(prev.favoriteIds)
-      });
+      const { pool, visible, counts } = deriveProjectView(
+        layout.projects,
+        prev.filters,
+        null,
+        prev.jojoProfileId,
+        {
+          favoritesOnly: prev.favoritesOnly,
+          favoriteIds: new Set(prev.favoriteIds)
+        }
+      );
       const visibleIds = new Set(visible.map((project) => project.id));
       return {
         ...prev,
@@ -1237,6 +1339,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       panCamera,
       zoomCamera,
       resetCamera,
+      setJojoProfile,
       toggleFilter,
       toggleFavoritesOnly,
       toggleFavorite,
@@ -1263,6 +1366,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       panCamera,
       zoomCamera,
       resetCamera,
+      setJojoProfile,
       toggleFilter,
       toggleFavoritesOnly,
       toggleFavorite,
