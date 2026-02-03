@@ -67,9 +67,6 @@ const AppContent = () => {
         <ProjectDetailDrawer />
         <WalletChecker />
       </div>
-      <div className="mobile-overlay">
-        Please visit the site on desktop for the best experience.
-      </div>
     </div>
   );
 };

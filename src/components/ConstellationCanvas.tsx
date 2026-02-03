@@ -760,8 +760,6 @@ export const ConstellationCanvas = ({
         const hit = findHitProject(event.nativeEvent, rect, projects, camera.x, camera.y, camera.zoom);
         if (hit) {
           selectProject(hit.id);
-        } else {
-          selectProject(null);
         }
       }
 
