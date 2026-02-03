@@ -45,13 +45,6 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
       textSegment(
         'Rocket is redefining prediction markets with redistribution markets. Instead of keeping capital idle until long-term resolution, everyone wins or loses a portion of their bet every 5 seconds.'
       )
-    ]
-  ],
-  aveforge: [
-    [
-      textSegment(
-        'Built by a team that has shipped Bloomtown and Graveyard Keeper on Steam, this addictive battler game is creating a strong IP around Mecha, using blockchain as settlement for rewards and cosmetics.'
-      )
     ],
     [textSegment("Definitely the gaming app I\'m the most excited about, I love every boss design.")]
   ],
@@ -275,11 +268,6 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
       textSegment('A very interesting DePIN project using TEE technology to exchange internet access anywhere in the world for verifiable compute.')
     ]
   ],
-  hop: [
-    [
-      textSegment("Not sure this one is still building, but Hop Network is a VPN project leveraging MegaETH scalability.")
-    ]
-  ],
   hunch: [
     [
       textSegment('Hunch is like Polymarket on steroids, with fast bets and resolutions. This might be very addictive, and it\'s accelerated by MegaMafia, so expect something interesting.')
@@ -495,7 +483,96 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
     [
       textSegment('Reach is a social growth and engagement platform using LLMs to help creators maximize visibility and monetization.')
     ],
-    [textSegment("First time I come across a protocol like this so I\'m curious even if I don\'t know much yet.")]
+    [textSegment("First time I come across a protocol like this so I'm curious even if I don't know much yet.")]
+  ],
+  miniminds: [
+    [
+      textSegment('Ngl I love this art and universe, plus it\'s made by core community members, so I\'ll watch it closely.')
+    ]
+  ],
+  chainlink: [
+    [
+      textSegment('Did you know that Chainlink has a TikTok account? I had nothing to say here, come on, it\'s Chainlink, but at least I taught you something lol.')
+    ]
+  ],
+  ethena: [
+    [
+      textSegment('Did you know that I\'m a big fan of Ethena? So I\'m definitely very happy they announced backing USDm, the main MegaETH stablecoin that will play an important role in this ecosystem. Yup.')
+    ]
+  ],
+  renzo: [
+    [
+      textSegment('One of the biggest LRT protocols deploying ezETH on MegaETH.')
+    ]
+  ],
+  opensea: [
+    [
+      textSegment("If you don't know OpenSea, I don't know what to tell you lmao.")
+    ]
+  ],
+  'magic-eden': [
+    [
+      textSegment("Everyone knows Magic Eden, they're one of the biggest NFT marketplaces, come onnnn.")
+    ]
+  ],
+  clutch: [
+    [
+      textSegment("It's a prediction market for livestreaming. We don't have much more for now, but I'll keep an eye on this one.")
+    ]
+  ],
+  premarket: [
+    [
+      textSegment('Premarket lets you trade options on everything, from IPOs to RWAs and TGEs. It\'s pure exposure, no margin, no liquidations, no funding.')
+    ],
+    [
+      textSegment("It's a small project for now, but the promise is very interesting, and it's built by Stryke, an options protocol that used to be quite famous in the past.")
+    ]
+  ],
+  offshore: [
+    [
+      textSegment('I have no idea bro lmao.')
+    ]
+  ],
+  syscall: [
+    [
+      textSegment("This one is weird lol, it's a reverse oracle that lets you send an SMS or an email from a smart contract.")
+    ],
+    [
+      textSegment('This is the kind of innovation that could be useful for no one, or literally change the world lmao.')
+    ]
+  ],
+  warren: [
+    [
+      textSegment('A "Permaweb" app that lets you host anything onchain on MegaETH. Pretty cool tbh, this kind of thing never took off because of fees, but it could work on Mega maybe.')
+    ]
+  ],
+  megacorp: [
+    [
+      textSegment("I have no idea at what I'm looking at bro lol, but I like lores.")
+    ]
+  ],
+  skrrtlords: [
+    [
+      textSegment('This is an NFT racing game with tournaments and rewards, not much more to say tbh.')
+    ]
+  ],
+  canonic: [
+    [
+      textSegment('Pretty cool ngl, it\'s a trading app solving a common problem of perp DEXs: market makers have to cancel and requote constantly to provide liquidity and execute orders, and this cost inevitably falls on users.')
+    ],
+    [
+      textSegment('By using MOAB architecture and '),
+      linkSegment('Redstone', 'redstone'),
+      textSegment(', Canonic can link liquidity to price continuously, so market makers don\'t need to requote all the time.')
+    ],
+    [
+      textSegment('This is very promising on paper, but the hard part will be getting enough liquidity and partners to prove it for real.')
+    ]
+  ],
+  gocash: [
+    [
+      textSegment('GoCash is a gaming hub with different mini-games, not much to say tbh.')
+    ]
   ]
 };
 

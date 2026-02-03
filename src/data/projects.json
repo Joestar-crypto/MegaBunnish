@@ -245,23 +245,6 @@
     "logo": "/logos/Dorado.webp"
   },
   {
-    "id": "pumpparty",
-    "name": "Pumpparty",
-    "categories": [
-      "Social",
-      "Native"
-    ],
-    "networks": [
-      "MegaETH"
-    ],
-    "links": {
-      "site": "https://www.pumpparty.com/",
-      "twitter": "https://x.com/pumpparty",
-      "telegram": "https://t.me/+kh4RQgAcmZAzYWQx"
-    },
-    "logo": "/logos/PumpParty.webp"
-  },
-  {
     "id": "worldmarkets",
     "name": "WorldMarkets",
     "categories": [
@@ -490,23 +473,6 @@
       "twitter": "https://x.com/getubitel"
     },
     "logo": "/logos/Ubitel.webp"
-  },
-  {
-    "id": "hop",
-    "name": "Hop",
-    "categories": [
-      "Megamafia",
-      "Depin",
-      "Native"
-    ],
-    "networks": [
-      "MegaETH"
-    ],
-    "links": {
-      "site": "https://hopnetwork.xyz/",
-      "twitter": "https://x.com/Hop_Network"
-    },
-    "logo": "/logos/Hop.webp"
   },
   {
     "id": "hunch",
@@ -1241,5 +1207,247 @@
       "discord": "https://discord.com/invite/megareach"
     },
     "logo": "/logos/Reach.webp"
+  },
+  {
+    "id": "miniminds",
+    "name": "MiniMinds",
+    "categories": [
+      "NFT",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://miniminds.love/",
+      "twitter": "https://x.com/theminiminds",
+      "telegram": "https://t.me/theminiminds"
+    },
+    "logo": "/logos/Miniminds.webp"
+  },
+  {
+    "id": "chainlink",
+    "name": "Chainlink",
+    "categories": [
+      "Tools"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://chain.link/",
+      "twitter": "https://x.com/chainlink",
+      "discord": "https://discord.com/invite/chainlink",
+      "telegram": "https://t.me/chainlinkofficial"
+    },
+    "logo": "/logos/Chainlink.webp"
+  },
+  {
+    "id": "ethena",
+    "name": "Ethena",
+    "categories": [
+      "DeFi"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://ethena.fi/",
+      "twitter": "https://x.com/ethena",
+      "telegram": "https://t.me/ethena_labs"
+    },
+    "logo": "/logos/Ethena.webp"
+  },
+  {
+    "id": "renzo",
+    "name": "Renzo",
+    "categories": [
+      "DeFi"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://app.renzoprotocol.com/explore",
+      "twitter": "https://x.com/RenzoProtocol"
+    },
+    "logo": "/logos/Renzo.webp"
+  },
+  {
+    "id": "opensea",
+    "name": "OpenSea",
+    "categories": [
+      "NFT"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://opensea.io/",
+      "twitter": "https://x.com/opensea",
+      "discord": "https://discord.com/invite/opensea",
+      "telegram": "https://t.me/officialopensea"
+    },
+    "logo": "/logos/Opensea.webp"
+  },
+  {
+    "id": "magic-eden",
+    "name": "Magic Eden",
+    "categories": [
+      "NFT"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://magiceden.io/",
+      "twitter": "https://x.com/MagicEden",
+      "discord": "https://discord.com/invite/magiceden"
+    },
+    "logo": "/logos/MagicEden.webp"
+  },
+  {
+    "id": "clutch",
+    "name": "Clutch",
+    "categories": [
+      "Prediction Market"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/clutchpredict"
+    },
+    "logo": "/logos/Clutch.webp"
+  },
+  {
+    "id": "premarket",
+    "name": "Premarket",
+    "categories": [
+      "Trading",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://premarket.xyz/",
+      "twitter": "https://x.com/premarket_xyz"
+    },
+    "logo": "/logos/Premarket.webp"
+  },
+  {
+    "id": "offshore",
+    "name": "Offshore",
+    "categories": [
+      "Gambling",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/OffshoreOnMega"
+    },
+    "logo": "/logos/Offshore.webp"
+  },
+  {
+    "id": "syscall",
+    "name": "Syscall",
+    "categories": [
+      "Tools",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/syscall_sdk"
+    },
+    "logo": "/logos/Syscall.webp"
+  },
+  {
+    "id": "warren",
+    "name": "Warren",
+    "categories": [
+      "Tools",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://thewarren.app/",
+      "twitter": "https://x.com/thewarren_app",
+      "telegram": "https://t.me/thewarren_app"
+    },
+    "logo": "/logos/Warren.webp"
+  },
+  {
+    "id": "megacorp",
+    "name": "MegaCorp",
+    "categories": [
+      "Gaming",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://megacorp.global/",
+      "twitter": "https://x.com/MegaCorpHQ"
+    },
+    "logo": "/logos/Megacorp.webp"
+  },
+  {
+    "id": "skrrtlords",
+    "name": "Skrrtlords",
+    "categories": [
+      "Gaming",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://skrrtlords.com/",
+      "twitter": "https://x.com/skrrtlords",
+      "discord": "https://discord.com/invite/9xsuEzt8kU"
+    },
+    "logo": "/logos/Skrrtlords.webp"
+  },
+  {
+    "id": "canonic",
+    "name": "Canonic",
+    "categories": [
+      "Trading",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://canonic.trade/",
+      "twitter": "https://x.com/_canonic",
+      "discord": "https://discord.com/invite/nQrzzDSdzB"
+    },
+    "logo": "/logos/Canonic.webp"
+  },
+  {
+    "id": "gocash",
+    "name": "GoCash",
+    "categories": [
+      "Gaming",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://www.gocash.fun/",
+      "twitter": "https://x.com/gocashdotfun"
+    },
+    "logo": "/logos/Gocash.webp"
   }
 ]
+
