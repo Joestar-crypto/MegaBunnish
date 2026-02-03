@@ -11,7 +11,6 @@ export type WalletInsights = {
   walletError: string | null;
   walletInteractionCounts: Record<string, number>;
   walletNftHoldings: Record<string, number>;
-  walletBeadLevels: Record<string, number>;
   walletUpdatedAt: number | null;
   contractDirectoryStatus: ContractDirectoryStatus;
   setWalletInput: (value: string) => void;
@@ -21,11 +20,10 @@ export type WalletInsights = {
 };
 
 type BlockscoutArrayResponse<T> = {
-  status: '0' | '1';
-  message: string;
-  result: T[] | string;
+  status?: '0' | '1';
+  message?: string;
+  result?: T[] | string;
 };
-
 type BlockscoutTransaction = {
   hash: string;
   blockNumber: string;
@@ -38,24 +36,46 @@ type BlockscoutTransaction = {
   isError: string;
 };
 
+type BlockscoutV2AddressRef = {
+  hash: string | null;
+};
+
+type BlockscoutV2Transaction = {
+  hash: string;
+  block_number?: number;
+  timestamp?: string;
+  nonce?: number;
+  from?: BlockscoutV2AddressRef | null;
+  to?: BlockscoutV2AddressRef | null;
+  status?: string;
+  value?: string;
+};
+
+type BlockscoutV2TransactionsResponse = {
+  items?: BlockscoutV2Transaction[];
+  next_page_params?: Record<string, string | number | null>;
+};
+
 type BlockscoutNftTransfer = {
   blockNumber: string;
   timeStamp: string;
   hash: string;
   nonce: string;
   from: string;
-  contractAddress: string;
   to: string;
+  contractAddress: string;
   tokenID: string;
 };
 
 const BLOCKSCOUT_API_URL = 'https://megaeth.blockscout.com/api';
+const BLOCKSCOUT_V2_API_URL = 'https://megaeth.blockscout.com/api/v2';
 const BLOCKSCOUT_API_KEY = (import.meta.env.VITE_ETHERSCAN_API_KEY || 'YourApiKeyToken').trim();
 const ADDRESS_REQUIRED_ERROR = 'Adresse MegaETH requise';
 const ADDRESS_INVALID_ERROR = 'Adresse MegaETH invalide';
 const BLOCKSCOUT_GENERIC_ERROR = 'Impossible de contacter Blockscout. Réessayez plus tard.';
-const TX_PAGE_SIZE = '200';
 const NFT_PAGE_SIZE = '120';
+const MAX_TRANSACTION_PAGES = 5;
+const MAX_TRANSACTION_RESULTS = 250;
 
 const normalizeAddress = (value: string) => value.trim().toLowerCase();
 const isMegaEthAddress = (value: string) => /^0x[a-fA-F0-9]{40}$/.test(value.trim());
@@ -74,25 +94,96 @@ const fetchBlockscoutArray = async <T>(params: Record<string, string>): Promise<
   if (!response.ok) {
     throw new Error(BLOCKSCOUT_GENERIC_ERROR);
   }
+
   const payload = (await response.json()) as BlockscoutArrayResponse<T>;
-  if (payload.status === '1') {
-    return Array.isArray(payload.result) ? payload.result : [];
+  const message = payload.message?.toLowerCase() ?? '';
+  const resultArray = Array.isArray(payload.result) ? payload.result : [];
+
+  const isExplicitSuccess = payload.status === '1';
+  const isImplicitSuccess = !payload.status && (message === 'ok' || resultArray.length > 0);
+
+  if (isExplicitSuccess || isImplicitSuccess) {
+    return resultArray;
   }
-  if (payload.message?.toLowerCase().includes('no transactions')) {
+
+  if (message.includes('no transactions') || message.includes('no token transfers')) {
     return [];
   }
+
   throw new Error(payload.message || BLOCKSCOUT_GENERIC_ERROR);
 };
 
-const fetchLatestTransactions = (address: string) =>
-  fetchBlockscoutArray<BlockscoutTransaction>({
-    module: 'account',
-    action: 'txlist',
-    address,
-    sort: 'desc',
-    page: '1',
-    offset: TX_PAGE_SIZE
+const buildV2TransactionsUrl = (address: string, params?: Record<string, string>) => {
+  const url = new URL(`${BLOCKSCOUT_V2_API_URL}/addresses/${address}/transactions`);
+  Object.entries(params ?? {}).forEach(([key, value]) => {
+    url.searchParams.set(key, value);
   });
+  return url.toString();
+};
+
+const mapV2Transaction = (tx: BlockscoutV2Transaction): BlockscoutTransaction | null => {
+  const toAddress = tx.to?.hash;
+  if (!toAddress) {
+    return null;
+  }
+  const timestampMs = tx.timestamp ? Date.parse(tx.timestamp) : NaN;
+  return {
+    hash: tx.hash,
+    blockNumber: String(tx.block_number ?? ''),
+    timeStamp: Number.isFinite(timestampMs) ? String(Math.floor(timestampMs / 1000)) : '',
+    nonce: String(tx.nonce ?? ''),
+    from: tx.from?.hash ?? '',
+    to: toAddress,
+    contractAddress: toAddress,
+    value: tx.value ?? '0',
+    isError: tx.status === 'ok' ? '0' : '1'
+  };
+};
+
+const sanitizeNextPageParams = (params?: Record<string, string | number | null>) => {
+  if (!params) {
+    return undefined;
+  }
+  const sanitized = Object.entries(params).reduce<Record<string, string>>((acc, [key, value]) => {
+    if (value === null || typeof value === 'undefined') {
+      return acc;
+    }
+    acc[key] = String(value);
+    return acc;
+  }, {});
+  return Object.keys(sanitized).length ? sanitized : undefined;
+};
+
+const fetchLatestTransactions = async (address: string) => {
+  const collected: BlockscoutTransaction[] = [];
+  let pageParams: Record<string, string> | undefined;
+
+  for (let pageIndex = 0; pageIndex < MAX_TRANSACTION_PAGES; pageIndex += 1) {
+    if (collected.length >= MAX_TRANSACTION_RESULTS) {
+      break;
+    }
+
+    const response = await fetch(buildV2TransactionsUrl(address, pageParams));
+    if (!response.ok) {
+      throw new Error(BLOCKSCOUT_GENERIC_ERROR);
+    }
+
+    const payload = (await response.json()) as BlockscoutV2TransactionsResponse;
+    const mapped = (payload.items ?? []).map(mapV2Transaction).filter(Boolean) as BlockscoutTransaction[];
+    if (!mapped.length) {
+      break;
+    }
+
+    collected.push(...mapped);
+    pageParams = sanitizeNextPageParams(payload.next_page_params);
+
+    if (!pageParams) {
+      break;
+    }
+  }
+
+  return collected.slice(0, MAX_TRANSACTION_RESULTS);
+};
 
 const fetchTrackedNftTransfers = (address: string) =>
   fetchBlockscoutArray<BlockscoutNftTransfer>({
@@ -116,22 +207,6 @@ const aggregateInteractionCounts = (transactions: BlockscoutTransaction[]) => {
     acc[projectId] = (acc[projectId] || 0) + 1;
     return acc;
   }, {});
-};
-
-const deriveBeadLevels = (counts: Record<string, number>) => {
-  const beads: Record<string, number> = {};
-  Object.entries(counts).forEach(([projectId, count]) => {
-    if (count >= 12) {
-      beads[projectId] = 3;
-      return;
-    }
-    if (count >= 5) {
-      beads[projectId] = 2;
-      return;
-    }
-    beads[projectId] = 1;
-  });
-  return beads;
 };
 
 const aggregateNftHoldings = (transfers: BlockscoutNftTransfer[], walletAddress: string) => {
@@ -173,7 +248,6 @@ export const useWalletInsights = (): WalletInsights => {
   const [walletUpdatedAt, setWalletUpdatedAt] = useState<number | null>(null);
   const [walletInteractionCounts, setWalletInteractionCounts] = useState<Record<string, number>>({});
   const [walletNftHoldings, setWalletNftHoldings] = useState<Record<string, number>>({});
-  const [walletBeadLevels, setWalletBeadLevels] = useState<Record<string, number>>({});
   const [contractDirectoryStatus, setContractDirectoryStatus] = useState<ContractDirectoryStatus>('idle');
   const requestRef = useRef(0);
 
@@ -185,7 +259,6 @@ export const useWalletInsights = (): WalletInsights => {
     setWalletError(null);
     setWalletUpdatedAt(null);
     setWalletInteractionCounts({});
-    setWalletBeadLevels({});
     setWalletNftHoldings({});
 
     try {
@@ -199,11 +272,9 @@ export const useWalletInsights = (): WalletInsights => {
       }
 
       const counts = aggregateInteractionCounts(transactions);
-      const beads = deriveBeadLevels(counts);
       const nftHoldings = aggregateNftHoldings(nftTransfers, normalizedAddress);
 
       setWalletInteractionCounts(counts);
-      setWalletBeadLevels(beads);
       setWalletNftHoldings(nftHoldings);
       setWalletUpdatedAt(Date.now());
       setWalletStatus('ready');
@@ -252,7 +323,6 @@ export const useWalletInsights = (): WalletInsights => {
     setWalletError(null);
     setWalletInteractionCounts({});
     setWalletNftHoldings({});
-    setWalletBeadLevels({});
     setWalletUpdatedAt(null);
     setContractDirectoryStatus('idle');
   }, []);
@@ -264,7 +334,6 @@ export const useWalletInsights = (): WalletInsights => {
     walletError,
     walletInteractionCounts,
     walletNftHoldings,
-    walletBeadLevels,
     walletUpdatedAt,
     contractDirectoryStatus,
     setWalletInput,

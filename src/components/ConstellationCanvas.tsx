@@ -238,7 +238,7 @@ export const ConstellationCanvas = ({
     zoomCamera,
     resetCamera,
     favoriteIds,
-    walletBeadLevels
+    walletInteractionCounts
   } = useConstellation();
   const images = useImageCache(projects);
   const cameraRef = useRef(camera);
@@ -459,7 +459,7 @@ export const ConstellationCanvas = ({
         const highlightStyle = project.highlight ? highlightStyles[project.highlight] : null;
         const baseLineWidth = project.id === selectedId ? 4 : 2;
         const isFavorite = favoriteSet.has(project.id);
-        const beadCount = walletBeadLevels[project.id] ?? 0;
+        const beadCount = walletInteractionCounts[project.id] ?? 0;
 
         context.beginPath();
         context.fillStyle = 'rgba(255, 255, 255, 0.08)';
@@ -580,7 +580,7 @@ export const ConstellationCanvas = ({
       cancelAnimationFrame(animationFrame);
       window.removeEventListener('resize', handleResize);
     };
-  }, [projects, images, stars, favoriteSet, walletBeadLevels]);
+  }, [projects, images, stars, favoriteSet, walletInteractionCounts]);
 
   const endInteraction = () => {
     if (interactionActiveRef.current) {
