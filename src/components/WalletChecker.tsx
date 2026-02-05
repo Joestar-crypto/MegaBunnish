@@ -76,7 +76,12 @@ export const WalletChecker = () => {
             <p className="wallet-checker__eyebrow">MegaETH activity radar</p>
             <h2>Wallet Checker</h2>
           </div>
-          <button type="button" className="wallet-checker__close" aria-label="Fermer" onClick={() => setIsOpen(false)}>
+          <button
+            type="button"
+            className="wallet-checker__close"
+            aria-label="Close wallet checker"
+            onClick={() => setIsOpen(false)}
+          >
             &times;
           </button>
         </header>
@@ -87,14 +92,14 @@ export const WalletChecker = () => {
             placeholder="0x..."
             value={walletInput}
             onChange={(event) => setWalletInput(event.target.value)}
-            aria-label="Adresse MegaETH"
+            aria-label="MegaETH address"
           />
           <button type="submit" className="wallet-checker__submit" disabled={isBusy}>
-            {walletStatus === 'loading' ? 'Scan...' : 'Scanner'}
+            {walletStatus === 'loading' ? 'Scanning...' : 'Scan wallet'}
           </button>
           {hasWallet ? (
             <button type="button" className="wallet-checker__ghost" onClick={clearWallet}>
-              Effacer
+              Clear
             </button>
           ) : null}
         </form>
@@ -102,29 +107,29 @@ export const WalletChecker = () => {
           {isBusy ? (
             <div className="wallet-checker__loading">
               <span className="wallet-checker__spinner" aria-hidden="true" />
-              <span>Analyse du wallet...</span>
+              <span>Analyzing wallet...</span>
             </div>
           ) : null}
           {walletError && !isBusy ? <p className="wallet-checker__error">{walletError}</p> : null}
           {walletUpdatedAt && walletStatus === 'ready' ? (
-            <p className="wallet-checker__meta">Mis à jour à {formatTimestamp(walletUpdatedAt)}</p>
+            <p className="wallet-checker__meta">Updated at {formatTimestamp(walletUpdatedAt)}</p>
           ) : null}
         </div>
         {contractDirectoryStatus === 'error' ? (
           <p className="wallet-checker__error">
-            Impossible de synchroniser les smart contracts MegaETH. Essayez de recharger la page.
+            Unable to sync the MegaETH smart contracts. Try refreshing the page.
           </p>
         ) : null}
         {walletStatus === 'ready' && !hasInsights ? (
-          <p className="wallet-checker__hint">Aucune interaction MegaETH n'a été détectée pour ce wallet.</p>
+          <p className="wallet-checker__hint">No MegaETH interactions were detected for this wallet.</p>
         ) : null}
         {topInteractions.length ? (
           <div className="wallet-checker__results">
             <div className="wallet-checker__results-header">
-              <p>Projets touchés</p>
+              <p>Interacted projects</p>
               {hasWallet ? (
                 <button type="button" onClick={refreshWalletInsights} disabled={isBusy}>
-                  Actualiser
+                  Refresh
                 </button>
               ) : null}
             </div>
@@ -141,7 +146,7 @@ export const WalletChecker = () => {
         {trackedNfts.length ? (
           <div className="wallet-checker__results wallet-checker__results--nft">
             <div className="wallet-checker__results-header">
-              <p>Collections suivies (NFT)</p>
+              <p>Tracked collections (NFT)</p>
             </div>
             <ul>
               {trackedNfts.map((entry) => (

@@ -245,10 +245,6 @@ select {
   width: clamp(120px, 14vw, 190px);
 }
 
-.trait-dock--jojo-active + .category-dock {
-  top: calc(clamp(0.75rem, 3vw, 2.5rem) + 8.75rem);
-}
-
 .ui-panel--hidden {
   opacity: 0;
   pointer-events: none;
@@ -329,32 +325,42 @@ select {
 .jojo-profile-menu {
   pointer-events: auto;
   display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  padding: 0.75rem 0.95rem;
-  border-radius: 1rem;
-  background: rgba(5, 8, 20, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(18px);
-  max-width: min(360px, calc(100vw - 2rem));
-  position: relative;
-  z-index: 6;
-}
-
-.jojo-profile-menu__header {
-  display: flex;
-  gap: 0.45rem;
-  align-items: baseline;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(233, 235, 255, 0.85);
-}
-
-.jojo-profile-menu__options {
-  display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  backdrop-filter: none;
+  max-width: 360px;
+  position: absolute;
+  top: calc(clamp(0.75rem, 3vw, 2.5rem) + 4.75rem);
+  left: auto;
+  right: calc(
+    100% - (
+      clamp(0.75rem, 2vw, 1.75rem) +
+        clamp(120px, 14vw, 190px)
+    ) -
+    clamp(10.5rem, 16vw, 15rem)
+  );
+  z-index: 6;
+  justify-content: flex-end;
+}
+
+@media (max-width: 980px) {
+  .jojo-profile-menu {
+    position: static;
+    left: auto;
+    right: auto;
+    margin-top: 0.75rem;
+    margin-left: clamp(0.75rem, 2vw, 1.75rem);
+    margin-right: clamp(0.75rem, 2vw, 1.75rem);
+    width: min(360px, calc(100vw - 2rem));
+    justify-content: center;
+  }
+
+  .trait-dock--jojo-active ~ .category-dock {
+    top: calc(clamp(0.75rem, 3vw, 2.5rem) + 8.75rem);
+  }
 }
 
 .jojo-profile-button {
@@ -543,10 +549,10 @@ select {
   width: min(360px, calc(100vw - 2rem));
   padding: 1.25rem;
   border-radius: 1.25rem;
-  background: rgba(5, 8, 20, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(24px);
+  background: #e0d9d9;
+  border: 1px solid #bfb8b8;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.35);
+  color: #111217;
   opacity: 0;
   pointer-events: none;
   transform: translateY(-10px);
@@ -571,18 +577,19 @@ select {
   font-size: 0.7rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: rgba(5, 6, 18, 0.65);
 }
 
 .wallet-checker__header h2 {
   margin: 0.15rem 0 0;
   font-size: 1.25rem;
+  color: #05060f;
 }
 
 .wallet-checker__close {
   border: none;
   background: transparent;
-  color: var(--text);
+  color: #05060f;
   font-size: 1.2rem;
   cursor: pointer;
 }
@@ -593,14 +600,14 @@ select {
   grid-auto-rows: auto;
   gap: 0.5rem;
   align-items: stretch;
-  margin: 1rem 0 0.4rem;
+  margin: 0.85rem 0 0;
 }
 
 .wallet-checker__form input {
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text);
+  border: 1px solid rgba(5, 6, 18, 0.2);
+  background: rgba(255, 255, 255, 0.85);
+  color: #05060f;
   padding: 0.55rem 1rem;
   outline: none;
   transition: border-color 0.2s ease, background 0.2s ease;
@@ -608,8 +615,8 @@ select {
 }
 
 .wallet-checker__form input:focus {
-  border-color: var(--accent);
-  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent-strong);
+  background: #ffffff;
 }
 
 .wallet-checker__submit,
@@ -625,8 +632,8 @@ select {
 }
 
 .wallet-checker__submit {
-  background: var(--accent);
-  color: #07111f;
+  background: #ffb37c;
+  color: #2f1d16;
   font-weight: 600;
 }
 
@@ -637,9 +644,9 @@ select {
 
 .wallet-checker__ghost,
 .wallet-checker__results button {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(5, 6, 18, 0.08);
+  color: #05060f;
+  border: 1px solid rgba(5, 6, 18, 0.18);
 }
 
 .wallet-checker__form .wallet-checker__ghost {
@@ -652,7 +659,8 @@ select {
 }
 
 .wallet-checker__status {
-  min-height: 2.2rem;
+  margin-top: 0.35rem;
+  min-height: 0;
 }
 
 .wallet-checker__loading {
@@ -660,7 +668,7 @@ select {
   align-items: center;
   gap: 0.45rem;
   font-size: 0.85rem;
-  color: var(--text);
+  color: #05060f;
 }
 
 .wallet-checker__spinner {
@@ -687,21 +695,21 @@ select {
 .wallet-checker__meta {
   margin: 0.2rem 0;
   font-size: 0.8rem;
-  color: var(--text-dim);
+  color: rgba(5, 6, 18, 0.6);
 }
 
 .wallet-checker__hint {
   margin: 0.4rem 0 0;
   font-size: 0.85rem;
-  color: var(--text-dim);
+  color: rgba(5, 6, 18, 0.6);
 }
 
 .wallet-checker__results {
   margin-top: 0.75rem;
   padding: 0.85rem;
   border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(5, 6, 18, 0.1);
 }
 
 .wallet-checker__results--nft {

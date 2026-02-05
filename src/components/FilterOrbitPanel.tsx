@@ -177,30 +177,27 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
             </span>
           </button>
         </div>
-          {showJojoProfiles ? (
-            <div className="jojo-profile-menu" role="group" aria-label="Profile options">
-              <div className="jojo-profile-menu__header">
-                <span>Profile</span>
-              </div>
-              <div className="jojo-profile-menu__options">
-                {JOJO_PROFILES.map((profile) => (
-                  <button
-                    key={profile.id}
-                    type="button"
-                    className={
-                      profile.id === jojoProfileId ? 'jojo-profile-button active' : 'jojo-profile-button'
-                    }
-                    onClick={() => setJojoProfile(profile.id)}
-                    aria-pressed={profile.id === jojoProfileId}
-                  >
-                    <span className="jojo-profile-button__label">{profile.label}</span>
-                    {profile.hint ? <span className="jojo-profile-button__hint">{profile.hint}</span> : null}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
       </div>
+      {showJojoProfiles ? (
+        <div
+          className={`jojo-profile-menu ${isInteracting ? 'ui-panel--hidden' : ''}`}
+          role="group"
+          aria-label="Profile options"
+        >
+          {JOJO_PROFILES.map((profile) => (
+            <button
+              key={profile.id}
+              type="button"
+              className={profile.id === jojoProfileId ? 'jojo-profile-button active' : 'jojo-profile-button'}
+              onClick={() => setJojoProfile(profile.id)}
+              aria-pressed={profile.id === jojoProfileId}
+            >
+              <span className="jojo-profile-button__label">{profile.label}</span>
+              {profile.hint ? <span className="jojo-profile-button__hint">{profile.hint}</span> : null}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <div className={`category-dock ${isInteracting ? 'ui-panel--hidden' : ''}`}>
         <aside className="category-rail" aria-label="Categories">
           <p className="category-rail__section-heading">Sectors</p>
