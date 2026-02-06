@@ -124,7 +124,7 @@
       "MegaETH"
     ],
     "links": {
-      "site": "https://www.prismfi.cc/",
+      "site": "https://prismfi.cc?ref=joestar",
       "twitter": "https://x.com/PrismFi_"
     },
     "logo": "/logos/PrismFi.webp",
@@ -315,7 +315,7 @@
       "MegaETH"
     ],
     "links": {
-      "site": "https://blackhaven.xyz/",
+      "site": "https://early.blackhaven.xyz/?ref=JoestarCrypto",
       "twitter": "https://x.com/blackhaven",
       "discord": "https://discord.com/invite/blackhavenxyz"
     },
@@ -338,6 +338,22 @@
       "discord": "https://discord.com/invite/kmn2bvdSzZ"
     },
     "logo": "/logos/Aqua.webp"
+  },
+  {
+    "id": "aurion",
+    "name": "Aurion",
+    "categories": [
+      "DeFi",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://www.aurion.xyz/",
+      "twitter": "https://x.com/AurionDex"
+    },
+    "logo": "/logos/Aurion.webp"
   },
   {
     "id": "showdown",

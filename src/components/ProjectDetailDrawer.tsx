@@ -48,6 +48,14 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
     ],
     [textSegment("Definitely the gaming app I\'m the most excited about, I love every boss design.")]
   ],
+  aveforge: [
+    [
+      textSegment(
+        'Built by a team that has shipped Bloomtown and Graveyard Keeper on Steam, this addictive battler game is creating a strong IP around mecha, using blockchain as settlement for rewards and cosmetics.'
+      )
+    ],
+    [textSegment("Definitely the gaming app I'm the most excited about (I love every boss design).")]
+  ],
   'hello-trade': [
     [
       textSegment(
@@ -71,6 +79,14 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
       textSegment('.')
     ],
     [textSegment('Not holding a BadBunnz should be considered a crime in MegaETH territory.')]
+  ],
+  blitzo: [
+    [
+      textSegment(
+        "Ngl I don't fully understand this one lol, it seems like a payment app coupled with something like TikTok lmao, making every payment memeable and tradable."
+      )
+    ],
+    [textSegment("Idk, but it's a MegaMafia project, so don't fade it.")]
   ],
   prismfi: [
     [
@@ -147,11 +163,6 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
   ren: [
     [
       textSegment('Used to be the main protocol for cross-chain BTC/BCH/ZEC DeFi, then collapsed after the Alameda acquisition and the FTX crash.')
-    ],
-    [
-      textSegment(
-        "Ngl I don\'t fully understand this one lol, it seems like a payment app coupled with something like TikTok, making every payment memeable and tradable. Idk, but it\'s a MegaMafia project, so don\'t fade it."
-      )
     ]
   ],
   lemonade: [
@@ -181,6 +192,11 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
       )
     ],
     [textSegment('The only limit is your imagination, definitely one of the best apps imo.')]
+  ],
+  wrapx: [
+    [
+      textSegment("Not much to say except that it's another DEX on MegaETH.")
+    ]
   ],
   benchmark: [
     [
@@ -212,6 +228,12 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
         'Aqua could be your go-to LST, letting you hold OMEGA, which receives yield from $MEGA staking, and additionally uses the Tide and Current model to offer extra yield with a strong risk-reward ratio.'
       )
     ]
+  ],
+  aurion: [
+    [
+      textSegment('Aurion is building a concentrated liquidity AMM and a prediction market on MegaETH with Algebra and Aegas.')
+    ],
+    [textSegment("I'm curious about this one, the DEX and prediction market combined is original.")]
   ],
   showdown: [
     [
