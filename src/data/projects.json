@@ -78,6 +78,7 @@
     "name": "HelloTrade",
     "categories": [
       "Jojo",
+      "Megamafia",
       "Trading",
       "Mobile",
       "Native"
@@ -117,6 +118,7 @@
     "name": "PrismFi",
     "categories": [
       "Jojo",
+      "Megamafia",
       "DeFi",
       "Native"
     ],
@@ -326,6 +328,7 @@
     "name": "Aqua",
     "categories": [
       "Jojo",
+      "Megamafia",
       "DeFi",
       "Native"
     ],
@@ -777,6 +780,7 @@
     "name": "Supernova",
     "categories": [
       "Jojo",
+      "Megamafia",
       "DeFi",
       "Native"
     ],
