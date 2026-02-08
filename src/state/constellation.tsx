@@ -1219,9 +1219,10 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
 
   const resetCamera = useCallback(() => {
     setState((prev) => {
+      const resetFilters: SpecialFilters = { ...SPECIAL_DEFAULTS };
       const { pool, visible, counts } = deriveProjectView(
         layout.projects,
-        prev.filters,
+        resetFilters,
         null,
         prev.jojoProfileId,
         {
@@ -1232,6 +1233,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       const visibleIds = new Set(visible.map((project) => project.id));
       return {
         ...prev,
+        filters: resetFilters,
         projects: visible,
         projectPoolSize: pool.length,
         categoryCounts: counts,

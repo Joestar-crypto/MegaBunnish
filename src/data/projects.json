@@ -118,7 +118,6 @@
     "name": "PrismFi",
     "categories": [
       "Jojo",
-      "Megamafia",
       "DeFi",
       "Native"
     ],
@@ -328,7 +327,6 @@
     "name": "Aqua",
     "categories": [
       "Jojo",
-      "Megamafia",
       "DeFi",
       "Native"
     ],
@@ -735,7 +733,7 @@
     ],
     "links": {
       "twitter": "https://x.com/PriorityTrade_",
-      "telegram": "https://t.me/prioritytradebot"
+      "telegram": "https://t.me/prioritytradebot?start=code_5846523252"
     },
     "logo": "/logos/Priority.webp",
     "linkedIds": [
@@ -848,7 +846,7 @@
     "id": "hitdotone",
     "name": "Hitdotone",
     "categories": [
-      "Gaming",
+      "Gambling",
       "Native"
     ],
     "networks": [
@@ -1320,22 +1318,6 @@
       "telegram": "https://t.me/officialopensea"
     },
     "logo": "/logos/Opensea.webp"
-  },
-  {
-    "id": "magic-eden",
-    "name": "Magic Eden",
-    "categories": [
-      "NFT"
-    ],
-    "networks": [
-      "MegaETH"
-    ],
-    "links": {
-      "site": "https://magiceden.io/",
-      "twitter": "https://x.com/MagicEden",
-      "discord": "https://discord.com/invite/magiceden"
-    },
-    "logo": "/logos/MagicEden.webp"
   },
   {
     "id": "clutch",
