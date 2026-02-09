@@ -664,17 +664,43 @@ const computeLayout = (
   return { projects: positionedProjects, categories, categoryCounts };
 };
 
+type DeriveProjectOptions = {
+  favoritesOnly?: boolean;
+  favoriteIds?: Set<string>;
+  ethosScores?: Record<string, number>;
+  ethosScoreThreshold?: number | null;
+};
+
+const applyEthosScoreFilter = (
+  projects: ConstellationProject[],
+  threshold: number | null,
+  scores: Record<string, number> | undefined
+) => {
+  if (threshold === null) {
+    return { projects, applied: false };
+  }
+  const scoreMap = scores ?? {};
+  const filtered = projects.filter((project) => {
+    const score = scoreMap[project.id];
+    return typeof score === 'number' && score >= threshold;
+  });
+  return { projects: filtered, applied: true };
+};
+
 const deriveProjectView = (
   baseProjects: ConstellationProject[],
   filters: SpecialFilters,
   category: string | null,
   jojoProfileId: string,
-  options?: { favoritesOnly?: boolean; favoriteIds?: Set<string> }
+  options: DeriveProjectOptions = {}
 ) => {
   let workingPool = baseProjects;
+  const favoriteSet = options.favoriteIds ?? new Set<string>();
+  const favoritesOnly = options.favoritesOnly ?? false;
+  const ethosScores = options.ethosScores ?? {};
+  const ethosScoreThreshold = options.ethosScoreThreshold ?? null;
 
-  if (options?.favoritesOnly) {
-    const favoriteSet = options.favoriteIds ?? new Set<string>();
+  if (favoritesOnly) {
     const favoritesSubset = workingPool.filter((project) => favoriteSet.has(project.id));
     if (favoritesSubset.length === 0) {
       const emptyCounts = deriveCategoryCounts([]);
@@ -686,8 +712,14 @@ const deriveProjectView = (
     );
   }
 
-  const filteredPool = applySpecialFilters(workingPool, filters, jojoProfileId);
-  const pool = shouldAggregateFilters(filters)
+  const { projects: ethosFilteredPool, applied: appliedEthosFilter } = applyEthosScoreFilter(
+    workingPool,
+    ethosScoreThreshold,
+    ethosScores
+  );
+  const filteredPool = applySpecialFilters(ethosFilteredPool, filters, jojoProfileId);
+  const needsRelayout = appliedEthosFilter || shouldAggregateFilters(filters);
+  const pool = needsRelayout
     ? computeLayout(toRawProjectSet(filteredPool)).projects
     : cloneProjects(filteredPool);
   const visible = filterProjectsByCategory(pool, category);
@@ -818,7 +850,9 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         prev.jojoProfileId,
         {
           favoritesOnly: prev.favoritesOnly,
-          favoriteIds: new Set(prev.favoriteIds)
+          favoriteIds: new Set(prev.favoriteIds),
+          ethosScoreThreshold: prev.ethosScoreThreshold,
+          ethosScores: prev.ethosScores
         }
       );
       const visibleIds = new Set(visible.map((project) => project.id));
@@ -844,10 +878,18 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
           return prev;
         }
 
-        const { pool, visible, counts } = deriveProjectView(layout.projects, prev.filters, category, prev.jojoProfileId, {
-          favoritesOnly: prev.favoritesOnly,
-          favoriteIds: new Set(prev.favoriteIds)
-        });
+        const { pool, visible, counts } = deriveProjectView(
+          layout.projects,
+          prev.filters,
+          category,
+          prev.jojoProfileId,
+          {
+            favoritesOnly: prev.favoritesOnly,
+            favoriteIds: new Set(prev.favoriteIds),
+            ethosScoreThreshold: prev.ethosScoreThreshold,
+            ethosScores: prev.ethosScores
+          }
+        );
         const visibleIds = new Set(visible.map((project) => project.id));
         const focus = computeCameraFocus(category, visible);
 
@@ -885,7 +927,9 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
           prev.jojoProfileId,
           {
             favoritesOnly: prev.favoritesOnly,
-            favoriteIds: new Set(prev.favoriteIds)
+            favoriteIds: new Set(prev.favoriteIds),
+            ethosScoreThreshold: prev.ethosScoreThreshold,
+            ethosScores: prev.ethosScores
           }
         );
 
@@ -898,9 +942,11 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         }
 
         const visibleIds = new Set(nextVisible.map((project) => project.id));
+        const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && !nextActiveCategory;
         const forceFocus =
           (shouldAggregateFilters(nextFilters) && !nextActiveCategory) ||
-          (prev.favoritesOnly && !nextActiveCategory);
+          (prev.favoritesOnly && !nextActiveCategory) ||
+          shouldForceEthosFocus;
         const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
         const shouldUpdateCamera =
           Boolean(nextActiveCategory) ||
@@ -951,7 +997,9 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         resolvedProfileId,
         {
           favoritesOnly: prev.favoritesOnly,
-          favoriteIds: new Set(prev.favoriteIds)
+          favoriteIds: new Set(prev.favoriteIds),
+          ethosScoreThreshold: prev.ethosScoreThreshold,
+          ethosScores: prev.ethosScores
         }
       );
 
@@ -964,9 +1012,11 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       }
 
       const visibleIds = new Set(nextVisible.map((project) => project.id));
+      const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && !nextActiveCategory;
       const forceFocus =
         (shouldAggregateFilters(prev.filters) && !nextActiveCategory) ||
-        (prev.favoritesOnly && !nextActiveCategory);
+        (prev.favoritesOnly && !nextActiveCategory) ||
+        shouldForceEthosFocus;
       const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
       const shouldUpdateCamera =
         Boolean(nextActiveCategory) ||
@@ -1014,7 +1064,9 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         prev.jojoProfileId,
         {
           favoritesOnly: nextFavoritesOnly,
-          favoriteIds: new Set(prev.favoriteIds)
+          favoriteIds: new Set(prev.favoriteIds),
+          ethosScoreThreshold: prev.ethosScoreThreshold,
+          ethosScores: prev.ethosScores
         }
       );
 
@@ -1027,9 +1079,11 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       }
 
       const visibleIds = new Set(nextVisible.map((project) => project.id));
+      const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && !nextActiveCategory;
       const forceFocus =
         (shouldAggregateFilters(prev.filters) && !nextActiveCategory) ||
-        (nextFavoritesOnly && !nextActiveCategory);
+        (nextFavoritesOnly && !nextActiveCategory) ||
+        shouldForceEthosFocus;
       const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
       const shouldUpdateCamera =
         Boolean(nextActiveCategory) ||
@@ -1081,7 +1135,9 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
           prev.jojoProfileId,
           {
             favoritesOnly: nextFavoritesOnly,
-            favoriteIds: new Set(nextFavoriteIds)
+            favoriteIds: new Set(nextFavoriteIds),
+            ethosScoreThreshold: prev.ethosScoreThreshold,
+            ethosScores: prev.ethosScores
           }
         );
 
@@ -1094,9 +1150,11 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         }
 
         const visibleIds = new Set(nextVisible.map((project) => project.id));
+        const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && !nextActiveCategory;
         const forceFocus =
           (shouldAggregateFilters(prev.filters) && !nextActiveCategory) ||
-          (nextFavoritesOnly && !nextActiveCategory);
+          (nextFavoritesOnly && !nextActiveCategory) ||
+          shouldForceEthosFocus;
         const shouldUpdateCamera =
           Boolean(nextActiveCategory) ||
           prev.activeCategory !== nextActiveCategory ||
@@ -1182,7 +1240,12 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
           };
           nextReturnPoint = null;
         } else if (prev.selectedProjectId) {
-          const forceFocus = shouldAggregateFilters(prev.filters) && !prev.activeCategory;
+          const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && !prev.activeCategory;
+          const shouldForceFavoritesFocus = prev.favoritesOnly && !prev.activeCategory;
+          const forceFocus =
+            (shouldAggregateFilters(prev.filters) && !prev.activeCategory) ||
+            shouldForceFavoritesFocus ||
+            shouldForceEthosFocus;
           const focus = computeCameraFocus(prev.activeCategory, prev.projects, forceFocus);
           nextCamera = {
             ...prev.camera,
@@ -1263,7 +1326,9 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         prev.jojoProfileId,
         {
           favoritesOnly: prev.favoritesOnly,
-          favoriteIds: new Set(prev.favoriteIds)
+          favoriteIds: new Set(prev.favoriteIds),
+          ethosScoreThreshold: prev.ethosScoreThreshold,
+          ethosScores: prev.ethosScores
         }
       );
       const visibleIds = new Set(visible.map((project) => project.id));
@@ -1291,9 +1356,71 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       if (scoreMapsEqual(prev.ethosScores, scores)) {
         return prev;
       }
-      return { ...prev, ethosScores: scores };
+
+      if (prev.ethosScoreThreshold === null) {
+        return { ...prev, ethosScores: scores };
+      }
+
+      const { pool, visible, counts } = deriveProjectView(
+        layout.projects,
+        prev.filters,
+        prev.activeCategory,
+        prev.jojoProfileId,
+        {
+          favoritesOnly: prev.favoritesOnly,
+          favoriteIds: new Set(prev.favoriteIds),
+          ethosScoreThreshold: prev.ethosScoreThreshold,
+          ethosScores: scores
+        }
+      );
+
+      let nextActiveCategory = prev.activeCategory;
+      let nextVisible = visible;
+
+      if (nextActiveCategory && visible.length === 0) {
+        nextActiveCategory = null;
+        nextVisible = pool;
+      }
+
+      const visibleIds = new Set(nextVisible.map((project) => project.id));
+      const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && !nextActiveCategory;
+      const forceFocus =
+        (shouldAggregateFilters(prev.filters) && !nextActiveCategory) ||
+        (prev.favoritesOnly && !nextActiveCategory) ||
+        shouldForceEthosFocus;
+      const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
+      const shouldUpdateCamera =
+        Boolean(nextActiveCategory) ||
+        prev.activeCategory !== nextActiveCategory ||
+        forceFocus;
+
+      return {
+        ...prev,
+        ethosScores: scores,
+        projects: nextVisible,
+        projectPoolSize: pool.length,
+        categoryCounts: counts,
+        activeCategory: nextActiveCategory,
+        hoveredProjectId:
+          prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId)
+            ? prev.hoveredProjectId
+            : null,
+        selectedProjectId:
+          prev.selectedProjectId && visibleIds.has(prev.selectedProjectId)
+            ? prev.selectedProjectId
+            : null,
+        cameraReturnPoint: null,
+        camera: shouldUpdateCamera
+          ? {
+              ...prev.camera,
+              targetX: focus.x,
+              targetY: focus.y,
+              targetZoom: focus.zoom
+            }
+          : prev.camera
+      };
     });
-  }, []);
+  }, [layout.projects]);
 
   const setEthosProfileLinks = useCallback((links: Record<string, string | null>) => {
     setState((prev) => {
@@ -1318,9 +1445,67 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       if (prev.ethosScoreThreshold === threshold) {
         return prev;
       }
-      return { ...prev, ethosScoreThreshold: threshold };
+
+      const { pool, visible, counts } = deriveProjectView(
+        layout.projects,
+        prev.filters,
+        prev.activeCategory,
+        prev.jojoProfileId,
+        {
+          favoritesOnly: prev.favoritesOnly,
+          favoriteIds: new Set(prev.favoriteIds),
+          ethosScoreThreshold: threshold,
+          ethosScores: prev.ethosScores
+        }
+      );
+
+      let nextActiveCategory = prev.activeCategory;
+      let nextVisible = visible;
+
+      if (nextActiveCategory && visible.length === 0) {
+        nextActiveCategory = null;
+        nextVisible = pool;
+      }
+
+      const visibleIds = new Set(nextVisible.map((project) => project.id));
+      const shouldForceEthosFocus = threshold !== null && !nextActiveCategory;
+      const forceFocus =
+        (shouldAggregateFilters(prev.filters) && !nextActiveCategory) ||
+        (prev.favoritesOnly && !nextActiveCategory) ||
+        shouldForceEthosFocus;
+      const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
+      const shouldUpdateCamera =
+        Boolean(nextActiveCategory) ||
+        prev.activeCategory !== nextActiveCategory ||
+        forceFocus;
+
+      return {
+        ...prev,
+        ethosScoreThreshold: threshold,
+        projects: nextVisible,
+        projectPoolSize: pool.length,
+        categoryCounts: counts,
+        activeCategory: nextActiveCategory,
+        hoveredProjectId:
+          prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId)
+            ? prev.hoveredProjectId
+            : null,
+        selectedProjectId:
+          prev.selectedProjectId && visibleIds.has(prev.selectedProjectId)
+            ? prev.selectedProjectId
+            : null,
+        cameraReturnPoint: null,
+        camera: shouldUpdateCamera
+          ? {
+              ...prev.camera,
+              targetX: focus.x,
+              targetY: focus.y,
+              targetZoom: focus.zoom
+            }
+          : prev.camera
+      };
     });
-  }, []);
+  }, [layout.projects]);
 
   const resolveProjectById = useCallback(
     (projectId: string | null) => {
