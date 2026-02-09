@@ -59,7 +59,19 @@ const AppContent = () => {
               </a>
             </div>
           </div>
-          <button type="button" className="reset-anchor" onClick={resetCamera} aria-label="Reset camera view">
+          <div
+            className={`live-status-legend ${isInteracting ? 'ui-panel--hidden' : ''}`}
+            aria-label="Live app indicator legend"
+          >
+            <span className="live-status-legend__dot" aria-hidden="true" />
+            <span className="live-status-legend__text">: Live</span>
+          </div>
+          <button
+            type="button"
+            className={`reset-anchor ${isInteracting ? 'ui-panel--hidden' : ''}`}
+            onClick={resetCamera}
+            aria-label="Reset camera view"
+          >
             Reset
           </button>
           {showJojoBanner ? (
@@ -78,7 +90,7 @@ const AppContent = () => {
           ) : null}
           <ProjectDetailDrawer />
           <div className="hud-stack">
-            <WalletChecker />
+            <WalletChecker isInteracting={isInteracting} />
             <div className={`constellation-hud ${isInteracting ? 'ui-panel--hidden' : ''}`}>
               <ConstellationHUD onOpenDashboards={openDashboards} />
             </div>

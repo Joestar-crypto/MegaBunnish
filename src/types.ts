@@ -23,6 +23,7 @@ export type RawProject = {
   networks: string[];
   links: ConstellationLinkMap;
   logo: string;
+  isLive?: boolean;
   incentives?: Incentive[];
   linkedIds?: string[];
 };
@@ -48,6 +49,7 @@ export type ConstellationProject = RawProject & {
   primaryCategory: string;
   linkedIds: string[];
   clusterOrigin: { x: number; y: number };
+  isLive: boolean;
   highlight?: HighlightVariant;
   traits: SpecialFilters;
 };
@@ -76,6 +78,7 @@ export type ConstellationState = {
   filters: SpecialFilters;
   favoriteIds: string[];
   favoritesOnly: boolean;
+  liveOnly: boolean;
   jojoProfileId: string;
   ethosScores: Record<string, number>;
   ethosProfileLinks: Record<string, string | null>;

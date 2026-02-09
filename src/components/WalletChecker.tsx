@@ -9,7 +9,11 @@ const formatTimestamp = (value: number) => {
   return formatter.format(value);
 };
 
-export const WalletChecker = () => {
+type WalletCheckerProps = {
+  isInteracting?: boolean;
+};
+
+export const WalletChecker = ({ isInteracting = false }: WalletCheckerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const {
     walletAddress,
@@ -64,8 +68,16 @@ export const WalletChecker = () => {
   const hasWallet = Boolean(walletAddress);
   const hasInsights = topInteractions.length > 0 || trackedNfts.length > 0;
 
+  const rootClasses = ['wallet-checker'];
+  if (isOpen) {
+    rootClasses.push('wallet-checker--open');
+  }
+  if (isInteracting) {
+    rootClasses.push('ui-panel--hidden');
+  }
+
   return (
-    <div className={`wallet-checker ${isOpen ? 'wallet-checker--open' : ''}`}>
+    <div className={rootClasses.join(' ')}>
       <button type="button" className="wallet-checker__toggle" onClick={() => setIsOpen((prev) => !prev)}>
         <span>Wallet Checker</span>
         <span className={`wallet-checker__indicator wallet-checker__indicator--${walletStatus}`} />

@@ -301,7 +301,8 @@
       "twitter": "https://x.com/avon_xyz",
       "telegram": "https://t.me/avon_xyz"
     },
-    "logo": "/logos/Avon.webp"
+    "logo": "/logos/Avon.webp",
+    "isLive": true
   },
   {
     "id": "blackhaven",
@@ -372,7 +373,8 @@
       "twitter": "https://x.com/Showdown_TCG",
       "discord": "https://discord.com/invite/VJYRAuT6Dh"
     },
-    "logo": "/logos/Showdown.webp"
+    "logo": "/logos/Showdown.webp",
+    "isLive": true
   },
   {
     "id": "topstrike",
@@ -391,7 +393,8 @@
       "twitter": "https://x.com/TopStrikeIO",
       "discord": "https://discord.com/invite/Jw4C3pSqCD"
     },
-    "logo": "/logos/TopStrike.webp"
+    "logo": "/logos/TopStrike.webp",
+    "isLive": true
   },
   {
     "id": "stomp",
@@ -409,7 +412,8 @@
       "site": "https://stomp.gg/",
       "twitter": "https://x.com/stompdotgg"
     },
-    "logo": "/logos/Stomp.webp"
+    "logo": "/logos/Stomp.webp",
+    "isLive": true
   },
   {
     "id": "rainmaker",
@@ -463,7 +467,8 @@
       "site": "https://www.kumbaya.xyz/",
       "twitter": "https://x.com/kumbaya_xyz"
     },
-    "logo": "/logos/Kumbaya.webp"
+    "logo": "/logos/Kumbaya.webp",
+    "isLive": true
   },
   {
     "id": "meth",
@@ -514,7 +519,8 @@
       "site": "https://app.ubi.tel/",
       "twitter": "https://x.com/getubitel"
     },
-    "logo": "/logos/Ubitel.webp"
+    "logo": "/logos/Ubitel.webp",
+    "isLive": true
   },
   {
     "id": "hunch",
@@ -853,7 +859,8 @@
       "site": "https://www.supernova.vision/",
       "twitter": "https://x.com/SupernovaLabs_"
     },
-    "logo": "/logos/Supernova.webp"
+    "logo": "/logos/Supernova.webp",
+    "isLive": true
   },
   {
     "id": "nunchi",
@@ -1429,7 +1436,8 @@
     "links": {
       "twitter": "https://x.com/OffshoreOnMega"
     },
-    "logo": "/logos/Offshore.webp"
+    "logo": "/logos/Offshore.webp",
+    "isLive": true
   },
   {
     "id": "syscall",

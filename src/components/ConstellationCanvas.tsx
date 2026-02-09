@@ -77,6 +77,22 @@ const drawIncentiveBell = (context: CanvasRenderingContext2D, x: number, y: numb
   context.restore();
 };
 
+const LIVE_INDICATOR_RADIUS = 6;
+
+const drawLiveIndicator = (context: CanvasRenderingContext2D, x: number, y: number) => {
+  context.save();
+  context.shadowColor = 'rgba(101, 255, 177, 0.55)';
+  context.shadowBlur = 16;
+  context.beginPath();
+  context.fillStyle = '#63ffb4';
+  context.arc(x, y, LIVE_INDICATOR_RADIUS, 0, Math.PI * 2);
+  context.fill();
+  context.lineWidth = 1.5;
+  context.strokeStyle = 'rgba(4, 18, 13, 0.65)';
+  context.stroke();
+  context.restore();
+};
+
 const BEAD_RADIUS = 4;
 const BEAD_ORBIT_OFFSET = 16;
 const MAX_VISIBLE_BEADS = 20;
@@ -918,6 +934,14 @@ export const ConstellationCanvas = ({
         if (project.incentives.length > 0) {
           const bellOffset = Math.max(radius * 0.7, radius - 8);
           drawIncentiveBell(context, x - bellOffset, y - bellOffset);
+        }
+
+        if (project.isLive) {
+          const maxInset = Math.max(radius - LIVE_INDICATOR_RADIUS - 4, radius * 0.35);
+          const indicatorOffset = Math.min(maxInset, radius * 0.65);
+          const indicatorX = x + indicatorOffset;
+          const indicatorY = y + indicatorOffset;
+          drawLiveIndicator(context, indicatorX, indicatorY);
         }
       });
 

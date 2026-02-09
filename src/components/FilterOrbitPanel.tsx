@@ -112,7 +112,9 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
     toggleFilter,
     favoriteIds,
     favoritesOnly,
-    toggleFavoritesOnly
+    toggleFavoritesOnly,
+    liveOnly,
+    toggleLiveOnly
   } = useConstellation();
   const totalProjects = projectPoolSize + NOISE_PROJECT_OFFSET;
   const hasFavorites = favoriteIds.length > 0;
@@ -202,38 +204,51 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
         <aside className="category-rail" aria-label="Categories">
           <p className="category-rail__section-heading">Sectors</p>
           <div className="category-rail__list" role="tablist">
-            <button
-              className={activeCategory === null ? 'chip chip--category active' : 'chip chip--category'}
-              type="button"
-              style={
-                activeCategory === null
-                  ? {
-                      borderColor: ALL_CATEGORY_ACCENT,
-                      backgroundColor: ALL_CATEGORY_ACCENT,
-                      color: '#05060f'
-                    }
-                  : {
-                      borderColor: ALL_CATEGORY_BORDER,
-                      backgroundColor: 'transparent',
-                      color: ALL_CATEGORY_ACCENT
-                    }
-              }
-              onClick={() => quickSelect(null)}
-              aria-pressed={activeCategory === null}
-              title="Also reveals the distant Noise signal"
-            >
-              <span className="chip-label">All</span>
-              <span
-                className="chip-count"
+            <div className="category-rail__all-group">
+              <button
+                className={activeCategory === null ? 'chip chip--category active' : 'chip chip--category'}
+                type="button"
                 style={
                   activeCategory === null
-                    ? { color: '#05060f' }
-                    : { color: 'rgba(200, 204, 221, 0.9)' }
+                    ? {
+                        borderColor: ALL_CATEGORY_ACCENT,
+                        backgroundColor: ALL_CATEGORY_ACCENT,
+                        color: '#05060f'
+                      }
+                    : {
+                        borderColor: ALL_CATEGORY_BORDER,
+                        backgroundColor: 'transparent',
+                        color: ALL_CATEGORY_ACCENT
+                      }
                 }
+                onClick={() => quickSelect(null)}
+                aria-pressed={activeCategory === null}
+                title="Also reveals the distant Noise signal"
               >
-                {totalProjects}
-              </span>
-            </button>
+                <span className="chip-label">All</span>
+                <span
+                  className="chip-count"
+                  style={
+                    activeCategory === null
+                      ? { color: '#05060f' }
+                      : { color: 'rgba(200, 204, 221, 0.9)' }
+                  }
+                >
+                  {totalProjects}
+                </span>
+              </button>
+              <button
+                className={liveOnly ? 'chip chip--category chip--live-filter active' : 'chip chip--category chip--live-filter'}
+                type="button"
+                onClick={toggleLiveOnly}
+                aria-pressed={liveOnly}
+              >
+                <span className="chip-label">
+                  Live
+                  <span className="chip-live-dot" aria-hidden="true" />
+                </span>
+              </button>
+            </div>
             {categories.map((category) => {
               const accent = getCategoryColor(category);
               const isActive = activeCategory === category;
