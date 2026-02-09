@@ -3,10 +3,13 @@ import { ConstellationCanvas } from './components/ConstellationCanvas';
 import { FilterOrbitPanel } from './components/FilterOrbitPanel';
 import { ProjectDetailDrawer } from './components/ProjectDetailDrawer';
 import { WalletChecker } from './components/WalletChecker';
+import { ConstellationHUD } from './components/ConstellationHUD';
+import { KpiDashboard } from './components/KpiDashboard';
 import { ConstellationProvider, useConstellation } from './state/constellation';
 
 const AppContent = () => {
   const [isInteracting, setIsInteracting] = useState(false);
+  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const { resetCamera, filters } = useConstellation();
   const showJojoBanner = filters.jojo;
 
@@ -16,6 +19,14 @@ const AppContent = () => {
 
   const handleInteractionEnd = useCallback(() => {
     setIsInteracting(false);
+  }, []);
+
+  const openDashboards = useCallback(() => {
+    setIsDashboardOpen(true);
+  }, []);
+
+  const closeDashboards = useCallback(() => {
+    setIsDashboardOpen(false);
   }, []);
 
   return (
@@ -47,6 +58,9 @@ const AppContent = () => {
           </div>
         </div>
         <FilterOrbitPanel isInteracting={isInteracting} />
+        <div className={`constellation-hud ${isInteracting ? 'ui-panel--hidden' : ''}`}>
+          <ConstellationHUD onOpenDashboards={openDashboards} />
+        </div>
         <button type="button" className="reset-anchor" onClick={resetCamera} aria-label="Reset camera view">
           Reset
         </button>
@@ -66,6 +80,7 @@ const AppContent = () => {
         ) : null}
         <ProjectDetailDrawer />
         <WalletChecker />
+        <KpiDashboard isOpen={isDashboardOpen} onClose={closeDashboards} />
       </div>
     </div>
   );

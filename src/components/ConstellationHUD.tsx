@@ -1,27 +1,25 @@
-import { useMemo } from 'react';
-import { useConstellation } from '../state/constellation';
+type ConstellationHUDProps = {
+  onOpenDashboards?: () => void;
+};
 
-export const ConstellationHUD = () => {
-  const { projects } = useConstellation();
-
-  const stats = useMemo(() => {
-    const incentives = projects.flatMap((project) => project.incentives);
-    return {
-      totalProjects: projects.length,
-      activeIncentives: incentives.length
-    };
-  }, [projects]);
+export const ConstellationHUD = ({ onOpenDashboards }: ConstellationHUDProps) => {
+  if (!onOpenDashboards) {
+    return null;
+  }
 
   return (
-    <div className="hud-card">
-      <p className="eyebrow">Constellation</p>
-      <h3>{stats.totalProjects} active orbs</h3>
-      <p className="muted">{stats.activeIncentives} live incentives glowing left now.</p>
-      <div className="hud-actions">
-        <span>Left-click drag to explore</span>
-        <span>Click nodes for intel</span>
-        <span>Scroll or pinch to zoom</span>
-      </div>
+    <div className="hud-card hud-card--compact">
+      <button
+        type="button"
+        className="hud-card__cta hud-card__cta--compact"
+        onClick={onOpenDashboards}
+        aria-label="Ouvrir les KPI"
+      >
+        <span>KPI</span>
+        <span className="hud-card__cta-glow" aria-hidden="true">
+          <span />
+        </span>
+      </button>
     </div>
   );
 };
