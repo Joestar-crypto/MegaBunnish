@@ -77,4 +77,8 @@ export type ConstellationState = {
   favoriteIds: string[];
   favoritesOnly: boolean;
   jojoProfileId: string;
+  ethosScores: Record<string, number>;
+  ethosProfileLinks: Record<string, string | null>;
+  isEthosOverlayActive: boolean;
+  ethosScoreThreshold: number | null;
 };

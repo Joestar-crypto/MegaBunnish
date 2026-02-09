@@ -120,6 +120,171 @@ const drawInteractionBeads = (
   }
 };
 
+const ETHOS_BADGE_HEIGHT = 20;
+const ETHOS_BADGE_RADIUS = 10;
+const ETHOS_BADGE_PADDING_X = 12;
+const ETHOS_BADGE_ICON_GAP = 12;
+const ETHOS_BADGE_GAP = 4;
+const ETHOS_BADGE_FONT = '600 12px Space Grotesk, sans-serif';
+const ETHOS_BADGE_LOGO_SRC = '/logos/Ethos.webp';
+const ETHOS_BADGE_LOGO_SIZE = 16;
+
+type EthosBadgePalette = {
+  start: string;
+  end: string;
+  text: string;
+  stroke: string;
+  glow: string;
+};
+
+const ETHOS_BADGE_TONES: { max: number; palette: EthosBadgePalette }[] = [
+  {
+    max: 800,
+    palette: {
+      start: '#7a0215',
+      end: '#ff2e49',
+      text: '#fff5f7',
+      stroke: '#ff6a80',
+      glow: 'rgba(255, 82, 120, 0.55)'
+    }
+  },
+  {
+    max: 1200,
+    palette: {
+      start: '#b67200',
+      end: '#ffb11f',
+      text: '#2b1600',
+      stroke: '#ffc857',
+      glow: 'rgba(255, 190, 70, 0.5)'
+    }
+  },
+  {
+    max: 1400,
+    palette: {
+      start: '#f8f7f0',
+      end: '#ffffff',
+      text: '#0e142b',
+      stroke: '#ffffff',
+      glow: 'rgba(255, 255, 255, 0.35)'
+    }
+  },
+  {
+    max: 1600,
+    palette: {
+      start: '#8ab0ff',
+      end: '#bdd4ff',
+      text: '#03102d',
+      stroke: '#dfe9ff',
+      glow: 'rgba(143, 175, 255, 0.4)'
+    }
+  },
+  {
+    max: 1800,
+    palette: {
+      start: '#1c86ff',
+      end: '#46b2ff',
+      text: '#f1f8ff',
+      stroke: '#72c8ff',
+      glow: 'rgba(76, 169, 255, 0.42)'
+    }
+  },
+  {
+    max: Number.POSITIVE_INFINITY,
+    palette: {
+      start: '#172d66',
+      end: '#3049ad',
+      text: '#e6edff',
+      stroke: '#4f6fe1',
+      glow: 'rgba(74, 103, 209, 0.45)'
+    }
+  }
+];
+
+const getEthosBadgePalette = (score: number): EthosBadgePalette => {
+  if (!Number.isFinite(score)) {
+    return ETHOS_BADGE_TONES[0].palette;
+  }
+  return ETHOS_BADGE_TONES.find((entry) => score < entry.max)?.palette ?? ETHOS_BADGE_TONES[0].palette;
+};
+
+const drawRoundedRect = (
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
+) => {
+  const clampedRadius = Math.min(radius, width / 2, height / 2);
+  context.beginPath();
+  context.moveTo(x + clampedRadius, y);
+  context.lineTo(x + width - clampedRadius, y);
+  context.quadraticCurveTo(x + width, y, x + width, y + clampedRadius);
+  context.lineTo(x + width, y + height - clampedRadius);
+  context.quadraticCurveTo(x + width, y + height, x + width - clampedRadius, y + height);
+  context.lineTo(x + clampedRadius, y + height);
+  context.quadraticCurveTo(x, y + height, x, y + height - clampedRadius);
+  context.lineTo(x, y + clampedRadius);
+  context.quadraticCurveTo(x, y, x + clampedRadius, y);
+  context.closePath();
+};
+
+const drawEthosBadge = (
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  label: string,
+  score: number,
+  logo: HTMLImageElement | null
+) => {
+  context.save();
+  context.font = ETHOS_BADGE_FONT;
+  const textWidth = context.measureText(label).width;
+  const badgeWidth = ETHOS_BADGE_PADDING_X * 2 + ETHOS_BADGE_ICON_GAP + textWidth;
+  const left = x - badgeWidth / 2;
+  const palette = getEthosBadgePalette(score);
+  const gradient = context.createLinearGradient(left, y, left + badgeWidth, y + ETHOS_BADGE_HEIGHT);
+  gradient.addColorStop(0, palette.start);
+  gradient.addColorStop(1, palette.end);
+
+  drawRoundedRect(context, left, y, badgeWidth, ETHOS_BADGE_HEIGHT, ETHOS_BADGE_RADIUS);
+  context.fillStyle = gradient;
+  context.strokeStyle = palette.stroke;
+  context.lineWidth = 1;
+  context.shadowColor = palette.glow;
+  context.shadowBlur = 18;
+  context.fill();
+  context.stroke();
+  context.shadowBlur = 0;
+
+  const glyphCenterX = left + ETHOS_BADGE_PADDING_X - 1;
+  const glyphCenterY = y + ETHOS_BADGE_HEIGHT / 2;
+  const logoSize = ETHOS_BADGE_LOGO_SIZE;
+  const logoHalf = logoSize / 2;
+  if (logo && logo.complete && logo.naturalWidth > 0 && logo.naturalHeight > 0) {
+    context.save();
+    context.beginPath();
+    context.arc(glyphCenterX, glyphCenterY, logoHalf, 0, Math.PI * 2);
+    context.closePath();
+    context.clip();
+    context.drawImage(logo, glyphCenterX - logoHalf, glyphCenterY - logoHalf, logoSize, logoSize);
+    context.restore();
+  } else {
+    context.fillStyle = palette.text;
+    context.beginPath();
+    context.arc(glyphCenterX, glyphCenterY, logoHalf, 0, Math.PI * 2);
+    context.fill();
+  }
+
+  context.fillStyle = palette.text;
+  context.textAlign = 'left';
+  context.textBaseline = 'middle';
+  context.globalAlpha = 0.8;
+  context.fillText(label, glyphCenterX + ETHOS_BADGE_ICON_GAP, glyphCenterY);
+  context.globalAlpha = 1;
+  context.restore();
+};
+
 type PointerState = {
   isDragging: boolean;
   pointerId: number | null;
@@ -144,6 +309,26 @@ type PinchState = {
   initialZoom: number;
   focus: { x: number; y: number } | null;
   isPinching: boolean;
+};
+
+type EthosBadgeSprite = {
+  canvas: HTMLCanvasElement;
+  width: number;
+  height: number;
+  score: number;
+  label: string;
+  devicePixelRatio: number;
+};
+
+type RenderInputs = {
+  visibleProjects: ConstellationProject[];
+  visibleProjectMap: Map<string, ConstellationProject>;
+  favoriteSet: Set<string>;
+  walletInteractionCounts: Record<string, number>;
+  ethosScores: Record<string, number>;
+  isEthosOverlayActive: boolean;
+  ethosScoreThreshold: number | null;
+  ethosBadgeSprites: Map<string, EthosBadgeSprite>;
 };
 
 const useImageCache = (projects: ConstellationProject[]) => {
@@ -208,6 +393,36 @@ const findHitProject = (
   return null;
 };
 
+const createEthosBadgeSprite = (
+  label: string,
+  score: number,
+  logo: HTMLImageElement | null,
+  devicePixelRatio: number
+): EthosBadgeSprite | null => {
+  if (typeof document === 'undefined') {
+    return null;
+  }
+  const canvas = document.createElement('canvas');
+  const measureContext = canvas.getContext('2d');
+  if (!measureContext) {
+    return null;
+  }
+  measureContext.font = ETHOS_BADGE_FONT;
+  const textWidth = measureContext.measureText(label).width;
+  const badgeWidth = ETHOS_BADGE_PADDING_X * 2 + ETHOS_BADGE_ICON_GAP + textWidth;
+  const badgeHeight = ETHOS_BADGE_HEIGHT;
+  const scale = devicePixelRatio || 1;
+  canvas.width = Math.max(1, Math.ceil(badgeWidth * scale));
+  canvas.height = Math.max(1, Math.ceil(badgeHeight * scale));
+  const drawContext = canvas.getContext('2d');
+  if (!drawContext) {
+    return null;
+  }
+  drawContext.scale(scale, scale);
+  drawEthosBadge(drawContext, badgeWidth / 2, 0, label, score, logo);
+  return { canvas, width: badgeWidth, height: badgeHeight, score, label, devicePixelRatio: scale };
+};
+
 type ConstellationCanvasProps = {
   onInteractionStart?: () => void;
   onInteractionEnd?: () => void;
@@ -219,6 +434,9 @@ export const ConstellationCanvas = ({
 }: ConstellationCanvasProps = {}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [pointerState, setPointerState] = useState<PointerState>(defaultPointerState);
+  const [devicePixelRatioState, setDevicePixelRatioState] = useState(() =>
+    (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1
+  );
   const pinchStateRef = useRef<PinchState>({
     activePointers: new Map(),
     originDistance: 0,
@@ -238,9 +456,30 @@ export const ConstellationCanvas = ({
     zoomCamera,
     resetCamera,
     favoriteIds,
-    walletInteractionCounts
+    walletInteractionCounts,
+    ethosScores,
+    isEthosOverlayActive,
+    ethosScoreThreshold
   } = useConstellation();
+  const visibleProjects = useMemo(() => {
+    if (!isEthosOverlayActive || ethosScoreThreshold === null) {
+      return projects;
+    }
+    return projects.filter((project) => {
+      const score = ethosScores[project.id];
+      return typeof score === 'number' && score >= ethosScoreThreshold;
+    });
+  }, [projects, ethosScores, isEthosOverlayActive, ethosScoreThreshold]);
+  const visibleProjectMap = useMemo(
+    () => new Map(visibleProjects.map((project) => [project.id, project])),
+    [visibleProjects]
+  );
   const images = useImageCache(projects);
+  const ethosLogo = useMemo(() => {
+    const image = new Image();
+    image.src = ETHOS_BADGE_LOGO_SRC;
+    return image;
+  }, []);
   const cameraRef = useRef(camera);
   const hoveredRef = useRef(hoveredProjectId);
   const selectedRef = useRef(selectedProjectId);
@@ -250,6 +489,100 @@ export const ConstellationCanvas = ({
   >([]);
   const interactionActiveRef = useRef(false);
   const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
+  const ethosScoreFormatter = useMemo(() => new Intl.NumberFormat('fr-FR'), []);
+  const ethosBadgeSpritesRef = useRef<Map<string, EthosBadgeSprite>>(new Map());
+  const [ethosLogoVersion, setEthosLogoVersion] = useState(0);
+  const renderInputsRef = useRef<RenderInputs>({
+    visibleProjects,
+    visibleProjectMap,
+    favoriteSet,
+    walletInteractionCounts,
+    ethosScores,
+    isEthosOverlayActive,
+    ethosScoreThreshold,
+    ethosBadgeSprites: ethosBadgeSpritesRef.current
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const handleResize = () => {
+      setDevicePixelRatioState(window.devicePixelRatio || 1);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    const logo = ethosLogo;
+    if (!logo) {
+      return;
+    }
+    if (logo.complete && logo.naturalWidth > 0) {
+      setEthosLogoVersion((prev) => prev + 1);
+      return;
+    }
+    const handleLoad = () => setEthosLogoVersion((prev) => prev + 1);
+    logo.addEventListener('load', handleLoad);
+    return () => {
+      logo.removeEventListener('load', handleLoad);
+    };
+  }, [ethosLogo]);
+
+  useEffect(() => {
+    const cache = ethosBadgeSpritesRef.current;
+    const activeScores = ethosScores;
+    const retainIds = new Set(Object.keys(activeScores));
+    cache.forEach((_, projectId) => {
+      if (!retainIds.has(projectId) || typeof activeScores[projectId] !== 'number') {
+        cache.delete(projectId);
+      }
+    });
+
+    Object.entries(activeScores).forEach(([projectId, score]) => {
+      if (typeof score !== 'number' || !Number.isFinite(score)) {
+        cache.delete(projectId);
+        return;
+      }
+      const label = ethosScoreFormatter.format(score);
+      const existing = cache.get(projectId);
+      if (
+        existing &&
+        existing.score === score &&
+        existing.label === label &&
+        existing.devicePixelRatio === devicePixelRatioState
+      ) {
+        return;
+      }
+      const sprite = createEthosBadgeSprite(label, score, ethosLogo, devicePixelRatioState);
+      if (sprite) {
+        cache.set(projectId, sprite);
+      }
+    });
+  }, [ethosScores, ethosScoreFormatter, ethosLogo, devicePixelRatioState, ethosLogoVersion]);
+
+  useEffect(() => {
+    const nextInputs = renderInputsRef.current;
+    nextInputs.visibleProjects = visibleProjects;
+    nextInputs.visibleProjectMap = visibleProjectMap;
+    nextInputs.favoriteSet = favoriteSet;
+    nextInputs.walletInteractionCounts = walletInteractionCounts;
+    nextInputs.ethosScores = ethosScores;
+    nextInputs.isEthosOverlayActive = isEthosOverlayActive;
+    nextInputs.ethosScoreThreshold = ethosScoreThreshold;
+    nextInputs.ethosBadgeSprites = ethosBadgeSpritesRef.current;
+  }, [
+    visibleProjects,
+    visibleProjectMap,
+    favoriteSet,
+    walletInteractionCounts,
+    ethosScores,
+    isEthosOverlayActive,
+    ethosScoreThreshold
+  ]);
 
   const updateCategoryHoverState = (clientX: number, clientY: number, rect?: DOMRect) => {
     const canvas = canvasRef.current;
@@ -316,9 +649,18 @@ export const ConstellationCanvas = ({
     const handleResize = () => resize();
     window.addEventListener('resize', handleResize);
 
-    const projectById = new Map(projects.map((project) => [project.id, project]));
-
     const render = (time: number) => {
+      const {
+        visibleProjects: renderProjects,
+        visibleProjectMap,
+        favoriteSet: renderFavoriteSet,
+        walletInteractionCounts: renderWalletCounts,
+        ethosScores: renderEthosScores,
+        isEthosOverlayActive: renderOverlayActive,
+        ethosScoreThreshold: renderScoreThreshold,
+        ethosBadgeSprites: renderBadgeSprites
+      } = renderInputsRef.current;
+
       const width = canvas.width / dpr;
       const height = canvas.height / dpr;
       context.setTransform(1, 0, 0, 1, 0, 0);
@@ -350,7 +692,7 @@ export const ConstellationCanvas = ({
         string,
         { origin: { x: number; y: number }; radius: number; color: string }
       >();
-      projects.forEach((project) => {
+      renderProjects.forEach((project) => {
         const key = project.primaryCategory;
         const origin = project.clusterOrigin;
         const distance = Math.hypot(project.position.x - origin.x, project.position.y - origin.y);
@@ -403,10 +745,10 @@ export const ConstellationCanvas = ({
       categoryRingsRef.current = nextCategoryRings;
 
       const drawnLinks = new Set<string>();
-      projects.forEach((project, index) => {
+      renderProjects.forEach((project, index) => {
         const sourceScreen = toScreen(project.position);
         project.linkedIds.forEach((linkedId) => {
-          const target = projectById.get(linkedId);
+          const target = visibleProjectMap.get(linkedId);
           if (!target) {
             return;
           }
@@ -451,15 +793,19 @@ export const ConstellationCanvas = ({
         });
       });
 
-      projects.forEach((project, index) => {
+      renderProjects.forEach((project, index) => {
         const { x, y } = toScreen(project.position);
         const pulse = Math.sin(time * 0.002 + index) * 4;
         const baseRadius = 36;
         const radius = baseRadius + pulse + (project.id === hoveredId ? 6 : 0);
         const highlightStyle = project.highlight ? highlightStyles[project.highlight] : null;
         const baseLineWidth = project.id === selectedId ? 4 : 2;
-        const isFavorite = favoriteSet.has(project.id);
-        const beadCount = walletInteractionCounts[project.id] ?? 0;
+        const isFavorite = renderFavoriteSet.has(project.id);
+        const beadCount = renderWalletCounts[project.id] ?? 0;
+        const scoreValue = renderEthosScores[project.id];
+        const meetsThreshold =
+          typeof scoreValue === 'number' && (renderScoreThreshold === null || scoreValue >= renderScoreThreshold);
+        const shouldShowEthosBadge = renderOverlayActive && meetsThreshold;
 
         context.beginPath();
         context.fillStyle = 'rgba(255, 255, 255, 0.08)';
@@ -538,10 +884,29 @@ export const ConstellationCanvas = ({
           drawInteractionBeads(context, x, y, beadCount, radius, time);
         }
 
+        let labelOffset = radius + 14;
+        if (shouldShowEthosBadge) {
+          const badgeTop = y + radius + ETHOS_BADGE_GAP;
+          const badgeSprite = renderBadgeSprites.get(project.id);
+          if (badgeSprite) {
+            context.drawImage(
+              badgeSprite.canvas,
+              x - badgeSprite.width / 2,
+              badgeTop,
+              badgeSprite.width,
+              badgeSprite.height
+            );
+            labelOffset = radius + ETHOS_BADGE_GAP + badgeSprite.height + 8;
+          } else {
+            const formattedScore = ethosScoreFormatter.format(scoreValue);
+            drawEthosBadge(context, x, badgeTop, formattedScore, scoreValue, ethosLogo);
+            labelOffset = radius + ETHOS_BADGE_GAP + ETHOS_BADGE_HEIGHT + 8;
+          }
+        }
         context.fillStyle = 'rgba(255, 255, 255, 0.7)';
         context.font = '12px Space Grotesk, sans-serif';
         context.textAlign = 'center';
-        context.fillText(project.name, x, y + radius + 14);
+        context.fillText(project.name, x, y + labelOffset);
 
         if (isFavorite) {
           const starOffset = Math.max(radius * 0.65, radius - 12);
@@ -580,7 +945,7 @@ export const ConstellationCanvas = ({
       cancelAnimationFrame(animationFrame);
       window.removeEventListener('resize', handleResize);
     };
-  }, [projects, images, stars, favoriteSet, walletInteractionCounts]);
+  }, [images, stars, ethosScoreFormatter, ethosLogo]);
 
   const endInteraction = () => {
     if (interactionActiveRef.current) {
@@ -741,7 +1106,7 @@ export const ConstellationCanvas = ({
     }
 
     const rect = canvasRef.current.getBoundingClientRect();
-    const hit = findHitProject(event.nativeEvent, rect, projects, camera.x, camera.y, camera.zoom);
+    const hit = findHitProject(event.nativeEvent, rect, visibleProjects, camera.x, camera.y, camera.zoom);
     setHoveredProject(hit?.id ?? null);
     updateCategoryHoverState(event.clientX, event.clientY, rect);
   };
@@ -758,7 +1123,7 @@ export const ConstellationCanvas = ({
     if (pointerState.isDragging && pointerState.pointerId === event.pointerId) {
       if (!pointerState.hasMoved) {
         const rect = canvasRef.current.getBoundingClientRect();
-        const hit = findHitProject(event.nativeEvent, rect, projects, camera.x, camera.y, camera.zoom);
+        const hit = findHitProject(event.nativeEvent, rect, visibleProjects, camera.x, camera.y, camera.zoom);
         if (hit) {
           selectProject(hit.id);
         } else {
