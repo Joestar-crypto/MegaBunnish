@@ -303,6 +303,24 @@ const ECOSYSTEM_HIGHLIGHTS: Record<string, HighlightVariant> = {
 const FAVORITES_STORAGE_KEY = 'constellation:favorites';
 const baseProjects = rawProjects as RawProject[];
 
+const scoreMapsEqual = (a: Record<string, number>, b: Record<string, number>) => {
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) {
+    return false;
+  }
+  return keysA.every((key) => b[key] === a[key]);
+};
+
+const linkMapsEqual = (a: Record<string, string | null>, b: Record<string, string | null>) => {
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) {
+    return false;
+  }
+  return keysA.every((key) => b[key] === a[key]);
+};
+
 const readStoredFavorites = (): string[] => {
   if (typeof window === 'undefined') {
     return [];
@@ -727,6 +745,10 @@ type ConstellationContextShape = ConstellationState &
   toggleFavoritesOnly: () => void;
   toggleFavorite: (projectId: string) => void;
   resolveProjectById: (projectId: string | null) => ConstellationProject | null;
+  setEthosScores: (scores: Record<string, number>) => void;
+  setEthosOverlayActive: (isActive: boolean) => void;
+  setEthosProfileLinks: (links: Record<string, string | null>) => void;
+  setEthosScoreThreshold: (threshold: number | null) => void;
   };
 
 const ConstellationContext = createContext<ConstellationContextShape | undefined>(undefined);
@@ -755,7 +777,11 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       filters,
       favoriteIds,
       favoritesOnly,
-      jojoProfileId
+      jojoProfileId,
+      ethosScores: {},
+      ethosProfileLinks: {},
+      isEthosOverlayActive: false,
+      ethosScoreThreshold: null
     };
   });
   const {
@@ -1250,6 +1276,42 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
     });
   }, [layout.projects]);
 
+  const setEthosScores = useCallback((scores: Record<string, number>) => {
+    setState((prev) => {
+      if (scoreMapsEqual(prev.ethosScores, scores)) {
+        return prev;
+      }
+      return { ...prev, ethosScores: scores };
+    });
+  }, []);
+
+  const setEthosProfileLinks = useCallback((links: Record<string, string | null>) => {
+    setState((prev) => {
+      if (linkMapsEqual(prev.ethosProfileLinks, links)) {
+        return prev;
+      }
+      return { ...prev, ethosProfileLinks: links };
+    });
+  }, []);
+
+  const setEthosOverlayActive = useCallback((isActive: boolean) => {
+    setState((prev) => {
+      if (prev.isEthosOverlayActive === isActive) {
+        return prev;
+      }
+      return { ...prev, isEthosOverlayActive: isActive };
+    });
+  }, []);
+
+  const setEthosScoreThreshold = useCallback((threshold: number | null) => {
+    setState((prev) => {
+      if (prev.ethosScoreThreshold === threshold) {
+        return prev;
+      }
+      return { ...prev, ethosScoreThreshold: threshold };
+    });
+  }, []);
+
   const resolveProjectById = useCallback(
     (projectId: string | null) => {
       if (!projectId) {
@@ -1343,7 +1405,11 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       toggleFilter,
       toggleFavoritesOnly,
       toggleFavorite,
-      resolveProjectById
+      resolveProjectById,
+      setEthosScores,
+      setEthosProfileLinks,
+      setEthosOverlayActive,
+      setEthosScoreThreshold
     }),
     [
       state,
@@ -1369,7 +1435,11 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       toggleFilter,
       toggleFavoritesOnly,
       toggleFavorite,
-      resolveProjectById
+      resolveProjectById,
+      setEthosScores,
+      setEthosProfileLinks,
+      setEthosOverlayActive,
+      setEthosScoreThreshold
     ]
   );
 

@@ -430,6 +430,24 @@
     "logo": "/logos/RainMaker.webp"
   },
   {
+    "id": "realtime",
+    "name": "RealTime",
+    "categories": [
+      "DeFi",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://realtime.exchange/",
+      "twitter": "https://x.com/realtime_defi",
+      "discord": "https://discord.com/invite/realtime-exchange",
+      "telegram": "https://t.me/realtime_exchange"
+    },
+    "logo": "/logos/RealTime.webp"
+  },
+  {
     "id": "kumbaya",
     "name": "Kumbaya",
     "categories": [
@@ -586,6 +604,22 @@
     "logo": "/logos/MTRKR.webp"
   },
   {
+    "id": "mevx",
+    "name": "MEVX",
+    "categories": [
+      "Tools"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://mevx.io/@G7skguI9ABNn",
+      "twitter": "https://x.com/MEVX_Official",
+      "telegram": "https://t.me/Mevx?start=G7skguI9ABNn"
+    },
+    "logo": "/logos/MEVX.webp"
+  },
+  {
     "id": "funes",
     "name": "Funes",
     "categories": [
@@ -601,6 +635,22 @@
       "twitter": "https://x.com/Funes_World"
     },
     "logo": "/logos/Funes.webp"
+  },
+  {
+    "id": "fluffle",
+    "name": "Fluffle",
+    "categories": [
+      "NFT",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://nft.megaeth.com/",
+      "twitter": "https://x.com/TheFluffleNFT"
+    },
+    "logo": "/logos/Fluffle.webp"
   },
   {
     "id": "netizens",
@@ -687,6 +737,21 @@
       "nft": "https://rarible.com/megaethtestnet/collections/0x804d4a7fa24cf485cbd574c329849939e7d11ce8"
     },
     "logo": "/logos/Barry.webp"
+  },
+  {
+    "id": "based",
+    "name": "Based",
+    "categories": [
+      "Tools"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/BasedTradingBot",
+      "telegram": "https://t.me/based_eth_bot?start=r_Joestarcrypto"
+    },
+    "logo": "/logos/Based.webp"
   },
   {
     "id": "glitchy-bunnies",
@@ -890,24 +955,6 @@
     "logo": "/logos/Valhalla.webp"
   },
   {
-    "id": "yokai",
-    "name": "Yokai",
-    "categories": [
-      "NFT",
-      "Native"
-    ],
-    "networks": [
-      "MegaETH"
-    ],
-    "links": {
-      "site": "https://yokaisyndicate.com/",
-      "twitter": "https://x.com/YokaiSyndicate",
-      "discord": "https://discord.com/invite/8rKmnc9rMw",
-      "nft": "https://opensea.io/collection/yokaisyndicate"
-    },
-    "logo": "/logos/Yokai.webp"
-  },
-  {
     "id": "breadio",
     "name": "Breadio",
     "categories": [
@@ -940,6 +987,23 @@
       "twitter": "https://x.com/Tulpea_org"
     },
     "logo": "/logos/Tulpea.webp"
+  },
+  {
+    "id": "gains",
+    "name": "Gains Network",
+    "categories": [
+      "Trading"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://gains.trade/",
+      "twitter": "https://x.com/GainsNetwork_io",
+      "discord": "https://discord.com/invite/gains-network",
+      "telegram": "https://t.me/GainsNetwork"
+    },
+    "logo": "/logos/Gains.webp"
   },
   {
     "id": "gmx",
@@ -1415,6 +1479,23 @@
       "twitter": "https://x.com/MegaCorpHQ"
     },
     "logo": "/logos/Megacorp.webp"
+  },
+  {
+    "id": "meridian",
+    "name": "Meridian",
+    "categories": [
+      "AI"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://mrdn.finance/",
+      "docs": "https://app.telis.xyz/",
+      "telegram": "https://t.me/mrdnfinance",
+      "twitter": "https://x.com/mrdn_finance"
+    },
+    "logo": "/logos/Meridian.webp"
   },
   {
     "id": "skrrtlords",

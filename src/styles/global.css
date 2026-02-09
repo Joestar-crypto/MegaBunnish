@@ -239,6 +239,250 @@ select {
   z-index: 6;
 }
 
+.ethos-trust-widget {
+  position: absolute;
+  top: clamp(4.25rem, 6vw, 5rem);
+  right: clamp(0.75rem, 3vw, 2rem);
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.ethos-trust-button {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  filter: drop-shadow(0 18px 35px rgba(0, 0, 0, 0.55));
+}
+
+.ethos-trust-button img {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(5, 8, 20, 0.75);
+  padding: 0.2rem;
+  object-fit: contain;
+}
+
+.ethos-trust-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
+.ethos-filter-bar {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.ethos-filter-pill {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(5, 8, 20, 0.6);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.3rem 1rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, color 0.2s ease;
+}
+
+.ethos-filter-pill:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.ethos-filter-pill--active {
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.35);
+}
+
+.ethos-filter-pill--tone-1200.ethos-filter-pill--active {
+  background: #f8f7f0;
+  border-color: #ffffff;
+  color: #0f152a;
+}
+
+.ethos-filter-pill--tone-1400.ethos-filter-pill--active {
+  background: linear-gradient(120deg, #8ab0ff, #c2d6ff);
+  border-color: #dfe9ff;
+  color: #05102a;
+}
+
+.ethos-filter-pill--tone-1600.ethos-filter-pill--active {
+  background: linear-gradient(120deg, #1c86ff, #4aa6ff);
+  border-color: #76c0ff;
+  color: #f1f8ff;
+}
+
+.ethos-trust-panel {
+  width: min(380px, calc(100vw - 2.5rem));
+  max-height: min(520px, calc(100vh - 4rem));
+  padding: 1.25rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(5, 8, 20, 0.92);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+}
+
+.ethos-trust-panel__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.ethos-trust-panel__caption {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.ethos-trust-panel__actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.ethos-trust-panel__refresh,
+.ethos-trust-panel__close,
+.ethos-trust-panel__retry {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.25rem 0.85rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.ethos-trust-panel__refresh:hover,
+.ethos-trust-panel__close:hover,
+.ethos-trust-panel__retry:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.ethos-trust-panel__refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ethos-trust-panel__retry {
+  margin-top: 0.6rem;
+}
+
+.ethos-trust-panel__list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.ethos-trust-panel__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ethos-trust-panel__item:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.ethos-trust-panel__meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.ethos-trust-panel__name {
+  display: block;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.15rem;
+}
+
+.ethos-trust-panel__details {
+  display: block;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.ethos-trust-panel__score-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  text-align: right;
+}
+
+.ethos-trust-panel__score-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.ethos-trust-panel__score-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.ethos-trust-panel__link {
+  font-size: 0.7rem;
+  text-decoration: none;
+  color: var(--accent-strong);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.ethos-trust-panel__link:hover {
+  border-color: var(--accent-strong);
+}
+
+.ethos-trust-panel__state {
+  margin: 1rem 0 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.ethos-trust-panel__state--error {
+  color: var(--danger);
+}
+
+@media (max-width: 720px) {
+  .ethos-trust-widget {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    align-items: center;
+  }
+
+  .ethos-trust-panel {
+    width: min(420px, calc(100vw - 1.5rem));
+  }
+}
+
 .category-dock {
   top: calc(clamp(0.75rem, 3vw, 2.5rem) + 5rem);
   bottom: auto;
@@ -461,6 +705,103 @@ select {
   gap: 0.2rem;
   color: var(--accent);
   font-size: 0.85rem;
+}
+
+.ethos-pill-panel {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ethos-pill-panel__header {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.5rem;
+}
+
+.ethos-pill-panel__header img {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.2rem;
+}
+
+.ethos-pill-panel__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.ethos-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  color: var(--text);
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+.ethos-pill__label {
+  font-size: 0.78rem;
+  color: inherit;
+}
+
+.ethos-pill__score {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+.ethos-pill--tone-default {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: linear-gradient(120deg, rgba(255, 154, 223, 0.15), rgba(254, 108, 204, 0.28));
+}
+
+.ethos-pill--tone-untrusted {
+  border-color: #c40018;
+  background: #c40018;
+  color: #fff4f4;
+}
+
+.ethos-pill--tone-questionable {
+  border-color: #e49700;
+  background: #e49700;
+  color: #2b1600;
+}
+
+.ethos-pill--tone-neutral {
+  border-color: #f8f8f1;
+  background: #f8f8f1;
+  color: #1a1f2d;
+}
+
+.ethos-pill--tone-known {
+  border-color: #96b2ea;
+  background: #96b2ea;
+  color: #071532;
+}
+
+.ethos-pill--tone-established {
+  border-color: #2d85d3;
+  background: #2d85d3;
+  color: #f1f8ff;
+}
+
+.ethos-pill--tone-renowned {
+  border-color: #1d3e8a;
+  background: #1d3e8a;
+  color: #e5edff;
 }
 
 .chip {
@@ -1183,6 +1524,35 @@ select {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+}
+
+.detail-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.detail-ethos-link {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.detail-ethos-link img {
+  width: 14px;
+  height: 14px;
+}
+
+.detail-ethos-link:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .detail-title {

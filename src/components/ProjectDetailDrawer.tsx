@@ -134,11 +134,6 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
       textSegment("Didn't hear from them since a month tho, I don't know if they are cooking and if they stopped.")
     ]
   ],
-  yokai: [
-    [
-      textSegment("Yokai is an NFT project that minted recently. I don't know much about them tbh, but I really like the art, and it looks like they're pretty respected in the community.")
-    ]
-  ],
   breadio: [
     [
       textSegment("Tut is really an OG, and Legend of Breadio is a very respected collection. I didn't follow this collection that closely, there are just too many good NFT collections on this blockchain, damn.")
@@ -275,6 +270,11 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
       textSegment("I\'d say it\'s the most hyped memecoin in the ecosystem. Memecoins are still pretty calm on MegaETH for now, but I expect that to change once everyone enters MegaETH.")
     ]
   ],
+  mevx: [
+    [
+      textSegment('MEVX is a trading platform with a Telegram bot and they\'re now expanding to MegaETH.')
+    ]
+  ],
   megarafia: [
     [
       textSegment("Megarafia is a MegaETH memecoin and a future NFT collection. I don\'t know much about them, only that they\'ve been around for a long time now.")
@@ -283,6 +283,14 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
   cilium: [
     [
       textSegment('Cilium is an alien technology that uses MegaETH to create a spatial layer for drones, robots, and self-driving vehicles. Yeah, the team is already in 2056.')
+    ]
+  ],
+  meridian: [
+    [
+      textSegment('Tbh I love that one, they\'re building x402 rails for the AI agent economy and that might be the next huge narrative.')
+    ],
+    [
+      textSegment("I'm glad to see one of the x402 projects expanding to MegaETH, it should unlock a ton of AI interactions.")
     ]
   ],
   ubitel: [
@@ -324,6 +332,14 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
       textSegment('3D modeling museum onchain, I have no idea what to expect, which is exactly why I\'m so curious about this one.')
     ]
   ],
+  fluffle: [
+    [
+      textSegment("Well, it's just like the main NFT project led directly by the foundation that was sold as fundraising a year ago.")
+    ],
+    [
+      textSegment("But that's not all, it's going to evolve at mainnet so keep an eye on them.")
+    ]
+  ],
   netizens: [
     [
       textSegment('One of the last big NFT collections to pop up in the ecosystem, they seem heavily backed and hyped, so it\'s probably one you\'ll want to keep an eye on when mainnet launches.')
@@ -347,6 +363,11 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
   barry: [
     [
       textSegment('No idea about this collection, I just know Barry is an OG and a respected member of the MegaETH community. Just be careful, this guy eats English food and criticizes French food, weird.')
+    ]
+  ],
+  based: [
+    [
+      textSegment('Based is a Telegram bot expanding to MegaETH.')
     ]
   ],
   'glitchy-bunnies': [
@@ -472,6 +493,11 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
     ],
     [textSegment("That\'s a strong signal OG protocols see MegaETH as a real opportunity.")]
   ],
+  gains: [
+    [
+      textSegment('Gains Network is another perp DEX expanding to MegaETH, they really get our culture so kudos.')
+    ]
+  ],
   syndicate: [
     [
       textSegment('Syndicate is the biggest MegaETH community I know of, period.')
@@ -506,6 +532,11 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
       textSegment('Reach is a social growth and engagement platform using LLMs to help creators maximize visibility and monetization.')
     ],
     [textSegment("First time I come across a protocol like this so I'm curious even if I don't know much yet.")]
+  ],
+  realtime: [
+    [
+      textSegment('This superapp is made by the FusionX devs (a former DEX on Mantle) and will integrate CLOB, perps, a launchpad, and an aggregator.')
+    ]
   ],
   miniminds: [
     [
@@ -644,7 +675,8 @@ export const ProjectDetailDrawer = () => {
     setActiveCategory,
     resolveProjectById,
     favoriteIds,
-    toggleFavorite
+    toggleFavorite,
+    ethosProfileLinks
   } = useConstellation();
   const project = useMemo(
     () => resolveProjectById(selectedProjectId),
@@ -652,6 +684,7 @@ export const ProjectDetailDrawer = () => {
   );
   const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
   const isFavorite = project ? favoriteSet.has(project.id) : false;
+  const ethosProfileUrl = project ? ethosProfileLinks[project.id] ?? null : null;
   const hasLiveIncentives = Boolean(project?.incentives.length);
   const showIncentiveBell = hasLiveIncentives;
   const socialLinks = useMemo(
@@ -673,7 +706,21 @@ export const ProjectDetailDrawer = () => {
         <div className="drawer-content">
           <header>
             <div className="detail-heading">
-              <p className="eyebrow">{project.primaryCategory}</p>
+              <div className="detail-eyebrow">
+                <p className="eyebrow">{project.primaryCategory}</p>
+                {ethosProfileUrl ? (
+                  <a
+                    className="detail-ethos-link"
+                    href={ethosProfileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Voir le profil Ethos"
+                    title="Voir le profil Ethos"
+                  >
+                    <img src="/logos/Ethos.webp" alt="" aria-hidden="true" />
+                  </a>
+                ) : null}
+              </div>
               <div className="detail-title">
                 <img src={project.logo} alt={`${project.name} logo`} loading="lazy" />
                 <div className="detail-title__heading">

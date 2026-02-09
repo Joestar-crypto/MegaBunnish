@@ -3,6 +3,7 @@ import { ConstellationCanvas } from './components/ConstellationCanvas';
 import { FilterOrbitPanel } from './components/FilterOrbitPanel';
 import { ProjectDetailDrawer } from './components/ProjectDetailDrawer';
 import { WalletChecker } from './components/WalletChecker';
+import { EthosTrustScores } from './components/EthosTrustScores';
 import { ConstellationProvider, useConstellation } from './state/constellation';
 
 const AppContent = () => {
@@ -66,6 +67,7 @@ const AppContent = () => {
           ) : null}
           <ProjectDetailDrawer />
           <WalletChecker />
+          <EthosTrustScores />
         </div>
         <div className="immersive-stage__rail">
           <FilterOrbitPanel isInteracting={isInteracting} />
