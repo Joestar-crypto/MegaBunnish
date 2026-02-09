@@ -755,6 +755,11 @@ const ConstellationContext = createContext<ConstellationContextShape | undefined
 
 export const ConstellationProvider = ({ children }: { children: ReactNode }) => {
   const layout = useMemo(() => computeLayout(baseProjects), []);
+  const layoutProjectMap = useMemo(() => {
+    const map = new Map<string, ConstellationProject>();
+    layout.projects.forEach((project) => map.set(project.id, project));
+    return map;
+  }, [layout.projects]);
   const [state, setState] = useState<ConstellationState>(() => {
     const filters = { ...SPECIAL_DEFAULTS };
     const favoriteIds = readStoredFavorites();
@@ -784,6 +789,11 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       ethosScoreThreshold: null
     };
   });
+  const visibleProjectMap = useMemo(() => {
+    const map = new Map<string, ConstellationProject>();
+    state.projects.forEach((project) => map.set(project.id, project));
+    return map;
+  }, [state.projects]);
   const {
     walletAddress,
     walletInput,
@@ -1317,13 +1327,9 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       if (!projectId) {
         return null;
       }
-      return (
-        state.projects.find((project) => project.id === projectId) ??
-        layout.projects.find((project) => project.id === projectId) ??
-        null
-      );
+      return visibleProjectMap.get(projectId) ?? layoutProjectMap.get(projectId) ?? null;
     },
-    [state.projects, layout.projects]
+    [visibleProjectMap, layoutProjectMap]
   );
 
   useEffect(() => {

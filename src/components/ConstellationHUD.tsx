@@ -84,6 +84,32 @@ export const ConstellationHUD = () => {
         .sort((a, b) => b.score - a.score);
   }, [ethosScores, resolveProjectById, ethosScoreThreshold]);
 
+  const ethosPanel = useMemo(() => {
+    if (!ethosHighlights.length) {
+      return null;
+    }
+    return (
+      <div className="ethos-pill-panel" aria-live="polite">
+        <div className="ethos-pill-panel__header">
+          <img src="/logos/Ethos.webp" alt="" aria-hidden="true" />
+          <span>Ethos trust</span>
+        </div>
+        <div className="ethos-pill-panel__grid">
+          {ethosHighlights.map((entry) => (
+            <span
+              key={entry.projectId}
+              className={`ethos-pill ${ethosToneForScore(entry.score)}`}
+              style={ethosStyleForScore(entry.score)}
+            >
+              <span className="ethos-pill__label">{entry.name}</span>
+              <span className="ethos-pill__score">{scoreFormatter.format(entry.score)}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  }, [ethosHighlights, scoreFormatter]);
+
   return (
     <div className="hud-card">
       <p className="eyebrow">Constellation</p>
@@ -94,26 +120,7 @@ export const ConstellationHUD = () => {
         <span>Click nodes for intel</span>
         <span>Scroll or pinch to zoom</span>
       </div>
-      {ethosHighlights.length ? (
-        <div className="ethos-pill-panel" aria-live="polite">
-          <div className="ethos-pill-panel__header">
-            <img src="/logos/Ethos.webp" alt="" aria-hidden="true" />
-            <span>Ethos trust</span>
-          </div>
-          <div className="ethos-pill-panel__grid">
-            {ethosHighlights.map((entry) => (
-              <span
-                key={entry.projectId}
-                className={`ethos-pill ${ethosToneForScore(entry.score)}`}
-                style={ethosStyleForScore(entry.score)}
-              >
-                <span className="ethos-pill__label">{entry.name}</span>
-                <span className="ethos-pill__score">{scoreFormatter.format(entry.score)}</span>
-              </span>
-            ))}
-          </div>
-        </div>
-      ) : null}
+      {ethosPanel}
     </div>
   );
 };
