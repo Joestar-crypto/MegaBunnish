@@ -281,10 +281,10 @@ select {
 
 .ethos-filter-bar {
   display: flex;
+  flex-direction: column;
   gap: 0.35rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
   width: 100%;
+  align-items: flex-end;
 }
 
 .ethos-filter-pill {

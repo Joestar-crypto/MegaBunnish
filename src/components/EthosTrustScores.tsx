@@ -43,9 +43,9 @@ const ETHOS_ENDPOINT = 'https://api.ethos.network/api/v2/apps';
 const ETHOS_CLIENT_HEADER = 'Megabunnish';
 const PAGE_SIZE = 50;
 const ETHOS_FILTERS = [
-  { label: '> 1200', value: 1200 },
+  { label: '> 1600', value: 1600 },
   { label: '> 1400', value: 1400 },
-  { label: '> 1600', value: 1600 }
+  { label: '> 1200', value: 1200 }
 ];
 
 const getFilterToneClass = (value: number) => {
