@@ -71,7 +71,8 @@
       "twitter": "https://x.com/AveForge",
       "discord": "https://discord.com/invite/aveforge"
     },
-    "logo": "/logos/Aveforge.webp"
+    "logo": "/logos/Aveforge.webp",
+    "isLive": true
   },
   {
     "id": "hello-trade",
@@ -430,7 +431,8 @@
       "twitter": "https://x.com/RainMakr_xyz",
       "discord": "https://discord.com/invite/rainmakrxyz"
     },
-    "logo": "/logos/RainMaker.webp"
+    "logo": "/logos/RainMaker.webp",
+    "isLive": true
   },
   {
     "id": "realtime",
@@ -808,7 +810,8 @@
     "logo": "/logos/Priority.webp",
     "linkedIds": [
       "megalio"
-    ]
+    ],
+    "isLive": true
   },
   {
     "id": "lora-finance",
@@ -944,7 +947,8 @@
       "twitter": "https://x.com/SectorOneDEX",
       "discord": "https://discord.com/invite/rfgMebUeV4"
     },
-    "logo": "/logos/SectorOne.webp"
+    "logo": "/logos/SectorOne.webp",
+    "isLive": true
   },
   {
     "id": "valhalla",
