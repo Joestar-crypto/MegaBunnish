@@ -105,6 +105,14 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     url: 'https://app.ethos.network/profile/x/useAqua_xyz'
   },
   {
+    projectId: 'aave',
+    handle: 'aave',
+    score: 1904,
+    tier: 'Reputable',
+    displayName: 'Aave',
+    url: 'https://app.ethos.network/profile/x/aave'
+  },
+  {
     projectId: 'gearbox',
     handle: 'GearboxProtocol',
     score: 1245,

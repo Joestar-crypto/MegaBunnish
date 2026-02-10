@@ -343,6 +343,23 @@
     "logo": "/logos/Aqua.webp"
   },
   {
+    "id": "aave",
+    "name": "Aave",
+    "categories": [
+      "DeFi"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://app.aave.com/",
+      "twitter": "https://x.com/aave",
+      "discord": "https://discord.com/invite/aave"
+    },
+    "logo": "/logos/Aave.webp",
+    "isLive": true
+  },
+  {
     "id": "aurion",
     "name": "Aurion",
     "categories": [

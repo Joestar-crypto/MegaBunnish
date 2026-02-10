@@ -224,6 +224,13 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
       )
     ]
   ],
+  aave: [
+    [
+      textSegment(
+        "Well, the biggest lending protocol is expanding on MegaETH even after swearing they'd avoid L2s without conviction about their future success. Interesting, isn't it?"
+      )
+    ]
+  ],
   aurion: [
     [
       textSegment('Aurion is building a concentrated liquidity AMM and a prediction market on MegaETH with Algebra and Aegas.')
