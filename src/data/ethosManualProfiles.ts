@@ -655,5 +655,45 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     tier: 'Neutral',
     displayName: 'Everwatch',
     url: 'https://app.ethos.network/profile/x/0xEverwatch'
+  },
+  {
+    projectId: 'strip',
+    handle: 'stripyield',
+    score: 950,
+    tier: 'Questionable',
+    displayName: 'Strip',
+    url: 'https://app.ethos.network/profile/x/stripyield'
+  },
+  {
+    projectId: 'cryptsai',
+    handle: 'AiCrypts',
+    score: 950,
+    tier: 'Questionable',
+    displayName: 'CryptsAI',
+    url: 'https://app.ethos.network/profile/x/AiCrypts'
+  },
+  {
+    projectId: 'mania',
+    handle: 'ManiaDotFun',
+    score: 950,
+    tier: 'Questionable',
+    displayName: 'Mania',
+    url: 'https://app.ethos.network/profile/x/ManiaDotFun'
+  },
+  {
+    projectId: 'alzena',
+    handle: 'alzenaworld',
+    score: 950,
+    tier: 'Questionable',
+    displayName: 'Alzena',
+    url: 'https://app.ethos.network/profile/x/alzenaworld'
+  },
+  {
+    projectId: 'pumpparty',
+    handle: 'pumpparty',
+    score: 950,
+    tier: 'Questionable',
+    displayName: 'PumpParty',
+    url: 'https://app.ethos.network/profile/x/pumpparty'
   }
 ];

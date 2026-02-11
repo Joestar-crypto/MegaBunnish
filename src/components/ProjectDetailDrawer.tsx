@@ -176,7 +176,40 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
   pumpparty: [
     [
       textSegment(
-        "A social app that uses AI to clone personalities and trade. I\'m not sure if it\'s still alive, they haven\'t been communicating, but it had some hype a few months ago, so I\'ll keep an eye on it."
+        "This one is weird: it used to be a Megamafia project with AI, trading, and battles, then it went silent. Now it\'s back with a game, still mentioning Megamafia, but Megamafia doesn\'t seem to support it anymore."
+      )
+    ],
+    [
+      textSegment(
+        'Either it stopped because ambitions were too high and came back with a simpler game to ride mainnet hype, or it\'s really cooking. I don\'t know.'
+      )
+    ]
+  ],
+  strip: [
+    [
+      textSegment(
+        'DeFi loop that kind of looks like a Ponzi or a 2020 experiment. I like those, but always approach with caution.'
+      )
+    ]
+  ],
+  cryptsai: [
+    [
+      textSegment(
+        'Seems like an adventure game using AI prompts. Could be a fun one.'
+      )
+    ]
+  ],
+  mania: [
+    [
+      textSegment(
+        'Another meme launchpad, nothing else to say.'
+      )
+    ]
+  ],
+  alzena: [
+    [
+      textSegment(
+        'Not sure I understand it well, but it looks like a world with beautiful art. It feels like lore and world-building.'
       )
     ]
   ],

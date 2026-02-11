@@ -1575,6 +1575,92 @@
       "twitter": "https://x.com/gocashdotfun"
     },
     "logo": "/logos/Gocash.webp"
+  },
+  {
+    "id": "strip",
+    "name": "Strip",
+    "categories": [
+      "Jojo",
+      "DeFi",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://stripyield.com/",
+      "twitter": "https://x.com/stripyield",
+      "discord": "https://discord.com/invite/KshwWDZGV6",
+      "telegram": "https://t.me/stripyield"
+    },
+    "logo": "/logos/Strip.webp"
+  },
+  {
+    "id": "cryptsai",
+    "name": "CryptsAI",
+    "categories": [
+      "Jojo",
+      "AI",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://crypts.ai/",
+      "twitter": "https://x.com/AiCrypts"
+    },
+    "logo": "/logos/CryptsAI.webp"
+  },
+  {
+    "id": "mania",
+    "name": "Mania",
+    "categories": [
+      "Jojo",
+      "Launchpad",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://www.mania.fun/",
+      "twitter": "https://x.com/ManiaDotFun"
+    },
+    "logo": "/logos/Mania.webp"
+  },
+  {
+    "id": "alzena",
+    "name": "Alzena",
+    "categories": [
+      "Jojo",
+      "Social"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/alzenaworld"
+    },
+    "logo": "/logos/Alzena.webp"
+  },
+  {
+    "id": "pumpparty",
+    "name": "PumpParty",
+    "categories": [
+      "Jojo",
+      "Gaming",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://www.pumpparty.com/",
+      "twitter": "https://x.com/pumpparty",
+      "telegram": "https://t.me/+kh4RQgAcmZAzYWQx"
+    },
+    "logo": "/logos/Pumpparty.webp"
   }
 ]
 
