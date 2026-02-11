@@ -130,6 +130,14 @@
       "twitter": "https://x.com/PrismFi_"
     },
     "logo": "/logos/PrismFi.webp",
+    "incentives": [
+      {
+        "id": "prismfi-liquidity-generation-event",
+        "title": "Liquidity Generation Event with boosted points",
+        "reward": "Starts now",
+        "expiresAt": "2099-12-31T23:59:00-05:00"
+      }
+    ],
     "linkedIds": [
       "bad-bunnz"
     ]

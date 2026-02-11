@@ -134,6 +134,21 @@ const APP_EVENTS: AppEvent[] = [
         end: '2026-02-16T23:59:00-05:00'
       }
     ]
+  },
+  {
+    id: 'prismfi-liquidity-generation-event',
+    title: 'Liquidity Generation Event with boosted points',
+    projectId: 'prismfi',
+    start: '2026-02-11T00:00:00-05:00',
+    end: '2099-12-31T23:59:00-05:00',
+    tweetUrl: 'https://x.com/PrismFi_',
+    phases: [
+      {
+        label: 'Ongoing',
+        start: '2026-02-11T00:00:00-05:00',
+        end: '2099-12-31T23:59:00-05:00'
+      }
+    ]
   }
 ];
 
