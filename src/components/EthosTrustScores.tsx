@@ -39,6 +39,20 @@ type EcosystemEthosApp = EthosApp & {
   projectLogo: string;
 };
 
+type AppEvent = {
+  id: string;
+  title: string;
+  projectId: string;
+  start: string;
+  end: string;
+  tweetUrl: string;
+  phases: {
+    label: string;
+    start: string;
+    end: string;
+  }[];
+};
+
 const ETHOS_ENDPOINT = 'https://api.ethos.network/api/v2/apps';
 const ETHOS_CLIENT_HEADER = 'Megabunnish';
 const PAGE_SIZE = 50;
@@ -46,6 +60,81 @@ const ETHOS_FILTERS = [
   { label: '> 1600', value: 1600 },
   { label: '> 1400', value: 1400 },
   { label: '> 1200', value: 1200 }
+];
+
+const EVENT_TIMEZONE = 'America/New_York';
+
+const APP_EVENTS: AppEvent[] = [
+  {
+    id: 'meganacci-mint-live',
+    title: 'Mint live',
+    projectId: 'meganacci',
+    start: '2026-02-11T10:00:00-05:00',
+    end: '2026-02-11T14:30:00-05:00',
+    tweetUrl: 'https://x.com/meganacci/status/2021264150195048767?s=20',
+    phases: [
+      {
+        label: 'Phase 1 (Guaranteed Whitelist)',
+        start: '2026-02-11T10:00:00-05:00',
+        end: '2026-02-11T13:00:00-05:00'
+      },
+      {
+        label: 'Phase 2 (Fafelnacci FCFS Whitelist)',
+        start: '2026-02-11T13:00:00-05:00',
+        end: '2026-02-11T13:30:00-05:00'
+      },
+      {
+        label: 'Phase 3 (FCFS Whitelist)',
+        start: '2026-02-11T13:30:00-05:00',
+        end: '2026-02-11T14:30:00-05:00'
+      }
+    ]
+  },
+  {
+    id: 'miniminds-mint-live',
+    title: 'Mint live',
+    projectId: 'miniminds',
+    start: '2026-02-16T00:00:00-05:00',
+    end: '2026-02-16T23:59:00-05:00',
+    tweetUrl: 'https://x.com/theminiminds/status/2021386441826144275?s=20',
+    phases: [
+      {
+        label: 'Toute la journee',
+        start: '2026-02-16T00:00:00-05:00',
+        end: '2026-02-16T23:59:00-05:00'
+      }
+    ]
+  },
+  {
+    id: 'euphoria-tapathon',
+    title: 'Tapathon',
+    projectId: 'euphoria',
+    start: '2026-02-16T00:00:00-05:00',
+    end: '2026-02-16T23:59:00-05:00',
+    tweetUrl: 'https://x.com/Euphoria_fi/status/2018731493380796461?s=20',
+    phases: [
+      {
+        label: 'Toute la journee',
+        start: '2026-02-16T00:00:00-05:00',
+        end: '2026-02-16T23:59:00-05:00'
+      }
+    ]
+  },
+  {
+    id: 'avon-bootstrapping-phase',
+    title: 'Bootstrapping phase live',
+    projectId: 'avon',
+    start: '2026-02-09T00:00:00-05:00',
+    end: '2026-02-16T23:59:00-05:00',
+    tweetUrl: 'https://x.com/avon_xyz/status/2021084235621335491',
+    phases: [
+      {
+        label: 'Bootstrapping phase',
+        start: '2026-02-09T00:00:00-05:00',
+        end: '2026-02-16T23:59:00-05:00'
+      }
+    ]
+  }
 ];
 
 const getFilterToneClass = (value: number) => {
@@ -137,6 +226,7 @@ const mapProjectToRef = (project: RawProject): EcosystemProjectRef => ({
 
 const ECOSYSTEM_PROJECT_REFS = ECOSYSTEM_PROJECTS.map(mapProjectToRef);
 const PROJECT_REF_BY_ID = new Map(ECOSYSTEM_PROJECT_REFS.map((ref) => [ref.id, ref]));
+const PROJECT_BY_ID = new Map(ECOSYSTEM_PROJECTS.map((project) => [project.id, project]));
 
 const buildEcosystemIndex = () => {
   const slugMap = new Map<string, EcosystemProjectRef[]>();
@@ -263,6 +353,55 @@ const buildManualEthosApps = (index: EcosystemIndex): EcosystemEthosApp[] => {
   }, []);
 };
 
+const toCalendarDateString = (value: string) => {
+  const date = new Date(value);
+  return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+};
+
+const buildGoogleCalendarUrl = (event: AppEvent, projectName: string) => {
+  const phaseLines = event.phases
+    .map((phase) => `${phase.label}: ${formatEventDateRange(phase.start, phase.end)}`)
+    .join('\n');
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `${projectName} - ${event.title}`,
+    dates: `${toCalendarDateString(event.start)}/${toCalendarDateString(event.end)}`,
+    details: `${event.title}\n${phaseLines ? `\n${phaseLines}\n` : ''}\nTweet: ${event.tweetUrl}`,
+    ctz: EVENT_TIMEZONE
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+};
+
+const EVENT_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  timeZone: EVENT_TIMEZONE
+});
+
+const EVENT_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  hour: 'numeric',
+  minute: '2-digit',
+  timeZone: EVENT_TIMEZONE
+});
+
+const formatEventDateRange = (start: string, end: string) => {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const dateLabel = EVENT_DATE_FORMATTER.format(startDate);
+  const startTime = EVENT_TIME_FORMATTER.format(startDate);
+  const endTime = EVENT_TIME_FORMATTER.format(endDate);
+  return `${dateLabel} · ${startTime} - ${endTime} ET`;
+};
+
+const formatEventTimeRange = (start: string, end: string) => {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const startTime = EVENT_TIME_FORMATTER.format(startDate);
+  const endTime = EVENT_TIME_FORMATTER.format(endDate);
+  return `${startTime} - ${endTime} ET`;
+};
+
 const extractEthosErrorMessage = async (response: Response) => {
   try {
     const payload = await response.json();
@@ -357,6 +496,7 @@ export const EthosTrustScores = () => {
     matchedApps.forEach((entry) => appByProjectId.set(entry.projectId, entry));
     return Array.from(appByProjectId.values()).sort((a, b) => b.trustScore - a.trustScore);
   }, [manualApps, matchedApps]);
+
 
   useEffect(() => {
     if (!areScoresVisible || hasFetchedRef.current) {
@@ -454,6 +594,129 @@ export const EthosTrustScores = () => {
               </button>
             );
           })}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+export const EventsBell = () => {
+  const [areEventsVisible, setEventsVisible] = useState(false);
+  const { selectProject } = useConstellation();
+
+  const upcomingEvents = useMemo(() => {
+    const now = Date.now();
+    return APP_EVENTS
+      .filter((event) => new Date(event.end).getTime() > now)
+      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+  }, []);
+
+  const hasUpcomingEvents = upcomingEvents.length > 0;
+
+  const handleEventsToggle = () => {
+    setEventsVisible((prev) => !prev);
+  };
+
+  const handleEventProjectClick = (projectId: string) => {
+    selectProject(projectId);
+    setEventsVisible(false);
+  };
+
+  return (
+    <div className="events-bell">
+      <button
+        type="button"
+        className={`ethos-events-button${hasUpcomingEvents ? ' ethos-events-button--active' : ''}${areEventsVisible ? ' ethos-events-button--open' : ''}`}
+        onClick={handleEventsToggle}
+        aria-pressed={areEventsVisible}
+        aria-label="Open events"
+        title={areEventsVisible ? 'Hide events' : 'Show events'}
+      >
+        <img src="/icons/bell.svg" alt="" />
+        {hasUpcomingEvents ? (
+          <span className="ethos-events-button__badge" aria-label={`${upcomingEvents.length} upcoming events`}>
+            {upcomingEvents.length}
+          </span>
+        ) : null}
+      </button>
+      {areEventsVisible ? (
+        <div className="ethos-events-panel" role="dialog" aria-label="Upcoming events">
+          <div className="ethos-events-panel__header">
+            <div>
+              <h3>Events</h3>
+            </div>
+            <button
+              type="button"
+              className="ethos-events-panel__close"
+              onClick={handleEventsToggle}
+              aria-label="Close events"
+            >
+              Close
+            </button>
+          </div>
+          {upcomingEvents.length ? (
+            <ul className="ethos-events-panel__list">
+              {upcomingEvents.map((event) => {
+                const project = PROJECT_BY_ID.get(event.projectId);
+                const projectName = project?.name ?? event.projectId;
+                const calendarUrl = buildGoogleCalendarUrl(event, projectName);
+                return (
+                  <li key={event.id} className="ethos-events-panel__item">
+                    <div className="ethos-events-panel__meta">
+                      <button
+                        type="button"
+                        className="ethos-events-panel__logo"
+                        onClick={() => handleEventProjectClick(event.projectId)}
+                        aria-label={`Open ${projectName}`}
+                      >
+                        <img src={project?.logo ?? '/logos/MegaETH.webp'} alt={projectName} />
+                      </button>
+                      <div>
+                        <div className="ethos-events-panel__title">{event.title}</div>
+                        <div className="ethos-events-panel__details">
+                          <span>{formatEventDateRange(event.start, event.end)}</span>
+                          <span className="ethos-events-panel__divider" aria-hidden="true">
+                            •
+                          </span>
+                          <span>{projectName}</span>
+                        </div>
+                        <div className="ethos-events-panel__phases">
+                          {event.phases.map((phase) => (
+                            <div key={phase.label} className="ethos-events-panel__phase">
+                              <span className="ethos-events-panel__phase-label">{phase.label}</span>
+                              <span className="ethos-events-panel__phase-time">
+                                {formatEventTimeRange(phase.start, phase.end)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="ethos-events-panel__actions">
+                      <a
+                        className="ethos-events-panel__action"
+                        href={calendarUrl}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        Google Calendar
+                      </a>
+                      <a
+                        className="ethos-events-panel__action"
+                        href={event.tweetUrl}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        Tweet
+                      </a>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="ethos-events-panel__empty">No upcoming events.</div>
+          )}
         </div>
       ) : null}
     </div>

@@ -55,10 +55,11 @@ const drawFavoriteStar = (
 const drawIncentiveBell = (context: CanvasRenderingContext2D, x: number, y: number) => {
   context.save();
   context.translate(x, y);
+  context.scale(0.8, 0.8);
   context.beginPath();
-  context.fillStyle = '#ff5d77';
-  context.strokeStyle = '#ff9fb1';
-  context.lineWidth = 1.5;
+  context.fillStyle = '#ff2b2b';
+  context.strokeStyle = '#ff6b6b';
+  context.lineWidth = 1.4;
   context.moveTo(0, -8);
   context.quadraticCurveTo(8, -8, 8, 0);
   context.lineTo(10, 6);

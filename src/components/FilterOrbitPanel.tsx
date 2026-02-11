@@ -14,6 +14,7 @@ import { useConstellation } from '../state/constellation';
 import { SpecialFilters } from '../types';
 import { getCategoryColor } from '../utils/colors';
 import { JOJO_PROFILES } from '../data/jojoProfiles';
+import { EventsBell } from './EthosTrustScores';
 
 const MegamafiaIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -178,6 +179,7 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
               <span className="chip-hint">{hasFavorites ? `${favoriteIds.length} saved` : 'Add stars'}</span>
             </span>
           </button>
+          <EventsBell />
         </div>
       </div>
       {showJojoProfiles ? (

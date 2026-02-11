@@ -67,7 +67,7 @@
       "MegaETH"
     ],
     "links": {
-      "site": "https://www.aveforge.gg/",
+      "site": "https://aveforge.gg/?referralCode=joestar633",
       "twitter": "https://x.com/AveForge",
       "discord": "https://discord.com/invite/aveforge"
     },
@@ -303,7 +303,15 @@
       "telegram": "https://t.me/avon_xyz"
     },
     "logo": "/logos/Avon.webp",
-    "isLive": true
+    "isLive": true,
+    "incentives": [
+      {
+        "id": "avon-bootstrapping-phase",
+        "title": "Bootstrapping phase live",
+        "reward": "Runs Feb 9 - Feb 16",
+        "expiresAt": "2026-02-16T23:59:00-05:00"
+      }
+    ]
   },
   {
     "id": "blackhaven",
