@@ -44,7 +44,7 @@ type AppEvent = {
   title: string;
   projectId: string;
   start: string;
-  end: string;
+  end?: string;
   tweetUrl: string;
   phases: {
     label: string;
@@ -147,6 +147,36 @@ const APP_EVENTS: AppEvent[] = [
         label: 'Ongoing',
         start: '2026-02-11T00:00:00-05:00',
         end: '2099-12-31T23:59:00-05:00'
+      }
+    ]
+  },
+  {
+    id: 'aveforge-cosmetic-sbt-early-users',
+    title: 'Cosmetic SBT offered for early users this week',
+    projectId: 'aveforge',
+    start: '2026-02-12T00:00:00-05:00',
+    end: '2026-02-13T23:59:00-05:00',
+    tweetUrl: 'https://x.com/AveForge',
+    phases: [
+      {
+        label: 'All day',
+        start: '2026-02-12T00:00:00-05:00',
+        end: '2026-02-13T23:59:00-05:00'
+      }
+    ]
+  },
+  {
+    id: 'survivors-presale-live-14d',
+    title: 'Presale live for 14D',
+    projectId: 'survivors',
+    start: '2026-02-12T00:00:00-05:00',
+    end: '2026-02-26T23:59:00-05:00',
+    tweetUrl: 'https://x.com/JoinSurvivors/status/2021658154358960333?s=20',
+    phases: [
+      {
+        label: 'Presale',
+        start: '2026-02-12T00:00:00-05:00',
+        end: '2026-02-26T23:59:00-05:00'
       }
     ]
   }
@@ -374,13 +404,14 @@ const toCalendarDateString = (value: string) => {
 };
 
 const buildGoogleCalendarUrl = (event: AppEvent, projectName: string) => {
+  const end = event.end ?? event.start;
   const phaseLines = event.phases
     .map((phase) => `${phase.label}: ${formatEventDateRange(phase.start, phase.end)}`)
     .join('\n');
   const params = new URLSearchParams({
     action: 'TEMPLATE',
     text: `${projectName} - ${event.title}`,
-    dates: `${toCalendarDateString(event.start)}/${toCalendarDateString(event.end)}`,
+    dates: `${toCalendarDateString(event.start)}/${toCalendarDateString(end)}`,
     details: `${event.title}\n${phaseLines ? `\n${phaseLines}\n` : ''}\nTweet: ${event.tweetUrl}`,
     ctz: EVENT_TIMEZONE
   });
@@ -399,10 +430,13 @@ const EVENT_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
   timeZone: EVENT_TIMEZONE
 });
 
-const formatEventDateRange = (start: string, end: string) => {
+const formatEventDateRange = (start: string, end?: string) => {
   const startDate = new Date(start);
-  const endDate = new Date(end);
+  const endDate = end ? new Date(end) : null;
   const startLabel = EVENT_DATE_FORMATTER.format(startDate);
+  if (!endDate || Number.isNaN(endDate.getTime())) {
+    return startLabel;
+  }
   const endLabel = EVENT_DATE_FORMATTER.format(endDate);
   const startTime = EVENT_TIME_FORMATTER.format(startDate);
   const endTime = EVENT_TIME_FORMATTER.format(endDate);
@@ -425,6 +459,42 @@ const formatEventTimeRange = (start: string, end: string) => {
   const endTime = EVENT_TIME_FORMATTER.format(endDate);
   const isAllDay = startTime === '12:00 AM' && endTime === '11:59 PM';
   return isAllDay ? 'All day' : `${startTime}-${endTime}`;
+};
+
+const formatCountdown = (start: string, end?: string, nowMs?: number) => {
+  if (!end) {
+    return null;
+  }
+  const startTime = new Date(start).getTime();
+  const endTime = new Date(end).getTime();
+  if (Number.isNaN(startTime) || Number.isNaN(endTime)) {
+    return null;
+  }
+  const now = nowMs ?? Date.now();
+  const isUpcoming = startTime > now;
+  const targetTime = isUpcoming ? startTime : endTime;
+  const diffMs = targetTime - now;
+  if (diffMs <= 0 && !isUpcoming) {
+    return 'Ended';
+  }
+  if (diffMs > 28 * 24 * 60 * 60 * 1000) {
+    return '?';
+  }
+  const totalMinutes = Math.max(1, Math.ceil(diffMs / 60000));
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  const parts: string[] = [];
+  if (days > 0) {
+    parts.push(`${days}d`);
+  }
+  if (hours > 0 || days > 0) {
+    parts.push(`${hours}h`);
+  }
+  if (days === 0 && hours === 0) {
+    parts.push(`${minutes}m`);
+  }
+  return isUpcoming ? `Starts in ${parts.join(' ')}` : `Ends in ${parts.join(' ')}`;
 };
 
 const extractEthosErrorMessage = async (response: Response) => {
@@ -627,15 +697,20 @@ export const EthosTrustScores = () => {
 
 export const EventsBell = () => {
   const [areEventsVisible, setEventsVisible] = useState(false);
+  const [nowTick, setNowTick] = useState(() => Date.now());
   const { selectProject } = useConstellation();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const upcomingEvents = useMemo(() => {
-    const now = Date.now();
     return APP_EVENTS
-      .filter((event) => new Date(event.end).getTime() > now)
+      .filter((event) => {
+        if (!event.end) {
+          return true;
+        }
+        return new Date(event.end).getTime() > nowTick;
+      })
       .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
-  }, []);
+  }, [nowTick]);
 
   const hasUpcomingEvents = upcomingEvents.length > 0;
 
@@ -647,6 +722,15 @@ export const EventsBell = () => {
     selectProject(projectId);
     setEventsVisible(false);
   };
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setNowTick(Date.now());
+    }, 60000);
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   useEffect(() => {
     if (!areEventsVisible) {
@@ -707,6 +791,7 @@ export const EventsBell = () => {
                 const project = PROJECT_BY_ID.get(event.projectId);
                 const projectName = project?.name ?? event.projectId;
                 const calendarUrl = buildGoogleCalendarUrl(event, projectName);
+                const countdownLabel = formatCountdown(event.start, event.end, nowTick);
                 return (
                   <li key={event.id} className="ethos-events-panel__item">
                     <div className="ethos-events-panel__meta">
@@ -738,6 +823,11 @@ export const EventsBell = () => {
                           ))}
                         </div>
                       </div>
+                      {countdownLabel ? (
+                        <div className="ethos-events-panel__countdown" aria-label={countdownLabel}>
+                          {countdownLabel}
+                        </div>
+                      ) : null}
                     </div>
                     <div className="ethos-events-panel__actions">
                       <a

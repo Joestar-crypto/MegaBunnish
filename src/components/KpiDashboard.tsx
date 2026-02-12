@@ -40,7 +40,7 @@ type KpiListItem = {
 };
 
 const KPI2_TARGET = 10;
-const KPI2_LIVE_IDS = new Set(['kumbaya', 'ubitel', 'avon', 'supernova', 'stomp']);
+const KPI2_LIVE_IDS = new Set(['kumbaya', 'avon', 'cap', 'ubitel', 'showdown']);
 const KPI2_APPS: Array<{ id: string; name: string; logoSrc: string }> = [
   { id: 'kumbaya', name: 'Kumbaya', logoSrc: '/logos/Kumbaya.webp' },
   { id: 'rocket', name: 'Rocket', logoSrc: '/logos/Rocket.webp' },
@@ -50,7 +50,6 @@ const KPI2_APPS: Array<{ id: string; name: string; logoSrc: string }> = [
   { id: 'worldmarkets', name: 'WorldMarkets', logoSrc: '/logos/Worldmarkets.webp' },
   { id: 'euphoria', name: 'Euphoria', logoSrc: '/logos/Euphoria.webp' },
   { id: 'blitzo', name: 'Blitzo', logoSrc: '/logos/Blitzo.webp' },
-  { id: 'ubitel', name: 'Ubitel', logoSrc: '/logos/Ubitel.webp' },
   { id: 'funes', name: 'Funes', logoSrc: '/logos/Funes.webp' },
   { id: 'cilium', name: 'Cilium', logoSrc: '/logos/Cilium.webp' },
   { id: 'brix', name: 'Brix', logoSrc: '/logos/Brix.webp' },
@@ -58,11 +57,11 @@ const KPI2_APPS: Array<{ id: string; name: string; logoSrc: string }> = [
   { id: 'benchmark', name: 'Benchmark', logoSrc: '/logos/Benchmark.webp' },
   { id: 'avon', name: 'Avon', logoSrc: '/logos/Avon.webp' },
   { id: 'blackhaven', name: 'Blackhaven', logoSrc: '/logos/Blackhaven.webp' },
-  { id: 'stomp', name: 'Stomp', logoSrc: '/logos/Stomp.webp' },
+  { id: 'ubitel', name: 'Ubitel', logoSrc: '/logos/Ubitel.webp' },
   { id: 'hellotrade', name: 'Hellotrade', logoSrc: '/logos/Hellotrade.webp' },
   { id: 'lemonade', name: 'Lemonade', logoSrc: '/logos/Lemonade.webp' },
   { id: 'dorado', name: 'Dorado', logoSrc: '/logos/Dorado.webp' },
-  { id: 'supernova', name: 'Supernova', logoSrc: '/logos/Supernova.webp' }
+  { id: 'showdown', name: 'Showdown', logoSrc: '/logos/Showdown.webp' }
 ];
 
 const KPI3_PLACEHOLDER: KpiCard = {

@@ -416,7 +416,8 @@ select {
   padding: 1.35rem;
   border-radius: 1.25rem;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: #8c0d0d;
+  background: #000000;
+  color: #ffffff;
   backdrop-filter: blur(18px);
   box-shadow: 0 25px 70px rgba(0, 0, 0, 0.65);
   overflow: hidden;
@@ -432,13 +433,13 @@ select {
 .ethos-events-panel__caption {
   margin: 0.2rem 0 0;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .ethos-events-panel__close {
   border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(255, 255, 255, 0.08);
-  color: var(--text);
+  color: #ffffff;
   border-radius: 999px;
   padding: 0.25rem 0.85rem;
   cursor: pointer;
@@ -465,8 +466,9 @@ select {
 
 .ethos-events-panel__item {
   border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #8c0d0d;
+  color: #fff;
   padding: 0.85rem;
   display: flex;
   flex-direction: column;
@@ -532,6 +534,17 @@ select {
   gap: 0.4rem;
   font-size: 0.78rem;
   color: rgba(255, 255, 255, 0.72);
+}
+
+.ethos-events-panel__countdown {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 .ethos-events-panel__phase {

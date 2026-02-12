@@ -72,7 +72,15 @@
       "discord": "https://discord.com/invite/aveforge"
     },
     "logo": "/logos/Aveforge.webp",
-    "isLive": true
+    "isLive": true,
+    "incentives": [
+      {
+        "id": "aveforge-cosmetic-sbt-early-users",
+        "title": "Cosmetic SBT offered for early users this week",
+        "reward": "Cosmetic SBT for early users",
+        "expiresAt": "2026-02-13T23:59:00-05:00"
+      }
+    ]
   },
   {
     "id": "hello-trade",
@@ -396,6 +404,7 @@
     "name": "Showdown",
     "categories": [
       "Jojo",
+      "Megamafia",
       "Gaming",
       "Native"
     ],
