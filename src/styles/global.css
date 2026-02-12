@@ -2210,6 +2210,27 @@ select {
   background: rgba(255, 59, 59, 0.15);
 }
 
+.incentive-item__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.incentive-item__meta {
+  min-width: 0;
+}
+
+.incentive-item__dates {
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.incentive-item__actions {
+  margin-top: 0.6rem;
+}
+
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.2em;

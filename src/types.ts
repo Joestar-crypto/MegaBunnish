@@ -11,6 +11,7 @@ export type Incentive = {
   id: string;
   title: string;
   reward: string;
+  startsAt?: string;
   expiresAt: string;
 };
 

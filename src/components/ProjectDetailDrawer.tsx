@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useConstellation } from '../state/constellation';
 import { getCategoryColor } from '../utils/colors';
 
@@ -9,6 +9,64 @@ const SOCIAL_LINKS: { key: 'site' | 'twitter' | 'discord' | 'telegram' | 'nft'; 
   { key: 'telegram', label: 'Telegram', icon: '/logos/Telegram.webp' },
   { key: 'nft', label: 'NFT', icon: '/logos/NFT.webp' }
 ];
+
+const INCENTIVE_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric'
+});
+
+const formatIncentiveDateRange = (start?: string | null, end?: string | null) => {
+  const startDate = start ? new Date(start) : null;
+  const endDate = end ? new Date(end) : null;
+  const hasStart = Boolean(startDate && !Number.isNaN(startDate.getTime()));
+  const hasEnd = Boolean(endDate && !Number.isNaN(endDate.getTime()));
+
+  if (!hasStart && !hasEnd) {
+    return null;
+  }
+  if (hasStart && hasEnd) {
+    const startLabel = INCENTIVE_DATE_FORMATTER.format(startDate as Date);
+    const endLabel = INCENTIVE_DATE_FORMATTER.format(endDate as Date);
+    return startLabel === endLabel ? startLabel : `${startLabel} - ${endLabel}`;
+  }
+  if (hasStart) {
+    return INCENTIVE_DATE_FORMATTER.format(startDate as Date);
+  }
+  return INCENTIVE_DATE_FORMATTER.format(endDate as Date);
+};
+
+const formatIncentiveCountdown = (end?: string | null, nowMs?: number) => {
+  if (!end) {
+    return null;
+  }
+  const endTime = new Date(end).getTime();
+  if (Number.isNaN(endTime)) {
+    return null;
+  }
+  const now = nowMs ?? Date.now();
+  const diffMs = endTime - now;
+  if (diffMs <= 0) {
+    return 'Ended';
+  }
+  if (diffMs > 28 * 24 * 60 * 60 * 1000) {
+    return '?';
+  }
+  const totalMinutes = Math.max(1, Math.ceil(diffMs / 60000));
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+  const parts: string[] = [];
+  if (days > 0) {
+    parts.push(`${days}d`);
+  }
+  if (hours > 0 || days > 0) {
+    parts.push(`${hours}h`);
+  }
+  if (days === 0 && hours === 0) {
+    parts.push(`${minutes}m`);
+  }
+  return `Ends in ${parts.join(' ')}`;
+};
 
 type DialogueSegment =
   | { kind: 'text'; content: string }
@@ -709,6 +767,7 @@ const JojoOracle = ({ projectId, onNavigate }: { projectId: string; onNavigate: 
 };
 
 export const ProjectDetailDrawer = () => {
+  const [nowTick, setNowTick] = useState(() => Date.now());
   const {
     selectedProjectId,
     selectProject,
@@ -737,8 +796,20 @@ export const ProjectDetailDrawer = () => {
         : [],
     [project]
   );
+  const incentiveDetailsUrl = project
+    ? project.links.site ?? project.links.docs ?? project.links.twitter ?? null
+    : null;
 
   const isVisible = Boolean(project);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setNowTick(Date.now());
+    }, 60000);
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   return (
     <aside className={`detail-drawer ${isVisible ? 'is-active' : 'is-hidden'}`} aria-hidden={!isVisible}>
@@ -838,11 +909,37 @@ export const ProjectDetailDrawer = () => {
               <ul className="incentive-list">
                 {project.incentives.map((incentive) => (
                   <li key={incentive.id}>
-                    <h4>{incentive.title}</h4>
-                    <p>{incentive.reward}</p>
-                    <span className="muted">
-                      Ends {new Date(incentive.expiresAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                    </span>
+                    <div className="incentive-item__row">
+                      <div className="incentive-item__meta">
+                        <h4>{incentive.title}</h4>
+                        <p>{incentive.reward}</p>
+                        {formatIncentiveDateRange(incentive.startsAt, incentive.expiresAt) ? (
+                          <div className="incentive-item__dates">
+                            {formatIncentiveDateRange(incentive.startsAt, incentive.expiresAt)}
+                          </div>
+                        ) : null}
+                      </div>
+                      {formatIncentiveCountdown(incentive.expiresAt, nowTick) ? (
+                        <div
+                          className="ethos-events-panel__countdown"
+                          aria-label={formatIncentiveCountdown(incentive.expiresAt, nowTick) ?? undefined}
+                        >
+                          {formatIncentiveCountdown(incentive.expiresAt, nowTick)}
+                        </div>
+                      ) : null}
+                    </div>
+                    {incentiveDetailsUrl ? (
+                      <div className="incentive-item__actions">
+                        <a
+                          className="ethos-events-panel__action"
+                          href={incentiveDetailsUrl}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                        >
+                          Details
+                        </a>
+                      </div>
+                    ) : null}
                   </li>
                 ))}
               </ul>

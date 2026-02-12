@@ -46,6 +46,7 @@ type AppEvent = {
   start: string;
   end?: string;
   tweetUrl: string;
+  detailsUrl?: string;
   phases: {
     label: string;
     start: string;
@@ -142,6 +143,7 @@ const APP_EVENTS: AppEvent[] = [
     start: '2026-02-11T00:00:00-05:00',
     end: '2099-12-31T23:59:00-05:00',
     tweetUrl: 'https://x.com/PrismFi_',
+    detailsUrl: 'https://prismfi.cc?ref=joestar',
     phases: [
       {
         label: 'Ongoing',
@@ -157,11 +159,42 @@ const APP_EVENTS: AppEvent[] = [
     start: '2026-02-12T00:00:00-05:00',
     end: '2026-02-13T23:59:00-05:00',
     tweetUrl: 'https://x.com/AveForge',
+    detailsUrl: 'https://aveforge.gg/?referralCode=joestar633',
     phases: [
       {
         label: 'All day',
         start: '2026-02-12T00:00:00-05:00',
         end: '2026-02-13T23:59:00-05:00'
+      }
+    ]
+  },
+  {
+    id: 'megarebel-mint',
+    title: 'Mint',
+    projectId: 'megarebel',
+    start: '2026-02-13T13:00:00-05:00',
+    end: '2026-02-13T14:00:00-05:00',
+    tweetUrl: 'https://x.com/MegaRebelNFT',
+    phases: [
+      {
+        label: 'Mint',
+        start: '2026-02-13T13:00:00-05:00',
+        end: '2026-02-13T14:00:00-05:00'
+      }
+    ]
+  },
+  {
+    id: 'glitchy-bunnies-mint',
+    title: 'Mint',
+    projectId: 'glitchy-bunnies',
+    start: '2026-02-19T00:00:00-05:00',
+    end: '2026-02-19T23:59:00-05:00',
+    tweetUrl: 'https://x.com/404bunnies',
+    phases: [
+      {
+        label: 'All day',
+        start: '2026-02-19T00:00:00-05:00',
+        end: '2026-02-19T23:59:00-05:00'
       }
     ]
   },
@@ -840,7 +873,7 @@ export const EventsBell = () => {
                       </a>
                       <a
                         className="ethos-events-panel__action"
-                        href={event.tweetUrl}
+                        href={event.detailsUrl ?? event.tweetUrl}
                         target="_blank"
                         rel="noreferrer noopener"
                       >
