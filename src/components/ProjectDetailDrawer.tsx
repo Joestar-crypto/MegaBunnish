@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { APP_EVENTS, type AppEvent } from './EthosTrustScores';
 import { useConstellation } from '../state/constellation';
 import { getCategoryColor } from '../utils/colors';
 
@@ -784,8 +785,31 @@ export const ProjectDetailDrawer = () => {
   const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
   const isFavorite = project ? favoriteSet.has(project.id) : false;
   const ethosProfileUrl = project ? ethosProfileLinks[project.id] ?? null : null;
-  const hasLiveIncentives = Boolean(project?.incentives.length);
-  const showIncentiveBell = hasLiveIncentives;
+  const mintEvents = useMemo(() => {
+    if (!project) {
+      return [] as AppEvent[];
+    }
+    return APP_EVENTS.filter((event) => event.projectId === project.id)
+      .filter((event) => event.title.toLowerCase().includes('mint'))
+      .filter((event) => {
+        const endValue = event.end ?? event.start;
+        const endMs = new Date(endValue).getTime();
+        return !Number.isNaN(endMs) && endMs >= nowTick;
+      });
+  }, [project, nowTick]);
+  const activeIncentives = useMemo(() => {
+    if (!project) {
+      return [];
+    }
+    return project.incentives.filter((incentive) => {
+      const endMs = new Date(incentive.expiresAt).getTime();
+      return !Number.isNaN(endMs) && endMs > nowTick;
+    });
+  }, [project, nowTick]);
+  const hasLiveIncentives = activeIncentives.length > 0;
+  const hasMintEvents = mintEvents.length > 0;
+  const incentiveSectionLabel = hasMintEvents ? 'Mint Date' : 'Active incentives';
+  const showIncentiveBell = hasLiveIncentives || hasMintEvents;
   const socialLinks = useMemo(
     () =>
       project
@@ -837,7 +861,7 @@ export const ProjectDetailDrawer = () => {
                 <div className="detail-title__heading">
                   <h2>{project.name}</h2>
                   {showIncentiveBell ? (
-                    <span className="incentive-bell" aria-label="Active incentives" title="Active incentives">
+                    <span className="incentive-bell" aria-label={incentiveSectionLabel} title={incentiveSectionLabel}>
                       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path
                           d="M12 4a4 4 0 0 1 4 4v3.2l1.2 2.6a1 1 0 0 1-.9 1.4H7.7a1 1 0 0 1-.9-1.4L8 11.2V8a4 4 0 0 1 4-4Z"
@@ -902,12 +926,47 @@ export const ProjectDetailDrawer = () => {
             </div>
           </section>
           <section>
-            <h3>Active incentives</h3>
-            {project.incentives.length === 0 ? (
+            <h3>{incentiveSectionLabel}</h3>
+            {hasMintEvents ? (
+              <ul className="incentive-list">
+                {mintEvents.map((event) => (
+                  <li key={event.id}>
+                    <div className="incentive-item__row">
+                      <div className="incentive-item__meta">
+                        <h4>{event.title}</h4>
+                        {formatIncentiveDateRange(event.start, event.end) ? (
+                          <div className="incentive-item__dates">
+                            {formatIncentiveDateRange(event.start, event.end)}
+                          </div>
+                        ) : null}
+                      </div>
+                      {formatIncentiveCountdown(event.end ?? event.start, nowTick) ? (
+                        <div
+                          className="ethos-events-panel__countdown"
+                          aria-label={formatIncentiveCountdown(event.end ?? event.start, nowTick) ?? undefined}
+                        >
+                          {formatIncentiveCountdown(event.end ?? event.start, nowTick)}
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="incentive-item__actions">
+                      <a
+                        className="ethos-events-panel__action"
+                        href={event.detailsUrl ?? event.tweetUrl}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        Details
+                      </a>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : activeIncentives.length === 0 ? (
               <p className="muted">Nothing live right now. Check back soon.</p>
             ) : (
               <ul className="incentive-list">
-                {project.incentives.map((incentive) => (
+                {activeIncentives.map((incentive) => (
                   <li key={incentive.id}>
                     <div className="incentive-item__row">
                       <div className="incentive-item__meta">

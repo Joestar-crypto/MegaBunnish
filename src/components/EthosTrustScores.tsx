@@ -39,7 +39,7 @@ type EcosystemEthosApp = EthosApp & {
   projectLogo: string;
 };
 
-type AppEvent = {
+export type AppEvent = {
   id: string;
   title: string;
   projectId: string;
@@ -65,7 +65,7 @@ const ETHOS_FILTERS = [
 
 const EVENT_TIMEZONE = 'America/New_York';
 
-const APP_EVENTS: AppEvent[] = [
+export const APP_EVENTS: AppEvent[] = [
   {
     id: 'meganacci-mint-live',
     title: 'Mint live',
@@ -205,6 +205,7 @@ const APP_EVENTS: AppEvent[] = [
     start: '2026-02-12T00:00:00-05:00',
     end: '2026-02-26T23:59:00-05:00',
     tweetUrl: 'https://x.com/JoinSurvivors/status/2021658154358960333?s=20',
+    detailsUrl: 'https://app.joinsurvivors.com/dashboard?ref=GKM8U',
     phases: [
       {
         label: 'Presale',
@@ -737,10 +738,8 @@ export const EventsBell = () => {
   const upcomingEvents = useMemo(() => {
     return APP_EVENTS
       .filter((event) => {
-        if (!event.end) {
-          return true;
-        }
-        return new Date(event.end).getTime() > nowTick;
+        const endValue = event.end ?? event.start;
+        return new Date(endValue).getTime() > nowTick;
       })
       .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
   }, [nowTick]);

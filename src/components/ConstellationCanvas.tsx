@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useConstellation } from '../state/constellation';
+import { APP_EVENTS } from './EthosTrustScores';
 import { ConstellationProject, HighlightVariant } from '../types';
 import { getCategoryColor } from '../utils/colors';
 
@@ -710,6 +711,16 @@ export const ConstellationCanvas = ({
       });
       const hoveredCategory = hoveredCategoryRef.current;
 
+      const nowMs = Date.now();
+      const mintProjectIds = new Set(
+        APP_EVENTS.filter((event) => event.title.toLowerCase().includes('mint'))
+          .filter((event) => {
+            const endValue = event.end ?? event.start;
+            const endMs = new Date(endValue).getTime();
+            return !Number.isNaN(endMs) && endMs >= nowMs;
+          })
+          .map((event) => event.projectId)
+      );
       const orbitMeta = new Map<
         string,
         { origin: { x: number; y: number }; radius: number; color: string }
@@ -766,13 +777,16 @@ export const ConstellationCanvas = ({
 
       categoryRingsRef.current = nextCategoryRings;
 
-      if (!isPerformanceMode) {
+      if (!isPerformanceMode || renderProjects.some((project) => project.highlight)) {
         const drawnLinks = new Set<string>();
         renderProjects.forEach((project, index) => {
           const sourceScreen = toScreen(project.position);
           project.linkedIds.forEach((linkedId) => {
             const target = visibleProjectMap.get(linkedId);
             if (!target) {
+              return;
+            }
+            if (isPerformanceMode && !project.highlight && !target.highlight) {
               return;
             }
             const key = project.id < linkedId ? `${project.id}|${linkedId}` : `${linkedId}|${project.id}`;
@@ -941,7 +955,11 @@ export const ConstellationCanvas = ({
           drawFavoriteStar(context, starX, starY, true);
         }
 
-        if (project.incentives.length > 0) {
+        const hasActiveIncentive = project.incentives.some((incentive) => {
+          const endMs = new Date(incentive.expiresAt).getTime();
+          return !Number.isNaN(endMs) && endMs > nowMs;
+        });
+        if (hasActiveIncentive || mintProjectIds.has(project.id)) {
           const bellOffset = Math.max(radius * 0.7, radius - 8);
           drawIncentiveBell(context, x - bellOffset, y - bellOffset);
         }

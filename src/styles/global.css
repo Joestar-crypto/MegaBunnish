@@ -2207,7 +2207,9 @@ select {
 .incentive-list li {
   padding: 0.8rem 1rem;
   border-radius: 1rem;
-  background: rgba(255, 59, 59, 0.15);
+  background: linear-gradient(135deg, rgba(255, 93, 119, 0.32), rgba(255, 117, 77, 0.26));
+  border: 1px solid rgba(255, 148, 148, 0.35);
+  box-shadow: 0 10px 24px rgba(255, 59, 59, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
 
 .incentive-item__row {
