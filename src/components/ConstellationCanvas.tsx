@@ -677,6 +677,10 @@ export const ConstellationCanvas = ({
         ethosScoreThreshold: renderScoreThreshold,
         ethosBadgeSprites: renderBadgeSprites
       } = renderInputsRef.current;
+      const isInteractionMode = interactionActiveRef.current;
+      const isDensityMode = renderProjects.length > 70;
+      const isPerformanceMode = isInteractionMode || isDensityMode;
+      const starStep = isPerformanceMode ? 3 : 1;
 
       const width = canvas.width / dpr;
       const height = canvas.height / dpr;
@@ -687,14 +691,15 @@ export const ConstellationCanvas = ({
       context.fillStyle = '#000000';
       context.fillRect(0, 0, width, height);
 
-      stars.forEach((star, idx) => {
+      for (let idx = 0; idx < stars.length; idx += starStep) {
+        const star = stars[idx];
         const drift = Math.sin(time * 0.0002 * star.speed + idx) * 4;
         const brightness = 0.35 + ((Math.sin(time * 0.001 * star.speed + star.twinkle) + 1) / 2) * 0.45;
         context.beginPath();
         context.fillStyle = `rgba(255, 255, 255, ${brightness})`;
         context.arc(star.x * width + drift, star.y * height + drift, star.radius, 0, Math.PI * 2);
         context.fill();
-      });
+      }
 
       const cameraState = cameraRef.current;
       const hoveredId = hoveredRef.current;
@@ -761,54 +766,56 @@ export const ConstellationCanvas = ({
 
       categoryRingsRef.current = nextCategoryRings;
 
-      const drawnLinks = new Set<string>();
-      renderProjects.forEach((project, index) => {
-        const sourceScreen = toScreen(project.position);
-        project.linkedIds.forEach((linkedId) => {
-          const target = visibleProjectMap.get(linkedId);
-          if (!target) {
-            return;
-          }
-          const key = project.id < linkedId ? `${project.id}|${linkedId}` : `${linkedId}|${project.id}`;
-          if (drawnLinks.has(key)) {
-            return;
-          }
-          drawnLinks.add(key);
+      if (!isPerformanceMode) {
+        const drawnLinks = new Set<string>();
+        renderProjects.forEach((project, index) => {
+          const sourceScreen = toScreen(project.position);
+          project.linkedIds.forEach((linkedId) => {
+            const target = visibleProjectMap.get(linkedId);
+            if (!target) {
+              return;
+            }
+            const key = project.id < linkedId ? `${project.id}|${linkedId}` : `${linkedId}|${project.id}`;
+            if (drawnLinks.has(key)) {
+              return;
+            }
+            drawnLinks.add(key);
 
-          const targetScreen = toScreen(target.position);
-          const curvature = Math.sin((project.position.x + target.position.y + index) * 0.001) * 35;
-          const controlX = (sourceScreen.x + targetScreen.x) / 2 + curvature;
-          const controlY = (sourceScreen.y + targetScreen.y) / 2 - curvature;
-          const sourceHighlight = project.highlight ? highlightStyles[project.highlight] : null;
-          const targetHighlight = target.highlight ? highlightStyles[target.highlight] : null;
-          const sharedHighlight =
-            project.highlight && project.highlight === target.highlight
-              ? highlightStyles[project.highlight]
-              : null;
-          const stroke =
-            sharedHighlight?.stroke ?? sourceHighlight?.stroke ?? targetHighlight?.stroke ?? 'rgba(78, 241, 255, 0.2)';
-          const glow =
-            sharedHighlight?.glow ?? sourceHighlight?.glow ?? targetHighlight?.glow ?? 'rgba(78, 241, 255, 0.28)';
-          const pulse = (Math.sin(time * 0.0015 + index) + 2) / 3;
-          const baseWidth = sharedHighlight ? 1.6 : 0.8;
-          const pulseWidth = sharedHighlight ? 0.9 : 0.6;
-          const baseAlpha = sharedHighlight ? 0.28 : 0.18;
-          const alphaPulse = sharedHighlight ? 0.32 : 0.25;
-          const shadowBlur = sharedHighlight ? 24 : 16;
+            const targetScreen = toScreen(target.position);
+            const curvature = Math.sin((project.position.x + target.position.y + index) * 0.001) * 35;
+            const controlX = (sourceScreen.x + targetScreen.x) / 2 + curvature;
+            const controlY = (sourceScreen.y + targetScreen.y) / 2 - curvature;
+            const sourceHighlight = project.highlight ? highlightStyles[project.highlight] : null;
+            const targetHighlight = target.highlight ? highlightStyles[target.highlight] : null;
+            const sharedHighlight =
+              project.highlight && project.highlight === target.highlight
+                ? highlightStyles[project.highlight]
+                : null;
+            const stroke =
+              sharedHighlight?.stroke ?? sourceHighlight?.stroke ?? targetHighlight?.stroke ?? 'rgba(78, 241, 255, 0.2)';
+            const glow =
+              sharedHighlight?.glow ?? sourceHighlight?.glow ?? targetHighlight?.glow ?? 'rgba(78, 241, 255, 0.28)';
+            const pulse = (Math.sin(time * 0.0015 + index) + 2) / 3;
+            const baseWidth = sharedHighlight ? 1.6 : 0.8;
+            const pulseWidth = sharedHighlight ? 0.9 : 0.6;
+            const baseAlpha = sharedHighlight ? 0.28 : 0.18;
+            const alphaPulse = sharedHighlight ? 0.32 : 0.25;
+            const shadowBlur = sharedHighlight ? 24 : 16;
 
-          context.save();
-          context.globalAlpha = baseAlpha + pulse * alphaPulse;
-          context.strokeStyle = stroke;
-          context.lineWidth = baseWidth + pulse * pulseWidth;
-          context.shadowBlur = shadowBlur;
-          context.shadowColor = glow;
-          context.beginPath();
-          context.moveTo(sourceScreen.x, sourceScreen.y);
-          context.quadraticCurveTo(controlX, controlY, targetScreen.x, targetScreen.y);
-          context.stroke();
-          context.restore();
+            context.save();
+            context.globalAlpha = baseAlpha + pulse * alphaPulse;
+            context.strokeStyle = stroke;
+            context.lineWidth = baseWidth + pulse * pulseWidth;
+            context.shadowBlur = shadowBlur;
+            context.shadowColor = glow;
+            context.beginPath();
+            context.moveTo(sourceScreen.x, sourceScreen.y);
+            context.quadraticCurveTo(controlX, controlY, targetScreen.x, targetScreen.y);
+            context.stroke();
+            context.restore();
+          });
         });
-      });
+      }
 
       renderProjects.forEach((project, index) => {
         const { x, y } = toScreen(project.position);
@@ -822,14 +829,14 @@ export const ConstellationCanvas = ({
         const scoreValue = renderEthosScores[project.id];
         const meetsThreshold =
           typeof scoreValue === 'number' && (renderScoreThreshold === null || scoreValue >= renderScoreThreshold);
-        const shouldShowEthosBadge = renderOverlayActive && meetsThreshold;
+        const shouldShowEthosBadge = renderOverlayActive && meetsThreshold && !isInteractionMode;
 
         context.beginPath();
         context.fillStyle = 'rgba(255, 255, 255, 0.08)';
         context.arc(x, y, radius + 10, 0, Math.PI * 2);
         context.fill();
 
-        if (highlightStyle) {
+        if (highlightStyle && !isPerformanceMode) {
           context.save();
           const haloRadius = radius + 24;
           const haloGradient = context.createRadialGradient(x, y, radius, x, y, haloRadius);
@@ -897,7 +904,7 @@ export const ConstellationCanvas = ({
           context.fillText(project.name[0]?.toUpperCase() ?? '?', x, y);
         }
 
-        if (beadCount > 0) {
+        if (!isPerformanceMode && beadCount > 0) {
           drawInteractionBeads(context, x, y, beadCount, radius, time);
         }
 
@@ -920,10 +927,12 @@ export const ConstellationCanvas = ({
             labelOffset = radius + ETHOS_BADGE_GAP + ETHOS_BADGE_HEIGHT + 8;
           }
         }
-        context.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        context.font = '12px Space Grotesk, sans-serif';
-        context.textAlign = 'center';
-        context.fillText(project.name, x, y + labelOffset);
+        if (!isPerformanceMode || project.id === hoveredId || project.id === selectedId) {
+          context.fillStyle = 'rgba(255, 255, 255, 0.7)';
+          context.font = '12px Space Grotesk, sans-serif';
+          context.textAlign = 'center';
+          context.fillText(project.name, x, y + labelOffset);
+        }
 
         if (isFavorite) {
           const starOffset = Math.max(radius * 0.65, radius - 12);
