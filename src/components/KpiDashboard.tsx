@@ -94,7 +94,7 @@ const buildActivationCard = (): KpiCard => {
     statusBadge: {
       tone: liveCount >= KPI2_TARGET ? 'positive' : 'negative',
       symbol: liveCount >= KPI2_TARGET ? '✔' : '✕',
-      label: liveCount >= KPI2_TARGET ? 'Objectif atteint' : 'Encore des apps à activer'
+      label: liveCount >= KPI2_TARGET ? 'Goal reached' : 'More apps to activate'
     },
     progress: {
       value: progressValue,
@@ -209,17 +209,17 @@ export const KpiDashboard = ({ isOpen, onClose }: KpiDashboardProps) => {
         className="mission-control__content"
         role="dialog"
         aria-modal="true"
-        aria-label="Fenêtre KPI mission control"
+        aria-label="Mission control KPI window"
         tabIndex={-1}
       >
         <header className="mission-control__header">
           <div>
             <p className="mission-control__eyebrow">Mission control</p>
-            <h2>Dashboards KPI</h2>
-            <p>Vue plein écran des 3 graphiques : KPI 1 (USDM supply), KPI 2 et KPI 3.</p>
+            <h2>KPI dashboards</h2>
+            <p>Full-screen view of the 3 charts: KPI 1 (USDM supply), KPI 2, and KPI 3.</p>
           </div>
           <button type="button" className="mission-control__close" onClick={onClose}>
-            Fermer
+            Close
           </button>
         </header>
         <div className="kpi-dashboard__grid">
@@ -257,7 +257,7 @@ export const KpiDashboard = ({ isOpen, onClose }: KpiDashboardProps) => {
                 {card.footer && <p className="kpi-card__meta kpi-card__meta--muted">{card.footer}</p>}
                 {card.status === 'error' && card.error && <p className="kpi-card__error">{card.error}</p>}
                 {card.progress ? (
-                  <div className="kpi-card__progress" role="img" aria-label={`Progression ${card.progress.label}`}>
+                  <div className="kpi-card__progress" role="img" aria-label={`Progress ${card.progress.label}`}>
                     <div className="kpi-card__progress-track">
                       <div className={progressFillClass} style={{ width: `${Math.min(card.progress.value, 1) * 100}%` }} />
                     </div>
@@ -273,7 +273,7 @@ export const KpiDashboard = ({ isOpen, onClose }: KpiDashboardProps) => {
                         </span>
                         <span
                           className={`kpi-card__list-status kpi-card__list-status--${item.status}`}
-                          aria-label={item.status === 'live' ? 'App live' : 'En attente'}
+                          aria-label={item.status === 'live' ? 'Live app' : 'Pending'}
                         >
                           {item.status === 'live' ? '✔' : '✕'}
                         </span>

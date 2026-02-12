@@ -13,7 +13,7 @@ export const ConstellationHUD = ({ onOpenDashboards }: ConstellationHUDProps) =>
         type="button"
         className="hud-card__cta hud-card__cta--compact"
         onClick={onOpenDashboards}
-        aria-label="Ouvrir les KPI"
+        aria-label="Open KPI dashboards"
       >
         <span>KPI</span>
         <span className="hud-card__cta-glow" aria-hidden="true">

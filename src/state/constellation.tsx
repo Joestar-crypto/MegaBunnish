@@ -257,14 +257,25 @@ const deriveCategoryCounts = (projects: ConstellationProject[]): Record<string, 
   return counts;
 };
 
-const filterProjectsByCategory = (
-  projects: ConstellationProject[],
-  category: string | null
-) => {
-  if (!category) {
+const filterProjectsByCategory = (projects: ConstellationProject[], categories: string[]) => {
+  if (!categories.length) {
     return projects;
   }
-  return projects.filter((project) => project.categories.includes(category as CoreCategory));
+  return projects.filter((project) =>
+    project.categories.some((category) => categories.includes(category as CoreCategory))
+  );
+};
+
+const areCategorySelectionsEqual = (left: string[], right: string[]) =>
+  left.length === right.length && left.every((value, index) => value === right[index]);
+
+const toggleCategorySelection = (categories: string[], category: string | null) => {
+  if (!category) {
+    return [];
+  }
+  return categories.includes(category)
+    ? categories.filter((entry) => entry !== category)
+    : [...categories, category];
 };
 const CATEGORY_ANCHOR_RADIUS = 260;
 const CLUSTER_RADIUS_PADDING = 60;
@@ -693,7 +704,7 @@ const applyEthosScoreFilter = (
 const deriveProjectView = (
   baseProjects: ConstellationProject[],
   filters: SpecialFilters,
-  category: string | null,
+  categories: string[],
   jojoProfileId: string,
   options: DeriveProjectOptions = {}
 ) => {
@@ -730,16 +741,16 @@ const deriveProjectView = (
   const pool = needsRelayout
     ? computeLayout(toRawProjectSet(filteredPool)).projects
     : cloneProjects(filteredPool);
-  const visible = filterProjectsByCategory(pool, category);
+  const visible = filterProjectsByCategory(pool, categories);
   return { pool, visible, counts: deriveCategoryCounts(pool) };
 };
 
 const computeCameraFocus = (
-  category: string | null,
+  categories: string[],
   focusProjects: ConstellationProject[],
   forceFocus = false
 ) => {
-  if ((!category && !forceFocus) || focusProjects.length === 0) {
+  if ((!categories.length && !forceFocus) || focusProjects.length === 0) {
     return { x: 0, y: 0, zoom: 1 };
   }
   const centroid = computeProjectsCentroid(focusProjects);
@@ -807,7 +818,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
     const favoritesOnly = false;
     const liveOnly = false;
     const jojoProfileId = DEFAULT_JOJO_PROFILE_ID;
-    const { pool, visible, counts } = deriveProjectView(layout.projects, filters, null, jojoProfileId, {
+    const { pool, visible, counts } = deriveProjectView(layout.projects, filters, [], jojoProfileId, {
       favoritesOnly,
       liveOnly,
       favoriteIds: new Set(favoriteIds)
@@ -817,7 +828,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       projectPoolSize: pool.length,
       categories: [...CORE_CATEGORIES],
       categoryCounts: counts,
-      activeCategory: null,
+      activeCategories: [],
       hoveredProjectId: null,
       selectedProjectId: null,
       camera: defaultCamera(),
@@ -858,7 +869,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       const { pool, visible, counts } = deriveProjectView(
         layout.projects,
         prev.filters,
-        prev.activeCategory,
+        prev.activeCategories,
         prev.jojoProfileId,
         {
           favoritesOnly: prev.favoritesOnly,
@@ -887,14 +898,15 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
   const setActiveCategory = useCallback(
     (category: string | null) => {
       setState((prev) => {
-        if (prev.activeCategory === category) {
+        const nextActiveCategories = toggleCategorySelection(prev.activeCategories, category);
+        if (areCategorySelectionsEqual(prev.activeCategories, nextActiveCategories)) {
           return prev;
         }
 
         const { pool, visible, counts } = deriveProjectView(
           layout.projects,
           prev.filters,
-          category,
+          nextActiveCategories,
           prev.jojoProfileId,
           {
             favoritesOnly: prev.favoritesOnly,
@@ -905,14 +917,14 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
           }
         );
         const visibleIds = new Set(visible.map((project) => project.id));
-        const focus = computeCameraFocus(category, visible);
+        const focus = computeCameraFocus(nextActiveCategories, visible);
 
         return {
           ...prev,
           projects: visible,
           projectPoolSize: pool.length,
           categoryCounts: counts,
-          activeCategory: category,
+          activeCategories: nextActiveCategories,
           hoveredProjectId:
             prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId) ? prev.hoveredProjectId : null,
           selectedProjectId:
@@ -937,7 +949,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         const { pool, visible, counts } = deriveProjectView(
           layout.projects,
           nextFilters,
-          prev.activeCategory,
+          prev.activeCategories,
           prev.jojoProfileId,
           {
             favoritesOnly: prev.favoritesOnly,
@@ -948,25 +960,25 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
           }
         );
 
-        let nextActiveCategory = prev.activeCategory;
+        let nextActiveCategories = prev.activeCategories;
         let nextVisible = visible;
 
-        if (nextActiveCategory && visible.length === 0) {
-          nextActiveCategory = null;
+        if (nextActiveCategories.length && visible.length === 0) {
+          nextActiveCategories = [];
           nextVisible = pool;
         }
 
         const visibleIds = new Set(nextVisible.map((project) => project.id));
-        const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && !nextActiveCategory;
+        const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && nextActiveCategories.length === 0;
         const forceFocus =
-          (shouldAggregateFilters(nextFilters) && !nextActiveCategory) ||
-          (prev.favoritesOnly && !nextActiveCategory) ||
-          (prev.liveOnly && !nextActiveCategory) ||
+          (shouldAggregateFilters(nextFilters) && nextActiveCategories.length === 0) ||
+          (prev.favoritesOnly && nextActiveCategories.length === 0) ||
+          (prev.liveOnly && nextActiveCategories.length === 0) ||
           shouldForceEthosFocus;
-        const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
+        const focus = computeCameraFocus(nextActiveCategories, nextVisible, forceFocus);
         const shouldUpdateCamera =
-          Boolean(nextActiveCategory) ||
-          prev.activeCategory !== nextActiveCategory ||
+          nextActiveCategories.length > 0 ||
+          !areCategorySelectionsEqual(prev.activeCategories, nextActiveCategories) ||
           forceFocus;
 
         return {
@@ -975,7 +987,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
           projects: nextVisible,
           projectPoolSize: pool.length,
           categoryCounts: counts,
-          activeCategory: nextActiveCategory,
+          activeCategories: nextActiveCategories,
           hoveredProjectId:
             prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId)
               ? prev.hoveredProjectId
@@ -1009,7 +1021,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       const { pool, visible, counts } = deriveProjectView(
         layout.projects,
         prev.filters,
-        prev.activeCategory,
+        prev.activeCategories,
         resolvedProfileId,
         {
           favoritesOnly: prev.favoritesOnly,
@@ -1020,25 +1032,25 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         }
       );
 
-      let nextActiveCategory = prev.activeCategory;
+      let nextActiveCategories = prev.activeCategories;
       let nextVisible = visible;
 
-      if (nextActiveCategory && visible.length === 0) {
-        nextActiveCategory = null;
+      if (nextActiveCategories.length && visible.length === 0) {
+        nextActiveCategories = [];
         nextVisible = pool;
       }
 
       const visibleIds = new Set(nextVisible.map((project) => project.id));
-      const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && !nextActiveCategory;
+      const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && nextActiveCategories.length === 0;
       const forceFocus =
-        (shouldAggregateFilters(prev.filters) && !nextActiveCategory) ||
-        (prev.favoritesOnly && !nextActiveCategory) ||
-        (prev.liveOnly && !nextActiveCategory) ||
+        (shouldAggregateFilters(prev.filters) && nextActiveCategories.length === 0) ||
+        (prev.favoritesOnly && nextActiveCategories.length === 0) ||
+        (prev.liveOnly && nextActiveCategories.length === 0) ||
         shouldForceEthosFocus;
-      const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
+      const focus = computeCameraFocus(nextActiveCategories, nextVisible, forceFocus);
       const shouldUpdateCamera =
-        Boolean(nextActiveCategory) ||
-        prev.activeCategory !== nextActiveCategory ||
+        nextActiveCategories.length > 0 ||
+        !areCategorySelectionsEqual(prev.activeCategories, nextActiveCategories) ||
         forceFocus;
 
       return {
@@ -1047,7 +1059,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         projects: nextVisible,
         projectPoolSize: pool.length,
         categoryCounts: counts,
-        activeCategory: nextActiveCategory,
+        activeCategories: nextActiveCategories,
         hoveredProjectId:
           prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId)
             ? prev.hoveredProjectId
@@ -1078,7 +1090,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       const { pool, visible, counts } = deriveProjectView(
         layout.projects,
         prev.filters,
-        prev.activeCategory,
+        prev.activeCategories,
         prev.jojoProfileId,
         {
           favoritesOnly: nextFavoritesOnly,
@@ -1089,25 +1101,25 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         }
       );
 
-      let nextActiveCategory = prev.activeCategory;
+      let nextActiveCategories = prev.activeCategories;
       let nextVisible = visible;
 
-      if (nextActiveCategory && visible.length === 0) {
-        nextActiveCategory = null;
+      if (nextActiveCategories.length && visible.length === 0) {
+        nextActiveCategories = [];
         nextVisible = pool;
       }
 
       const visibleIds = new Set(nextVisible.map((project) => project.id));
-      const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && !nextActiveCategory;
+      const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && nextActiveCategories.length === 0;
       const forceFocus =
-        (shouldAggregateFilters(prev.filters) && !nextActiveCategory) ||
-        (nextFavoritesOnly && !nextActiveCategory) ||
-        (prev.liveOnly && !nextActiveCategory) ||
+        (shouldAggregateFilters(prev.filters) && nextActiveCategories.length === 0) ||
+        (nextFavoritesOnly && nextActiveCategories.length === 0) ||
+        (prev.liveOnly && nextActiveCategories.length === 0) ||
         shouldForceEthosFocus;
-      const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
+      const focus = computeCameraFocus(nextActiveCategories, nextVisible, forceFocus);
       const shouldUpdateCamera =
-        Boolean(nextActiveCategory) ||
-        prev.activeCategory !== nextActiveCategory ||
+        nextActiveCategories.length > 0 ||
+        !areCategorySelectionsEqual(prev.activeCategories, nextActiveCategories) ||
         forceFocus ||
         prev.favoritesOnly !== nextFavoritesOnly;
 
@@ -1117,7 +1129,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         projects: nextVisible,
         projectPoolSize: pool.length,
         categoryCounts: counts,
-        activeCategory: nextActiveCategory,
+        activeCategories: nextActiveCategories,
         hoveredProjectId:
           prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId)
             ? prev.hoveredProjectId
@@ -1145,7 +1157,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       const { pool, visible, counts } = deriveProjectView(
         layout.projects,
         prev.filters,
-        prev.activeCategory,
+        prev.activeCategories,
         prev.jojoProfileId,
         {
           favoritesOnly: prev.favoritesOnly,
@@ -1156,25 +1168,25 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         }
       );
 
-      let nextActiveCategory = prev.activeCategory;
+      let nextActiveCategories = prev.activeCategories;
       let nextVisible = visible;
 
-      if (nextActiveCategory && visible.length === 0) {
-        nextActiveCategory = null;
+      if (nextActiveCategories.length && visible.length === 0) {
+        nextActiveCategories = [];
         nextVisible = pool;
       }
 
       const visibleIds = new Set(nextVisible.map((project) => project.id));
-      const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && !nextActiveCategory;
+      const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && nextActiveCategories.length === 0;
       const forceFocus =
-        (shouldAggregateFilters(prev.filters) && !nextActiveCategory) ||
-        (prev.favoritesOnly && !nextActiveCategory) ||
-        (nextLiveOnly && !nextActiveCategory) ||
+        (shouldAggregateFilters(prev.filters) && nextActiveCategories.length === 0) ||
+        (prev.favoritesOnly && nextActiveCategories.length === 0) ||
+        (nextLiveOnly && nextActiveCategories.length === 0) ||
         shouldForceEthosFocus;
-      const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
+      const focus = computeCameraFocus(nextActiveCategories, nextVisible, forceFocus);
       const shouldUpdateCamera =
-        Boolean(nextActiveCategory) ||
-        prev.activeCategory !== nextActiveCategory ||
+        nextActiveCategories.length > 0 ||
+        !areCategorySelectionsEqual(prev.activeCategories, nextActiveCategories) ||
         forceFocus ||
         prev.liveOnly !== nextLiveOnly;
 
@@ -1184,7 +1196,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         projects: nextVisible,
         projectPoolSize: pool.length,
         categoryCounts: counts,
-        activeCategory: nextActiveCategory,
+        activeCategories: nextActiveCategories,
         hoveredProjectId:
           prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId)
             ? prev.hoveredProjectId
@@ -1218,7 +1230,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         const { pool, visible, counts } = deriveProjectView(
           layout.projects,
           prev.filters,
-          prev.activeCategory,
+          prev.activeCategories,
           prev.jojoProfileId,
           {
             favoritesOnly: nextFavoritesOnly,
@@ -1229,27 +1241,27 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
           }
         );
 
-        let nextActiveCategory = prev.activeCategory;
+        let nextActiveCategories = prev.activeCategories;
         let nextVisible = visible;
 
-        if (nextActiveCategory && visible.length === 0) {
-          nextActiveCategory = null;
+        if (nextActiveCategories.length && visible.length === 0) {
+          nextActiveCategories = [];
           nextVisible = pool;
         }
 
         const visibleIds = new Set(nextVisible.map((project) => project.id));
-        const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && !nextActiveCategory;
+        const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && nextActiveCategories.length === 0;
         const forceFocus =
-          (shouldAggregateFilters(prev.filters) && !nextActiveCategory) ||
-          (nextFavoritesOnly && !nextActiveCategory) ||
-          (prev.liveOnly && !nextActiveCategory) ||
+          (shouldAggregateFilters(prev.filters) && nextActiveCategories.length === 0) ||
+          (nextFavoritesOnly && nextActiveCategories.length === 0) ||
+          (prev.liveOnly && nextActiveCategories.length === 0) ||
           shouldForceEthosFocus;
         const shouldUpdateCamera =
-          Boolean(nextActiveCategory) ||
-          prev.activeCategory !== nextActiveCategory ||
+          nextActiveCategories.length > 0 ||
+          !areCategorySelectionsEqual(prev.activeCategories, nextActiveCategories) ||
           forceFocus ||
           prev.favoritesOnly !== nextFavoritesOnly;
-        const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
+        const focus = computeCameraFocus(nextActiveCategories, nextVisible, forceFocus);
 
         return {
           ...prev,
@@ -1258,7 +1270,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
           projects: nextVisible,
           projectPoolSize: pool.length,
           categoryCounts: counts,
-          activeCategory: nextActiveCategory,
+          activeCategories: nextActiveCategories,
           hoveredProjectId:
             prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId)
               ? prev.hoveredProjectId
@@ -1329,15 +1341,15 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
           };
           nextReturnPoint = null;
         } else if (prev.selectedProjectId) {
-          const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && !prev.activeCategory;
-          const shouldForceFavoritesFocus = prev.favoritesOnly && !prev.activeCategory;
-          const shouldForceLiveFocus = prev.liveOnly && !prev.activeCategory;
+          const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && prev.activeCategories.length === 0;
+          const shouldForceFavoritesFocus = prev.favoritesOnly && prev.activeCategories.length === 0;
+          const shouldForceLiveFocus = prev.liveOnly && prev.activeCategories.length === 0;
           const forceFocus =
-            (shouldAggregateFilters(prev.filters) && !prev.activeCategory) ||
+            (shouldAggregateFilters(prev.filters) && prev.activeCategories.length === 0) ||
             shouldForceFavoritesFocus ||
             shouldForceLiveFocus ||
             shouldForceEthosFocus;
-          const focus = computeCameraFocus(prev.activeCategory, prev.projects, forceFocus);
+          const focus = computeCameraFocus(prev.activeCategories, prev.projects, forceFocus);
           nextCamera = {
             ...prev.camera,
             targetX: focus.x,
@@ -1414,7 +1426,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       const { pool, visible, counts } = deriveProjectView(
         layout.projects,
         resetFilters,
-        null,
+        [],
         prev.jojoProfileId,
         {
           favoritesOnly: prev.favoritesOnly,
@@ -1432,7 +1444,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         projects: visible,
         projectPoolSize: pool.length,
         categoryCounts: counts,
-        activeCategory: null,
+        activeCategories: [],
         hoveredProjectId:
           prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId) ? prev.hoveredProjectId : null,
         selectedProjectId:
@@ -1458,7 +1470,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       const { pool, visible, counts } = deriveProjectView(
         layout.projects,
         prev.filters,
-        prev.activeCategory,
+        prev.activeCategories,
         prev.jojoProfileId,
         {
           favoritesOnly: prev.favoritesOnly,
@@ -1469,25 +1481,25 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         }
       );
 
-      let nextActiveCategory = prev.activeCategory;
+      let nextActiveCategories = prev.activeCategories;
       let nextVisible = visible;
 
-      if (nextActiveCategory && visible.length === 0) {
-        nextActiveCategory = null;
+      if (nextActiveCategories.length && visible.length === 0) {
+        nextActiveCategories = [];
         nextVisible = pool;
       }
 
       const visibleIds = new Set(nextVisible.map((project) => project.id));
-      const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && !nextActiveCategory;
+      const shouldForceEthosFocus = prev.ethosScoreThreshold !== null && nextActiveCategories.length === 0;
       const forceFocus =
-        (shouldAggregateFilters(prev.filters) && !nextActiveCategory) ||
-        (prev.favoritesOnly && !nextActiveCategory) ||
-        (prev.liveOnly && !nextActiveCategory) ||
+        (shouldAggregateFilters(prev.filters) && nextActiveCategories.length === 0) ||
+        (prev.favoritesOnly && nextActiveCategories.length === 0) ||
+        (prev.liveOnly && nextActiveCategories.length === 0) ||
         shouldForceEthosFocus;
-      const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
+      const focus = computeCameraFocus(nextActiveCategories, nextVisible, forceFocus);
       const shouldUpdateCamera =
-        Boolean(nextActiveCategory) ||
-        prev.activeCategory !== nextActiveCategory ||
+        nextActiveCategories.length > 0 ||
+        !areCategorySelectionsEqual(prev.activeCategories, nextActiveCategories) ||
         forceFocus;
 
       return {
@@ -1496,7 +1508,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         projects: nextVisible,
         projectPoolSize: pool.length,
         categoryCounts: counts,
-        activeCategory: nextActiveCategory,
+        activeCategories: nextActiveCategories,
         hoveredProjectId:
           prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId)
             ? prev.hoveredProjectId
@@ -1545,7 +1557,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       const { pool, visible, counts } = deriveProjectView(
         layout.projects,
         prev.filters,
-        prev.activeCategory,
+        prev.activeCategories,
         prev.jojoProfileId,
         {
           favoritesOnly: prev.favoritesOnly,
@@ -1556,25 +1568,25 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         }
       );
 
-      let nextActiveCategory = prev.activeCategory;
+      let nextActiveCategories = prev.activeCategories;
       let nextVisible = visible;
 
-      if (nextActiveCategory && visible.length === 0) {
-        nextActiveCategory = null;
+      if (nextActiveCategories.length && visible.length === 0) {
+        nextActiveCategories = [];
         nextVisible = pool;
       }
 
       const visibleIds = new Set(nextVisible.map((project) => project.id));
-      const shouldForceEthosFocus = threshold !== null && !nextActiveCategory;
+      const shouldForceEthosFocus = threshold !== null && nextActiveCategories.length === 0;
       const forceFocus =
-        (shouldAggregateFilters(prev.filters) && !nextActiveCategory) ||
-        (prev.favoritesOnly && !nextActiveCategory) ||
-        (prev.liveOnly && !nextActiveCategory) ||
+        (shouldAggregateFilters(prev.filters) && nextActiveCategories.length === 0) ||
+        (prev.favoritesOnly && nextActiveCategories.length === 0) ||
+        (prev.liveOnly && nextActiveCategories.length === 0) ||
         shouldForceEthosFocus;
-      const focus = computeCameraFocus(nextActiveCategory, nextVisible, forceFocus);
+      const focus = computeCameraFocus(nextActiveCategories, nextVisible, forceFocus);
       const shouldUpdateCamera =
-        Boolean(nextActiveCategory) ||
-        prev.activeCategory !== nextActiveCategory ||
+        nextActiveCategories.length > 0 ||
+        !areCategorySelectionsEqual(prev.activeCategories, nextActiveCategories) ||
         forceFocus;
 
       return {
@@ -1583,7 +1595,7 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
         projects: nextVisible,
         projectPoolSize: pool.length,
         categoryCounts: counts,
-        activeCategory: nextActiveCategory,
+        activeCategories: nextActiveCategories,
         hoveredProjectId:
           prev.hoveredProjectId && visibleIds.has(prev.hoveredProjectId)
             ? prev.hoveredProjectId

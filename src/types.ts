@@ -70,7 +70,7 @@ export type ConstellationState = {
   projectPoolSize: number;
   categories: string[];
   categoryCounts: Record<string, number>;
-  activeCategory: string | null;
+  activeCategories: string[];
   hoveredProjectId: string | null;
   selectedProjectId: string | null;
   camera: CameraState;

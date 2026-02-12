@@ -754,8 +754,8 @@ export const ProjectDetailDrawer = () => {
                     href={ethosProfileUrl}
                     target="_blank"
                     rel="noreferrer"
-                    aria-label="Voir le profil Ethos"
-                    title="Voir le profil Ethos"
+                    aria-label="View Ethos profile"
+                    title="View Ethos profile"
                   >
                     <img src="/logos/Ethos.webp" alt="" aria-hidden="true" />
                   </a>
@@ -766,7 +766,7 @@ export const ProjectDetailDrawer = () => {
                 <div className="detail-title__heading">
                   <h2>{project.name}</h2>
                   {showIncentiveBell ? (
-                    <span className="incentive-bell" aria-label="Incentives actives" title="Incentives actives">
+                    <span className="incentive-bell" aria-label="Active incentives" title="Active incentives">
                       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path
                           d="M12 4a4 4 0 0 1 4 4v3.2l1.2 2.6a1 1 0 0 1-.9 1.4H7.7a1 1 0 0 1-.9-1.4L8 11.2V8a4 4 0 0 1 4-4Z"
@@ -780,7 +780,7 @@ export const ProjectDetailDrawer = () => {
                     type="button"
                     className={isFavorite ? 'favorite-toggle is-active' : 'favorite-toggle'}
                     aria-pressed={isFavorite}
-                    aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                    aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                     onClick={() => toggleFavorite(project.id)}
                   >
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">

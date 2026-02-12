@@ -99,7 +99,7 @@ const APP_EVENTS: AppEvent[] = [
     tweetUrl: 'https://x.com/theminiminds/status/2021386441826144275?s=20',
     phases: [
       {
-        label: 'Toute la journee',
+        label: 'All day',
         start: '2026-02-16T00:00:00-05:00',
         end: '2026-02-16T23:59:00-05:00'
       }
@@ -114,7 +114,7 @@ const APP_EVENTS: AppEvent[] = [
     tweetUrl: 'https://x.com/Euphoria_fi/status/2018731493380796461?s=20',
     phases: [
       {
-        label: 'Toute la journee',
+        label: 'All day',
         start: '2026-02-16T00:00:00-05:00',
         end: '2026-02-16T23:59:00-05:00'
       }
@@ -339,10 +339,10 @@ const buildManualEthosApps = (index: EcosystemIndex): EcosystemEthosApp[] => {
     const manualApp: EthosApp = {
       id: -(entryIndex + 1),
       name: profile.displayName ?? profile.handle,
-      appType: profile.tier ? `Profil ${profile.tier}` : 'Profil Ethos',
+      appType: profile.tier ? `Profile ${profile.tier}` : 'Ethos profile',
       link: profile.url ?? null,
       trustScore: profile.score,
-      authorName: profile.tier ?? 'Profil Ethos',
+      authorName: profile.tier ?? 'Ethos profile',
       authorUsername: profile.handle
     };
 
@@ -354,7 +354,7 @@ const buildManualEthosApps = (index: EcosystemIndex): EcosystemEthosApp[] => {
       projectRef = matchEthosAppToProject(manualApp, index);
     }
     if (!projectRef) {
-      console.warn('Impossible de faire correspondre le profil Ethos manuel', profile.handle);
+      console.warn('Unable to match manual Ethos profile', profile.handle);
       return acc;
     }
 
@@ -390,7 +390,6 @@ const buildGoogleCalendarUrl = (event: AppEvent, projectName: string) => {
 const EVENT_DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
   month: 'short',
   day: 'numeric',
-  year: 'numeric',
   timeZone: EVENT_TIMEZONE
 });
 
@@ -403,10 +402,20 @@ const EVENT_TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
 const formatEventDateRange = (start: string, end: string) => {
   const startDate = new Date(start);
   const endDate = new Date(end);
-  const dateLabel = EVENT_DATE_FORMATTER.format(startDate);
+  const startLabel = EVENT_DATE_FORMATTER.format(startDate);
+  const endLabel = EVENT_DATE_FORMATTER.format(endDate);
   const startTime = EVENT_TIME_FORMATTER.format(startDate);
   const endTime = EVENT_TIME_FORMATTER.format(endDate);
-  return `${dateLabel} · ${startTime} - ${endTime} ET`;
+  const isSameDay = startLabel === endLabel;
+  const isAllDay = isSameDay && startTime === '12:00 AM' && endTime === '11:59 PM';
+
+  if (isAllDay) {
+    return `${startLabel} · All day`;
+  }
+  if (isSameDay) {
+    return `${startLabel} · ${startTime}-${endTime}`;
+  }
+  return `${startLabel} - ${endLabel}`;
 };
 
 const formatEventTimeRange = (start: string, end: string) => {
@@ -414,7 +423,8 @@ const formatEventTimeRange = (start: string, end: string) => {
   const endDate = new Date(end);
   const startTime = EVENT_TIME_FORMATTER.format(startDate);
   const endTime = EVENT_TIME_FORMATTER.format(endDate);
-  return `${startTime} - ${endTime} ET`;
+  const isAllDay = startTime === '12:00 AM' && endTime === '11:59 PM';
+  return isAllDay ? 'All day' : `${startTime}-${endTime}`;
 };
 
 const extractEthosErrorMessage = async (response: Response) => {
@@ -461,7 +471,7 @@ const fetchAllEthosApps = async (): Promise<EthosApp[]> => {
       appType: app.appType,
       link: app.link ?? null,
       trustScore: Math.round(app.author?.score ?? 0),
-      authorName: app.author?.displayName ?? 'Auteur inconnu',
+      authorName: app.author?.displayName ?? 'Unknown author',
       authorUsername: app.author?.username ?? null
     }))
     .sort((a, b) => b.trustScore - a.trustScore);
@@ -532,7 +542,7 @@ export const EthosTrustScores = () => {
         if (!isActive) {
           return;
         }
-        console.error('Impossible de recuperer les trust scores Ethos', fetchError);
+        console.error('Unable to fetch Ethos trust scores', fetchError);
       });
 
     return () => {
@@ -587,13 +597,13 @@ export const EthosTrustScores = () => {
         className="ethos-trust-button"
         onClick={handleToggle}
         aria-pressed={areScoresVisible}
-        aria-label="Basculer les trust scores Ethos"
-        title={areScoresVisible ? 'Masquer les trust scores sur les orbes' : 'Afficher les trust scores sur les orbes'}
+        aria-label="Toggle Ethos trust scores"
+        title={areScoresVisible ? 'Hide trust scores on orbs' : 'Show trust scores on orbs'}
       >
         <img src="/logos/Ethos.webp" alt="" />
       </button>
       {areScoresVisible ? (
-        <div className="ethos-filter-bar" role="group" aria-label="Filtrer les trust scores Ethos">
+        <div className="ethos-filter-bar" role="group" aria-label="Filter Ethos trust scores">
           {ETHOS_FILTERS.map((filter) => {
             const isActive = ethosScoreThreshold === filter.value;
             const toneClass = getFilterToneClass(filter.value);
@@ -618,6 +628,7 @@ export const EthosTrustScores = () => {
 export const EventsBell = () => {
   const [areEventsVisible, setEventsVisible] = useState(false);
   const { selectProject } = useConstellation();
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const upcomingEvents = useMemo(() => {
     const now = Date.now();
@@ -637,8 +648,29 @@ export const EventsBell = () => {
     setEventsVisible(false);
   };
 
+  useEffect(() => {
+    if (!areEventsVisible) {
+      return;
+    }
+
+    const handleDocumentPointerDown = (event: PointerEvent) => {
+      const container = containerRef.current;
+      if (!container) {
+        return;
+      }
+      if (!container.contains(event.target as Node)) {
+        setEventsVisible(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handleDocumentPointerDown);
+    return () => {
+      document.removeEventListener('pointerdown', handleDocumentPointerDown);
+    };
+  }, [areEventsVisible]);
+
   return (
-    <div className="events-bell">
+    <div className="events-bell" ref={containerRef}>
       <button
         type="button"
         className={`ethos-events-button${hasUpcomingEvents ? ' ethos-events-button--active' : ''}${areEventsVisible ? ' ethos-events-button--open' : ''}`}
@@ -722,7 +754,7 @@ export const EventsBell = () => {
                         target="_blank"
                         rel="noreferrer noopener"
                       >
-                        Tweet
+                        Details
                       </a>
                     </div>
                   </li>

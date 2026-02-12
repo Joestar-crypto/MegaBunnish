@@ -105,7 +105,7 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
     projectPoolSize,
     categories,
     categoryCounts,
-    activeCategory,
+    activeCategories,
     setActiveCategory,
     filters,
     jojoProfileId,
@@ -122,10 +122,6 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
   const favoritesDisabled = !favoritesOnly && !hasFavorites;
   const showJojoProfiles = filters.jojo && JOJO_PROFILES.length > 1;
   const quickSelect = (category: string | null) => {
-    if (category && activeCategory === category) {
-      setActiveCategory(null);
-      return;
-    }
     setActiveCategory(category);
   };
 
@@ -208,10 +204,10 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
           <div className="category-rail__list" role="tablist">
             <div className="category-rail__all-group">
               <button
-                className={activeCategory === null ? 'chip chip--category active' : 'chip chip--category'}
+                className={activeCategories.length === 0 ? 'chip chip--category active' : 'chip chip--category'}
                 type="button"
                 style={
-                  activeCategory === null
+                  activeCategories.length === 0
                     ? {
                         borderColor: ALL_CATEGORY_ACCENT,
                         backgroundColor: ALL_CATEGORY_ACCENT,
@@ -224,14 +220,14 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
                       }
                 }
                 onClick={() => quickSelect(null)}
-                aria-pressed={activeCategory === null}
+                aria-pressed={activeCategories.length === 0}
                 title="Also reveals the distant Noise signal"
               >
                 <span className="chip-label">All</span>
                 <span
                   className="chip-count"
                   style={
-                    activeCategory === null
+                    activeCategories.length === 0
                       ? { color: '#05060f' }
                       : { color: 'rgba(200, 204, 221, 0.9)' }
                   }
@@ -253,18 +249,18 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
             </div>
             {categories.map((category) => {
               const accent = getCategoryColor(category);
-              const isActive = activeCategory === category;
+              const isActive = activeCategories.includes(category);
               const style = isActive
                 ? { borderColor: accent, backgroundColor: accent, color: '#05060f' }
                 : { borderColor: accent, backgroundColor: 'transparent' };
               return (
                 <button
                   key={category}
-                  className={activeCategory === category ? 'chip chip--category active' : 'chip chip--category'}
+                  className={isActive ? 'chip chip--category active' : 'chip chip--category'}
                   type="button"
                   style={style}
                   onClick={() => quickSelect(category)}
-                  aria-pressed={activeCategory === category}
+                  aria-pressed={isActive}
                 >
                   <span className="chip-label">{formatCategoryLabel(category)}</span>
                   <span className="chip-count" style={isActive ? { color: '#05060f' } : undefined}>

@@ -1153,7 +1153,6 @@ export const ConstellationCanvas = ({
           selectProject(hit.id);
         } else {
           selectProject(null);
-          resetCamera();
         }
       }
 
