@@ -722,7 +722,12 @@ export const ConstellationCanvas = ({
           .map((event) => event.projectId)
       );
       const specialEventIds = new Set(
-        APP_EVENTS.filter((event) => event.id === 'euphoria-tapathon' || event.id === 'survivors-presale-live-14d')
+        APP_EVENTS.filter(
+          (event) =>
+            event.id === 'euphoria-tapathon' ||
+            event.id === 'survivors-presale-live-14d' ||
+            event.id === 'blackhaven-ico-registration'
+        )
           .filter((event) => {
             const endValue = event.end ?? event.start;
             const endMs = new Date(endValue).getTime();

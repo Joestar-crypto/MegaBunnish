@@ -798,10 +798,15 @@ export const ProjectDetailDrawer = () => {
       });
   }, [project, nowTick]);
   const specialEvent = useMemo(() => {
-    if (!project || (project.id !== 'euphoria' && project.id !== 'survivors')) {
+    if (!project || (project.id !== 'euphoria' && project.id !== 'survivors' && project.id !== 'blackhaven')) {
       return null;
     }
-    const targetId = project.id === 'euphoria' ? 'euphoria-tapathon' : 'survivors-presale-live-14d';
+    const targetId =
+      project.id === 'euphoria'
+        ? 'euphoria-tapathon'
+        : project.id === 'survivors'
+          ? 'survivors-presale-live-14d'
+          : 'blackhaven-ico-registration';
     const event = APP_EVENTS.find((entry) => entry.id === targetId);
     if (!event) {
       return null;
@@ -949,7 +954,13 @@ export const ProjectDetailDrawer = () => {
                 <li key={specialEvent?.id ?? 'euphoria-event'}>
                   <div className="incentive-item__row">
                     <div className="incentive-item__meta">
-                      <h4>Event</h4>
+                      <h4>
+                        {project.id === 'survivors'
+                          ? 'Presale Open'
+                          : project.id === 'blackhaven'
+                            ? 'ICO Registration'
+                            : 'Tapathon'}
+                      </h4>
                       {formatIncentiveDateRange(specialEvent?.start, specialEvent?.end) ? (
                         <div className="incentive-item__dates">
                           {formatIncentiveDateRange(specialEvent?.start, specialEvent?.end)}

@@ -313,7 +313,7 @@ const formatEventDateRange = (start: string, end?: string) => {
   const isAllDay = isSameDay && startTime === '12:00 AM' && endTime === '11:59 PM';
 
   if (isAllDay) {
-    return `${startLabel} · All day`;
+    return startLabel;
   }
   if (isSameDay) {
     return `${startLabel} · ${startTime}-${endTime}`;
@@ -327,7 +327,7 @@ const formatEventTimeRange = (start: string, end: string) => {
   const startTime = EVENT_TIME_FORMATTER.format(startDate);
   const endTime = EVENT_TIME_FORMATTER.format(endDate);
   const isAllDay = startTime === '12:00 AM' && endTime === '11:59 PM';
-  return isAllDay ? 'All day' : `${startTime}-${endTime}`;
+  return isAllDay ? '' : `${startTime}-${endTime}`;
 };
 
 const formatCountdown = (start: string, end?: string, nowMs?: number) => {
@@ -680,12 +680,18 @@ export const EventsBell = () => {
                           <span>{projectName}</span>
                         </div>
                         <div className="ethos-events-panel__phases">
-                          {event.phases.map((phase) => (
+                          {event.phases
+                            .filter((phase) => phase.label.toLowerCase() !== 'all day')
+                            .map((phase) => (
                             <div key={phase.label} className="ethos-events-panel__phase">
                               <span className="ethos-events-panel__phase-label">{phase.label}</span>
-                              <span className="ethos-events-panel__phase-time">
-                                {formatEventTimeRange(phase.start, phase.end)}
-                              </span>
+                              {phase.label.toLowerCase().startsWith('end at')
+                                ? null
+                                : formatEventTimeRange(phase.start, phase.end) && (
+                                    <span className="ethos-events-panel__phase-time">
+                                      {formatEventTimeRange(phase.start, phase.end)}
+                                    </span>
+                                  )}
                             </div>
                           ))}
                         </div>

@@ -132,6 +132,22 @@ export const APP_EVENTS: AppEvent[] = [
     ]
   },
   {
+    id: 'blackhaven-ico-registration',
+    title: 'ICO Registration',
+    projectId: 'blackhaven',
+    start: '2026-02-12T00:00:00Z',
+    end: '2026-02-17T19:00:00Z',
+    tweetUrl: 'https://x.com/blackhaven/status/2020962020699537421',
+    detailsUrl: 'https://x.com/blackhaven/status/2020962020699537421',
+    phases: [
+      {
+        label: 'End at 7PM UTC',
+        start: '2026-02-12T00:00:00Z',
+        end: '2026-02-17T19:00:00Z'
+      }
+    ]
+  },
+  {
     id: 'glitchy-bunnies-mint',
     title: 'Mint',
     projectId: 'glitchy-bunnies',
