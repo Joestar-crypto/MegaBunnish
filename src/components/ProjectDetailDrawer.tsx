@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { APP_EVENTS, type AppEvent } from './EthosTrustScores';
+import { APP_EVENTS, type AppEvent } from '../data/appEvents';
 import { useConstellation } from '../state/constellation';
 import { getCategoryColor } from '../utils/colors';
 
@@ -797,6 +797,22 @@ export const ProjectDetailDrawer = () => {
         return !Number.isNaN(endMs) && endMs >= nowTick;
       });
   }, [project, nowTick]);
+  const specialEvent = useMemo(() => {
+    if (!project || (project.id !== 'euphoria' && project.id !== 'survivors')) {
+      return null;
+    }
+    const targetId = project.id === 'euphoria' ? 'euphoria-tapathon' : 'survivors-presale-live-14d';
+    const event = APP_EVENTS.find((entry) => entry.id === targetId);
+    if (!event) {
+      return null;
+    }
+    const endValue = event.end ?? event.start;
+    const endMs = new Date(endValue).getTime();
+    if (Number.isNaN(endMs) || endMs < nowTick) {
+      return null;
+    }
+    return event;
+  }, [project, nowTick]);
   const activeIncentives = useMemo(() => {
     if (!project) {
       return [];
@@ -808,8 +824,9 @@ export const ProjectDetailDrawer = () => {
   }, [project, nowTick]);
   const hasLiveIncentives = activeIncentives.length > 0;
   const hasMintEvents = mintEvents.length > 0;
-  const incentiveSectionLabel = hasMintEvents ? 'Mint Date' : 'Active incentives';
-  const showIncentiveBell = hasLiveIncentives || hasMintEvents;
+  const hasSpecialEvent = Boolean(specialEvent);
+  const incentiveSectionLabel = hasMintEvents ? 'Mint Date' : hasSpecialEvent ? 'Event' : 'Active incentives';
+  const showIncentiveBell = hasLiveIncentives || hasMintEvents || hasSpecialEvent;
   const socialLinks = useMemo(
     () =>
       project
@@ -927,7 +944,42 @@ export const ProjectDetailDrawer = () => {
           </section>
           <section>
             <h3>{incentiveSectionLabel}</h3>
-            {hasMintEvents ? (
+            {hasSpecialEvent ? (
+              <ul className="incentive-list">
+                <li key={specialEvent?.id ?? 'euphoria-event'}>
+                  <div className="incentive-item__row">
+                    <div className="incentive-item__meta">
+                      <h4>Event</h4>
+                      {formatIncentiveDateRange(specialEvent?.start, specialEvent?.end) ? (
+                        <div className="incentive-item__dates">
+                          {formatIncentiveDateRange(specialEvent?.start, specialEvent?.end)}
+                        </div>
+                      ) : null}
+                    </div>
+                    {formatIncentiveCountdown(specialEvent?.end ?? specialEvent?.start, nowTick) ? (
+                      <div
+                        className="ethos-events-panel__countdown"
+                        aria-label={
+                          formatIncentiveCountdown(specialEvent?.end ?? specialEvent?.start, nowTick) ?? undefined
+                        }
+                      >
+                        {formatIncentiveCountdown(specialEvent?.end ?? specialEvent?.start, nowTick)}
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="incentive-item__actions">
+                    <a
+                      className="ethos-events-panel__action"
+                      href={specialEvent?.detailsUrl ?? specialEvent?.tweetUrl}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
+                      Details
+                    </a>
+                  </div>
+                </li>
+              </ul>
+            ) : hasMintEvents ? (
               <ul className="incentive-list">
                 {mintEvents.map((event) => (
                   <li key={event.id}>

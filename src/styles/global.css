@@ -1009,6 +1009,29 @@ select {
   gap: 0.35rem;
 }
 
+.chip--event-filter {
+  border-color: rgba(255, 93, 119, 0.75);
+  color: rgba(255, 93, 119, 0.95);
+}
+
+.chip--event-filter.active {
+  border-color: #ff5d77;
+  background: #ff5d77;
+  color: #0f1118;
+  box-shadow: 0 6px 20px rgba(255, 93, 119, 0.35);
+}
+
+.chip--event-filter .chip-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.chip-event-bell {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
 .chip-live-dot {
   width: 0.45rem;
   height: 0.45rem;
@@ -1017,7 +1040,6 @@ select {
   border: 1px solid rgba(4, 18, 13, 0.65);
   box-shadow: 0 0 10px rgba(99, 255, 180, 0.45);
 }
-
 
 .hud-stack {
   position: absolute;

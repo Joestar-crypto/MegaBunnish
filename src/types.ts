@@ -80,6 +80,7 @@ export type ConstellationState = {
   favoriteIds: string[];
   favoritesOnly: boolean;
   liveOnly: boolean;
+  eventOnly: boolean;
   jojoProfileId: string;
   ethosScores: Record<string, number>;
   ethosProfileLinks: Record<string, string | null>;

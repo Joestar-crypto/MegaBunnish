@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useConstellation } from '../state/constellation';
-import { APP_EVENTS } from './EthosTrustScores';
+import { APP_EVENTS } from '../data/appEvents';
 import { ConstellationProject, HighlightVariant } from '../types';
 import { getCategoryColor } from '../utils/colors';
 
@@ -721,6 +721,15 @@ export const ConstellationCanvas = ({
           })
           .map((event) => event.projectId)
       );
+      const specialEventIds = new Set(
+        APP_EVENTS.filter((event) => event.id === 'euphoria-tapathon' || event.id === 'survivors-presale-live-14d')
+          .filter((event) => {
+            const endValue = event.end ?? event.start;
+            const endMs = new Date(endValue).getTime();
+            return !Number.isNaN(endMs) && endMs >= nowMs;
+          })
+          .map((event) => event.projectId)
+      );
       const orbitMeta = new Map<
         string,
         { origin: { x: number; y: number }; radius: number; color: string }
@@ -959,7 +968,7 @@ export const ConstellationCanvas = ({
           const endMs = new Date(incentive.expiresAt).getTime();
           return !Number.isNaN(endMs) && endMs > nowMs;
         });
-        if (hasActiveIncentive || mintProjectIds.has(project.id)) {
+        if (hasActiveIncentive || mintProjectIds.has(project.id) || specialEventIds.has(project.id)) {
           const bellOffset = Math.max(radius * 0.7, radius - 8);
           drawIncentiveBell(context, x - bellOffset, y - bellOffset);
         }

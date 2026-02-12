@@ -115,7 +115,9 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
     favoritesOnly,
     toggleFavoritesOnly,
     liveOnly,
-    toggleLiveOnly
+    toggleLiveOnly,
+    eventOnly,
+    toggleEventOnly
   } = useConstellation();
   const totalProjects = projectPoolSize + NOISE_PROJECT_OFFSET;
   const hasFavorites = favoriteIds.length > 0;
@@ -244,6 +246,19 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
                 <span className="chip-label">
                   Live
                   <span className="chip-live-dot" aria-hidden="true" />
+                </span>
+              </button>
+              <button
+                className={
+                  eventOnly ? 'chip chip--category chip--event-filter active' : 'chip chip--category chip--event-filter'
+                }
+                type="button"
+                onClick={toggleEventOnly}
+                aria-pressed={eventOnly}
+              >
+                <span className="chip-label">
+                  Event
+                  <img className="chip-event-bell" src="/icons/bell.svg" alt="" aria-hidden="true" />
                 </span>
               </button>
             </div>
