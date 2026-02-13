@@ -253,12 +253,14 @@ const drawEthosBadge = (
   y: number,
   label: string,
   score: number,
-  logo: HTMLImageElement | null
+  logo: HTMLImageElement | null,
+  disableShadows = false
 ) => {
   context.save();
   context.font = ETHOS_BADGE_FONT;
   const textWidth = context.measureText(label).width;
   const badgeWidth = ETHOS_BADGE_PADDING_X * 2 + ETHOS_BADGE_ICON_GAP + textWidth;
+  const badgeHeight = ETHOS_BADGE_HEIGHT; // Fix usage of undefined variable if any, though ETHOS_BADGE_HEIGHT is constant
   const left = x - badgeWidth / 2;
   const palette = getEthosBadgePalette(score);
   const gradient = context.createLinearGradient(left, y, left + badgeWidth, y + ETHOS_BADGE_HEIGHT);
@@ -269,8 +271,12 @@ const drawEthosBadge = (
   context.fillStyle = gradient;
   context.strokeStyle = palette.stroke;
   context.lineWidth = 1;
-  context.shadowColor = palette.glow;
-  context.shadowBlur = 18;
+  
+  if (!disableShadows) {
+    context.shadowColor = palette.glow;
+    context.shadowBlur = 18;
+  }
+  
   context.fill();
   context.stroke();
   context.shadowBlur = 0;
@@ -790,8 +796,10 @@ export const ConstellationCanvas = ({
         context.strokeStyle = color;
         context.globalAlpha = 0.22;
         context.lineWidth = 1.25;
-        context.shadowColor = color;
-        context.shadowBlur = 14;
+        if (!isSmallScreen) {
+          context.shadowColor = color;
+          context.shadowBlur = 14;
+        }
         context.arc(center.x, center.y, screenRadius, 0, Math.PI * 2);
         context.stroke();
         context.restore();
@@ -966,7 +974,7 @@ export const ConstellationCanvas = ({
             labelOffset = radius + ETHOS_BADGE_GAP + badgeSprite.height + 8;
           } else {
             const formattedScore = ethosScoreFormatter.format(scoreValue);
-            drawEthosBadge(context, x, badgeTop, formattedScore, scoreValue, ethosLogo);
+            drawEthosBadge(context, x, badgeTop, formattedScore, scoreValue, ethosLogo, isSmallScreen);
             labelOffset = radius + ETHOS_BADGE_GAP + ETHOS_BADGE_HEIGHT + 8;
           }
         }
