@@ -129,77 +129,79 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
 
   return (
     <>
-      <div
-        className={`trait-dock ${isInteracting ? 'ui-panel--hidden' : ''} ${
-          showJojoProfiles ? 'trait-dock--jojo-active' : ''
-        }`}
-      >
-        <div className="trait-menu" role="group" aria-label="Signal traits">
-          {SPECIAL_FILTERS.map(({ key, label, hint, Icon, iconSrc }) => {
-            const traitStyles = getTraitStyles(key, filters[key]);
-            return (
-              <button
-                key={key}
-                type="button"
-                className={buildTraitClassName(key, filters[key])}
-                onClick={() => toggleFilter(key)}
-                aria-pressed={filters[key]}
-                style={traitStyles.button}
-              >
-                <span className="chip__leading-icon" style={traitStyles.icon}>
-                  {iconSrc ? <img src={iconSrc} alt="" aria-hidden /> : Icon ? <Icon /> : null}
-                </span>
-                <span className="chip__stack">
-                  <span className="chip-label">{label}</span>
-                  {hint ? <span className="chip-hint">{hint}</span> : null}
-                </span>
-              </button>
-            );
-          })}
-          <button
-            type="button"
-            className={favoritesOnly ? 'chip chip--trait chip--favorites active' : 'chip chip--trait chip--favorites'}
-            onClick={toggleFavoritesOnly}
-            aria-pressed={favoritesOnly}
-            disabled={favoritesDisabled}
-            title="To add favorites, open a project and tap the star in its details."
-            style={
-              favoritesOnly
-                ? { backgroundColor: '#ffd84d', borderColor: '#ffd84d', color: '#05060f' }
-                : undefined
-            }
-          >
-            <span className="chip__leading-icon">
-              <FavoriteIcon />
-            </span>
-            <span className="chip__stack">
-              <span className="chip-label">Favorites</span>
-              <span className="chip-hint">{hasFavorites ? `${favoriteIds.length} saved` : 'Add stars'}</span>
-            </span>
-          </button>
-          <EventsBell />
-        </div>
-      </div>
-      {showJojoProfiles ? (
+      <div className={`trait-dock-wrapper ${isInteracting ? 'ui-panel--hidden' : ''}`}>
         <div
-          className={`jojo-profile-menu ${isInteracting ? 'ui-panel--hidden' : ''}`}
-          role="group"
-          aria-label="Profile options"
+          className={`trait-dock ${
+            showJojoProfiles ? 'trait-dock--jojo-active' : ''
+          }`}
         >
-          {JOJO_PROFILES.map((profile) => (
+          <div className="trait-menu" role="group" aria-label="Signal traits">
+            {SPECIAL_FILTERS.map(({ key, label, hint, Icon, iconSrc }) => {
+              const traitStyles = getTraitStyles(key, filters[key]);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={buildTraitClassName(key, filters[key])}
+                  onClick={() => toggleFilter(key)}
+                  aria-pressed={filters[key]}
+                  style={traitStyles.button}
+                >
+                  <span className="chip__leading-icon" style={traitStyles.icon}>
+                    {iconSrc ? <img src={iconSrc} alt="" aria-hidden /> : Icon ? <Icon /> : null}
+                  </span>
+                  <span className="chip__stack">
+                    <span className="chip-label">{label}</span>
+                    {hint ? <span className="chip-hint">{hint}</span> : null}
+                  </span>
+                </button>
+              );
+            })}
             <button
-              key={profile.id}
               type="button"
-              className={profile.id === jojoProfileId ? 'jojo-profile-button active' : 'jojo-profile-button'}
-              onClick={() => setJojoProfile(profile.id)}
-              aria-pressed={profile.id === jojoProfileId}
+              className={favoritesOnly ? 'chip chip--trait chip--favorites active' : 'chip chip--trait chip--favorites'}
+              onClick={toggleFavoritesOnly}
+              aria-pressed={favoritesOnly}
+              disabled={favoritesDisabled}
+              title="To add favorites, open a project and tap the star in its details."
+              style={
+                favoritesOnly
+                  ? { backgroundColor: '#ffd84d', borderColor: '#ffd84d', color: '#05060f' }
+                  : undefined
+              }
             >
-              <span className="jojo-profile-button__label">{profile.label}</span>
-              {profile.hint ? <span className="jojo-profile-button__hint">{profile.hint}</span> : null}
+              <span className="chip__leading-icon">
+                <FavoriteIcon />
+              </span>
+              <span className="chip__stack">
+                <span className="chip-label">Favorites</span>
+                <span className="chip-hint">{hasFavorites ? `${favoriteIds.length} saved` : 'Add stars'}</span>
+              </span>
             </button>
-          ))}
+            <EventsBell />
+          </div>
         </div>
-      ) : null}
+        {showJojoProfiles ? (
+          <div
+            className="jojo-profile-menu"
+            role="group"
+            aria-label="Profile options"
+          >
+            {JOJO_PROFILES.map((profile) => (
+              <button
+                key={profile.id}
+                type="button"
+                className={profile.id === jojoProfileId ? 'jojo-profile-button active' : 'jojo-profile-button'}
+                onClick={() => setJojoProfile(profile.id)}
+                aria-pressed={profile.id === jojoProfileId}
+              >
+                <span className="jojo-profile-button__label">{profile.label}</span>
+                {profile.hint ? <span className="jojo-profile-button__hint">{profile.hint}</span> : null}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
       <div className={`category-dock ${isInteracting ? 'ui-panel--hidden' : ''}`}>
         <aside className="category-rail" aria-label="Categories">
           <p className="category-rail__section-heading">Sectors</p>

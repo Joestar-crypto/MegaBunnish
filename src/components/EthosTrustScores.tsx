@@ -416,7 +416,7 @@ const fetchAllEthosApps = async (): Promise<EthosApp[]> => {
     .sort((a, b) => b.trustScore - a.trustScore);
 };
 
-export const EthosTrustScores = () => {
+export const EthosTrustScores = ({ isInteracting = false }: { isInteracting?: boolean }) => {
   const [areScoresVisible, setScoresVisible] = useState(false);
   const [apps, setApps] = useState<EthosApp[]>([]);
   const hasFetchedRef = useRef(false);
@@ -530,7 +530,7 @@ export const EthosTrustScores = () => {
   };
 
   return (
-    <div className="ethos-trust-widget">
+    <div className={`ethos-trust-widget ${isInteracting ? 'ui-panel--hidden' : ''}`}>
       <button
         type="button"
         className="ethos-trust-button"

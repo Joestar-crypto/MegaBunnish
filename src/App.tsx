@@ -94,7 +94,7 @@ const AppContent = () => {
             <div className={`constellation-hud ${isInteracting ? 'ui-panel--hidden' : ''}`}>
               <ConstellationHUD onOpenDashboards={openDashboards} />
             </div>
-            <EthosTrustScores />
+            <EthosTrustScores isInteracting={isInteracting} />
           </div>
         </div>
         <div className="immersive-stage__rail">

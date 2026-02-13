@@ -8,11 +8,21 @@
   --accent-strong: #ff9a62;
   --success: #6fffc8;
   --danger: #ff6f91;
-  --ref-w: 1440px;
-  --ref-h: 900px;
-  --scale: clamp(0.7, min(calc(100vw / var(--ref-w)), calc(100vh / var(--ref-h))), 1);
   font-size: 16px;
 }
+
+@media (max-width: 1024px) {
+  :root {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    font-size: 14px;
+  }
+}
+
 
 * {
   box-sizing: border-box;
@@ -44,14 +54,12 @@ select {
 
 .app-shell {
   position: relative;
-  width: calc(100% / var(--scale));
-  height: calc(100% / var(--scale));
+  width: 100vw;
+  height: 100vh;
   min-height: 0;
   overflow: hidden;
   padding: 0;
   background: #010106;
-  transform: scale(var(--scale));
-  transform-origin: top left;
 }
 
 .app-shell--immersive {
@@ -88,7 +96,7 @@ select {
   position: absolute;
   inset: 0;
   z-index: 2;
-  padding: clamp(1.25rem, 4vw, 3rem);
+  padding: 2rem;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -97,8 +105,15 @@ select {
   text-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
 }
 
+@media (max-width: 768px) {
+  .hero-overlay {
+    padding: 1.25rem;
+  }
+}
+
 .hero-overlay__content {
-  max-width: clamp(280px, 36vw, 520px);
+  max-width: 520px;
+  width: 100%;
   text-align: right;
   margin-left: auto;
   display: flex;
@@ -108,12 +123,32 @@ select {
   pointer-events: auto;
 }
 
+@media (max-width: 480px) {
+  .hero-overlay__content {
+    max-width: 100%;
+    align-items: center; /* Center align on mobile portrait? Or stay right? */
+    text-align: right;
+  }
+}
+
 .hero-overlay__content h1 {
   margin: 0.2rem 0 0;
-  font-size: clamp(1.25rem, 4vw, 2.8rem);
+  font-size: 2.5rem;
   line-height: 1.05;
   color: #e7e9ff;
   font-family: 'Russo One', 'Stalinist One', 'Space Grotesk', 'Segoe UI', Tahoma, sans-serif;
+}
+
+@media (max-width: 768px) {
+  .hero-overlay__content h1 {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-overlay__content h1 {
+    font-size: 1.5rem;
+  }
 }
 
 .hero-overlay__title {
@@ -126,8 +161,21 @@ select {
 
 .hero-overlay__title img {
   display: block;
-  width: clamp(200px, 28vw, 360px);
+  width: 300px;
   height: auto;
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .hero-overlay__title img {
+    width: 240px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-overlay__title img {
+    width: 180px;
+  }
 }
 
 .hero-overlay__content .eyebrow {
@@ -225,23 +273,46 @@ select {
   transition: opacity 0.35s ease;
 }
 
-.trait-dock,
-.category-dock {
+.trait-dock-wrapper {
   position: absolute;
-  left: clamp(0.75rem, 2vw, 1.75rem);
-  z-index: 4;
+  top: 1rem;
+  left: 1rem;
+  max-width: calc(100vw - 2rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+  z-index: 6;
   pointer-events: none;
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .trait-dock {
-  top: clamp(0.75rem, 3vw, 2.5rem);
+  position: relative;
+  top: auto;
+  left: auto;
   width: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-  align-items: flex-start;
-  z-index: 6;
+  max-width: 100%;
+  pointer-events: auto;
+}
+
+.category-dock {
+  position: absolute;
+  left: 1rem;
+  z-index: 4;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+@media (max-width: 768px) {
+  .trait-dock-wrapper {
+    top: 0.75rem;
+    left: 0.75rem;
+    max-width: calc(100vw - 1.5rem);
+  }
+  .category-dock {
+    left: 0.75rem;
+  }
 }
 
 .ethos-trust-widget {
@@ -736,9 +807,42 @@ select {
 
 
 .category-dock {
-  top: calc(clamp(0.75rem, 3vw, 2.5rem) + 5rem);
-  bottom: calc(clamp(0.6rem, 3vw, 2.25rem) + 4.2rem);
-  width: clamp(100px, 11vw, 160px);
+  top: 6rem;
+  bottom: 6rem;
+  width: 140px;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .category-dock {
+    width: 120px;
+    top: 5rem;
+    bottom: 5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .category-dock {
+    /* Move to bottom horizontal rail on small mobile? */
+    /* Or keep it small on the left? */
+    /* Let's keep it left but lighter */
+    width: auto;
+    left: 0.5rem;
+    top: auto;
+    bottom: 4rem; /* Above any bottom controls */
+    max-height: 40vh;
+  }
+  
+  .category-rail {
+     width: auto;
+     border-radius: 0.75rem;
+  }
+  
+  .category-rail__list .chip--category {
+     padding: 0.25rem 0.5rem;
+     font-size: 0.7rem;
+  }
 }
 
 .ui-panel--hidden {
@@ -854,22 +958,28 @@ select {
   flex-wrap: wrap;
   gap: 0.45rem;
   padding: 0;
+  margin-left: 160px;
   background: transparent;
   border: none;
   backdrop-filter: none;
-  max-width: 360px;
-  position: absolute;
-  top: calc(clamp(0.75rem, 3vw, 2.5rem) + 4.75rem);
+  max-width: 100%;
+  position: relative;
+  top: auto;
   left: auto;
-  right: calc(
-    100% - (
-      clamp(0.75rem, 2vw, 1.75rem) +
-        clamp(120px, 14vw, 190px)
-    ) -
-    clamp(10.5rem, 16vw, 15rem)
-  );
-  z-index: 6;
-  justify-content: flex-end;
+  right: auto;
+  justify-content: flex-start;
+}
+
+@media (max-width: 768px) {
+  .jojo-profile-menu {
+    margin-left: 135px;
+  }
+}
+
+@media (max-width: 480px) {
+  .jojo-profile-menu {
+    margin-left: 0;
+  }
 }
 
 
@@ -956,13 +1066,20 @@ select {
   flex: 1 1 auto;
   min-height: 0;
   max-height: none;
-  overflow-y: visible;
+  overflow-y: auto;
   padding-right: 0;
 }
 
 .category-rail button {
   width: 100%;
   flex: 1 1 auto;
+  min-height: 0;
+}
+
+.category-rail__list .chip--category {
+  font-size: clamp(0.65rem, 0.7rem + 0.1vw, 0.8rem);
+  padding: clamp(0.2rem, 0.25rem + 0.1vw, 0.35rem) clamp(0.55rem, 0.65rem + 0.2vw, 0.9rem);
+  line-height: 1.1;
 }
 
 .category-rail__list::-webkit-scrollbar {
@@ -1028,13 +1145,22 @@ select {
 
 .hud-stack {
   position: absolute;
-  top: clamp(0.75rem, 3vw, 2.25rem);
-  right: clamp(0.75rem, 3vw, 2.5rem);
+  top: 1rem;
+  right: 1rem;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 0.4rem;
   z-index: 7;
+  max-width: 50vw; /* Prevent it from taking over the screen on desktop */
+}
+
+@media (max-width: 768px) {
+  .hud-stack {
+    top: 0.75rem;
+    right: 0.75rem;
+    gap: 0.35rem;
+  }
 }
 
 .constellation-hud {
@@ -1850,6 +1976,49 @@ select {
   display: block;
 }
 
+@media (max-width: 600px) {
+  .chip--trait {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  .chip__leading-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .chip-hint {
+    font-size: 0.65rem;
+  }
+
+  .trait-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    max-width: 100%; /* Allow it to fill the available space in the dock */
+  }
+
+  /* Ensure the dock itself doesn't overlap the right side */
+  .trait-dock {
+    max-width: calc(100vw - 4rem); /* Simple constraint */
+  }
+}
+
+@media (max-width: 480px) {
+  .trait-dock {
+    max-width: calc(100vw - 3.5rem);
+  }
+  
+  /* On very small screens, maybe hide hints to save space? */
+  .chip-hint {
+    display: none;
+  }
+  
+  .chip--trait {
+    padding: 0.35rem 0.5rem;
+  }
+}
+
 .chip__stack {
   display: flex;
   flex-direction: column;
@@ -1965,10 +2134,10 @@ select {
 
 .detail-drawer {
   position: absolute;
-  top: clamp(1rem, 4vw, 2.5rem);
-  right: clamp(1rem, 4vw, 2.5rem);
-  bottom: clamp(1rem, 4vw, 2.5rem);
-  width: clamp(260px, 24vw, 360px);
+  top: 1rem;
+  right: 1rem;
+  bottom: 1rem;
+  width: 360px;
   background: rgba(8, 11, 25, 0.95);
   border-radius: 1.25rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1983,6 +2152,29 @@ select {
   pointer-events: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(78, 241, 255, 0.7) rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 768px) {
+  .detail-drawer {
+    width: 320px;
+  }
+}
+
+@media (max-width: 480px) {
+  .detail-drawer {
+    width: 100%;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 80vh; /* Bottom sheet style */
+    border-radius: 1.25rem 1.25rem 0 0;
+    transform: translateY(0);
+  }
+  
+  .detail-drawer.is-hidden {
+    transform: translateY(100%);
+  }
 }
 
 .detail-drawer::-webkit-scrollbar {
@@ -2017,6 +2209,15 @@ select {
   opacity: 1;
   visibility: visible;
   transform: translateX(0);
+}
+
+@media (max-width: 480px) {
+  .detail-drawer.is-hidden {
+    transform: translateY(100%);
+  }
+  .detail-drawer.is-active {
+    transform: translateY(0);
+  }
 }
 
 .detail-drawer .summary {

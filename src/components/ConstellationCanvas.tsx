@@ -365,8 +365,8 @@ const useImageCache = (projects: ConstellationProject[]) => {
   return cache;
 };
 
-const generateStars = () =>
-  Array.from({ length: 260 }, () => ({
+const generateStars = (maxStars: number) =>
+  Array.from({ length: maxStars }, () => ({
     x: Math.random(),
     y: Math.random(),
     radius: Math.random() * 1.4 + 0.2,
@@ -452,9 +452,14 @@ export const ConstellationCanvas = ({
 }: ConstellationCanvasProps = {}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [pointerState, setPointerState] = useState<PointerState>(defaultPointerState);
-  const [devicePixelRatioState, setDevicePixelRatioState] = useState(() =>
-    (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1
-  );
+  const [devicePixelRatioState, setDevicePixelRatioState] = useState(() => {
+    if (typeof window === 'undefined') return 1;
+    // Cap pixel ratio at 2x to save performance on high-density mobile screens
+    // If it's a small screen (likely mobile), maybe even cap at 1.5x
+    const isSmallScreen = window.innerWidth < 768;
+    const ratio = window.devicePixelRatio || 1;
+    return Math.min(ratio, isSmallScreen ? 1.5 : 2);
+  });
   const pinchStateRef = useRef<PinchState>({
     activePointers: new Map(),
     originDistance: 0,
@@ -462,7 +467,13 @@ export const ConstellationCanvas = ({
     focus: null,
     isPinching: false
   });
-  const stars = useMemo(generateStars, []);
+  const stars = useMemo(() => {
+    // Generate fewer stars on mobile
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return generateStars(100);
+    }
+    return generateStars(220); // Slightly reduced from 260
+  }, []);
   const {
     projects,
     camera,
@@ -526,7 +537,9 @@ export const ConstellationCanvas = ({
       return;
     }
     const handleResize = () => {
-      setDevicePixelRatioState(window.devicePixelRatio || 1);
+      const isSmallScreen = window.innerWidth < 768;
+      const ratio = window.devicePixelRatio || 1;
+      setDevicePixelRatioState(Math.min(ratio, isSmallScreen ? 1.5 : 2));
     };
     window.addEventListener('resize', handleResize);
     return () => {
@@ -679,8 +692,9 @@ export const ConstellationCanvas = ({
         ethosBadgeSprites: renderBadgeSprites
       } = renderInputsRef.current;
       const isInteractionMode = interactionActiveRef.current;
-      const isDensityMode = renderProjects.length > 70;
-      const isPerformanceMode = isInteractionMode || isDensityMode;
+      const isSmallScreen = window.innerWidth < 768;
+      const isDensityMode = renderProjects.length > (isSmallScreen ? 30 : 70);
+      const isPerformanceMode = isInteractionMode || isDensityMode || isSmallScreen;
       const starStep = isPerformanceMode ? 3 : 1;
 
       const width = canvas.width / dpr;
@@ -857,7 +871,8 @@ export const ConstellationCanvas = ({
         const scoreValue = renderEthosScores[project.id];
         const meetsThreshold =
           typeof scoreValue === 'number' && (renderScoreThreshold === null || scoreValue >= renderScoreThreshold);
-        const shouldShowEthosBadge = renderOverlayActive && meetsThreshold && !isInteractionMode;
+        // Keep Ethos badges visible even during interaction if they are active
+        const shouldShowEthosBadge = renderOverlayActive && meetsThreshold;
 
         context.beginPath();
         context.fillStyle = 'rgba(255, 255, 255, 0.08)';
