@@ -1224,22 +1224,6 @@
     ]
   },
   {
-    "id": "gmega",
-    "name": "gMega",
-    "categories": [
-      "Meme",
-      "Native"
-    ],
-    "networks": [
-      "MegaETH"
-    ],
-    "links": {
-      "twitter": "https://x.com/gMegaEth",
-      "telegram": "https://t.me/gMegaEth_tg"
-    },
-    "logo": "/logos/gMega.webp"
-  },
-  {
     "id": "gearbox",
     "name": "Gearbox",
     "categories": [
@@ -1480,6 +1464,7 @@
       "MegaETH"
     ],
     "links": {
+      "site": "https://offshoreprotocol.fun?ref=139",
       "twitter": "https://x.com/OffshoreOnMega"
     },
     "logo": "/logos/Offshore.webp",

@@ -375,8 +375,8 @@ const generateStars = (maxStars: number) =>
   Array.from({ length: maxStars }, () => ({
     x: Math.random(),
     y: Math.random(),
-    radius: Math.random() * 1.4 + 0.2,
-    speed: Math.random() * 0.4 + 0.2,
+    radius: Math.pow(Math.random(), 2) * 1.5 + 0.4, // Non-linear distribution for depth effect
+    speed: Math.random() * 0.3 + 0.05,
     twinkle: Math.random() * Math.PI * 2
   }));
 
@@ -478,7 +478,7 @@ export const ConstellationCanvas = ({
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       return generateStars(100);
     }
-    return generateStars(220); // Slightly reduced from 260
+    return generateStars(600); // Significantly increased for galaxy effect on desktop
   }, []);
   const {
     projects,

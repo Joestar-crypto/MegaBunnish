@@ -580,12 +580,6 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
     ],
     [textSegment('If they nail UX it could quickly become the native mint hub.')]
   ],
-  gmega: [
-    [
-      textSegment('gMega is a gamified memecoin with mini games that plans to airdrop the $GMEGA token to users.')
-    ],
-    [textSegment("I just discovered them, and as always with memecoins you need to be careful with this type of asset.")]
-  ],
   gearbox: [
     [
       textSegment('Gearbox is a lending infra for tokens and RWAs that used to sit near $400M TVL and still has about $60M while deploying on MegaETH.')

@@ -169,14 +169,6 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     url: 'https://app.ethos.network/profile/x/_canonic'
   },
   {
-    projectId: 'gmega',
-    handle: 'gMegaEth',
-    score: 950,
-    tier: 'Questionable',
-    displayName: 'gMega',
-    url: 'https://app.ethos.network/profile/x/gMegaEth'
-  },
-  {
     projectId: 'megarebel',
     handle: 'MegaRebelNFT',
     score: 1229,

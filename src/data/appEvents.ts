@@ -15,6 +15,37 @@ export type AppEvent = {
 
 export const APP_EVENTS: AppEvent[] = [
   {
+    id: 'offshore-presale',
+    title: 'Presale Open',
+    projectId: 'offshore',
+    start: '2026-02-14T12:00:00-05:00',
+    end: '2026-02-19T16:00:00-05:00',
+    tweetUrl: 'https://x.com/OffshoreOnMega',
+    detailsUrl: 'https://offshoreprotocol.fun?ref=139',
+    phases: [
+      {
+        label: 'Presale Open',
+        start: '2026-02-14T12:00:00-05:00',
+        end: '2026-02-19T16:00:00-05:00'
+      }
+    ]
+  },
+  {
+    id: 'alzena-nft-mint',
+    title: 'NFT Mint',
+    projectId: 'alzena',
+    start: '2026-02-18T00:00:00-05:00',
+    end: '2026-02-18T23:59:00-05:00',
+    tweetUrl: 'https://x.com/alzenaworld',
+    phases: [
+      {
+        label: 'All day',
+        start: '2026-02-18T00:00:00-05:00',
+        end: '2026-02-18T23:59:00-05:00'
+      }
+    ]
+  },
+  {
     id: 'meganacci-mint-live',
     title: 'Mint live',
     projectId: 'meganacci',
