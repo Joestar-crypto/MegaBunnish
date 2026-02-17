@@ -233,6 +233,14 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     url: 'https://app.ethos.network/profile/x/AveForge'
   },
   {
+    projectId: 'wink-realm',
+    handle: 'Wink_Realm',
+    score: 1236,
+    tier: 'Neutral',
+    displayName: 'Wink Realm',
+    url: 'https://app.ethos.network/profile/x/Wink_Realm'
+  },
+  {
     projectId: 'meridian',
     handle: 'mrdn_finance',
     score: 950,

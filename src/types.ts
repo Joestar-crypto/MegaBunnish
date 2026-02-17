@@ -27,6 +27,7 @@ export type RawProject = {
   isLive?: boolean;
   incentives?: Incentive[];
   linkedIds?: string[];
+  jojoInsight?: string;
 };
 
 export type SpecialFilters = {

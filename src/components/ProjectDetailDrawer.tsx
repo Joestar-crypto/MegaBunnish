@@ -69,6 +69,37 @@ const formatIncentiveCountdown = (end?: string | null, nowMs?: number) => {
   return `Ends in ${parts.join(' ')}`;
 };
 
+const isTwitterHost = (host: string) => host === 'twitter.com' || host === 'x.com';
+
+const extractTwitterHandleFromUrl = (link?: string | null) => {
+  if (!link) {
+    return null;
+  }
+  try {
+    const url = new URL(link);
+    const host = url.hostname.replace(/^www\./, '').toLowerCase();
+    if (!isTwitterHost(host)) {
+      return null;
+    }
+    const segments = url.pathname.split('/').filter(Boolean);
+    if (!segments.length) {
+      return null;
+    }
+    const trimmed = segments[0].replace(/^@+/, '').trim();
+    return trimmed || null;
+  } catch {
+    return null;
+  }
+};
+
+const buildEthosProfileUrlFromTwitter = (link?: string | null) => {
+  const handle = extractTwitterHandleFromUrl(link);
+  if (!handle) {
+    return null;
+  }
+  return `https://app.ethos.network/profile/x/${handle}`;
+};
+
 type DialogueSegment =
   | { kind: 'text'; content: string }
   | { kind: 'link'; label: string; targetId: string };
@@ -722,10 +753,19 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
   ]
 };
 
-const JojoOracle = ({ projectId, onNavigate }: { projectId: string; onNavigate: (targetId: string) => void }) => {
+const JojoOracle = ({
+  projectId,
+  onNavigate,
+  fallbackInsight
+}: {
+  projectId: string;
+  onNavigate: (targetId: string) => void;
+  fallbackInsight?: string | null;
+}) => {
   const script = JOJO_DIALOGUE[projectId];
+  const fallbackText = fallbackInsight?.trim();
 
-  if (!script) {
+  if (!script && !fallbackText) {
     return null;
   }
 
@@ -737,24 +777,28 @@ const JojoOracle = ({ projectId, onNavigate }: { projectId: string; onNavigate: 
       <div className="jojo-bubble">
         <p className="jojo-title">Jojo's Insight</p>
         <div className="jojo-dialogue">
-          {script.map((block, blockIndex) => (
-            <p key={`jojo-line-${blockIndex}`}>
-              {block.map((segment, segmentIndex) =>
-                segment.kind === 'text' ? (
-                  <span key={`text-${segmentIndex}`}>{segment.content}</span>
-                ) : (
-                  <button
-                    key={`link-${segmentIndex}-${segment.label}`}
-                    type="button"
-                    className="jojo-link"
-                    onClick={() => onNavigate(segment.targetId)}
-                  >
-                    {segment.label}
-                  </button>
-                )
-              )}
-            </p>
-          ))}
+          {script
+            ? script.map((block, blockIndex) => (
+                <p key={`jojo-line-${blockIndex}`}>
+                  {block.map((segment, segmentIndex) =>
+                    segment.kind === 'text' ? (
+                      <span key={`text-${segmentIndex}`}>{segment.content}</span>
+                    ) : (
+                      <button
+                        key={`link-${segmentIndex}-${segment.label}`}
+                        type="button"
+                        className="jojo-link"
+                        onClick={() => onNavigate(segment.targetId)}
+                      >
+                        {segment.label}
+                      </button>
+                    )
+                  )}
+                </p>
+              ))
+            : fallbackText
+              ? [<p key="jojo-fallback">{fallbackText}</p>]
+              : null}
         </div>
       </div>
     </section>
@@ -778,7 +822,9 @@ export const ProjectDetailDrawer = () => {
   );
   const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
   const isFavorite = project ? favoriteSet.has(project.id) : false;
-  const ethosProfileUrl = project ? ethosProfileLinks[project.id] ?? null : null;
+  const ethosProfileUrl = project
+    ? ethosProfileLinks[project.id] ?? buildEthosProfileUrlFromTwitter(project.links?.twitter)
+    : null;
   const mintEvents = useMemo(() => {
     if (!project) {
       return [] as AppEvent[];
@@ -924,7 +970,7 @@ export const ProjectDetailDrawer = () => {
               </div>
             </section>
           ) : null}
-          <JojoOracle projectId={project.id} onNavigate={selectProject} />
+          <JojoOracle projectId={project.id} onNavigate={selectProject} fallbackInsight={project.jojoInsight} />
           <section>
             <h3>Categories</h3>
             <div className="badge-row">
