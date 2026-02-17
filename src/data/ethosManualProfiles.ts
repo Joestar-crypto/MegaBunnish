@@ -161,6 +161,46 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     url: 'https://app.ethos.network/profile/x/GainsNetwork_io'
   },
   {
+    projectId: 'bungee',
+    handle: 'BungeeExchange',
+    score: 1484,
+    tier: 'Known',
+    displayName: 'Bungee',
+    url: 'https://app.ethos.network/profile/x/BungeeExchange'
+  },
+  {
+    projectId: 'avail',
+    handle: 'AvailProject',
+    score: 1294,
+    tier: 'Neutral',
+    displayName: 'Avail',
+    url: 'https://app.ethos.network/profile/x/AvailProject'
+  },
+  {
+    projectId: 'dotmegadomains',
+    handle: 'dotmegadomains',
+    score: 1200,
+    tier: 'Neutral',
+    displayName: 'MegaDomains',
+    url: 'https://app.ethos.network/profile/x/dotmegadomains'
+  },
+  {
+    projectId: 'mega-punk',
+    handle: 'Megaeth_Punks',
+    score: 970,
+    tier: 'Questionable',
+    displayName: 'MegaPunk',
+    url: 'https://app.ethos.network/profile/x/Megaeth_Punks'
+  },
+  {
+    projectId: 'jumper',
+    handle: 'JumperExchange',
+    score: 1724,
+    tier: 'Established',
+    displayName: 'Jumper',
+    url: 'https://app.ethos.network/profile/x/JumperExchange'
+  },
+  {
     projectId: 'canonic',
     handle: '_canonic',
     score: 950,

@@ -10,7 +10,10 @@ const accentOverrides: Record<string, string> = {
   Meme: '#ffd966',
   Gambling: '#ff6f91',
   'Prediction M.': '#c4a2ff',
-  AI: '#7ad6ff'
+  AI: '#7ad6ff',
+  Bridge: '#6ad5ff',
+  RWA: '#f2b86e',
+  'Trading bot': '#ffa0b6'
 };
 
 const generatedColorCache: Record<string, string> = {};

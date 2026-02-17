@@ -196,7 +196,7 @@
     "categories": [
       "Jojo",
       "Megamafia",
-      "DeFi",
+      "RWA",
       "Native"
     ],
     "networks": [
@@ -279,7 +279,7 @@
     ],
     "links": {
       "site": "https://www.wcm.inc/",
-      "twitter": "https://x.com/worldmarkets_io"
+      "twitter": "https://x.com/worldmarketsinc"
     },
     "logo": "/logos/Worldmarkets.webp"
   },
@@ -656,7 +656,7 @@
     "id": "mevx",
     "name": "MEVX",
     "categories": [
-      "Tools"
+      "Trading bot"
     ],
     "networks": [
       "MegaETH"
@@ -791,7 +791,7 @@
     "id": "based",
     "name": "Based",
     "categories": [
-      "Tools"
+      "Trading bot"
     ],
     "networks": [
       "MegaETH"
@@ -839,7 +839,7 @@
     "id": "priority",
     "name": "Priority",
     "categories": [
-      "Tools",
+      "Trading bot",
       "Native"
     ],
     "networks": [
@@ -946,7 +946,7 @@
     "name": "Telis",
     "categories": [
       "Jojo",
-      "Tools",
+      "Bridge",
       "Native"
     ],
     "networks": [
@@ -1028,7 +1028,7 @@
     "name": "Tulpea",
     "categories": [
       "Jojo",
-      "DeFi",
+      "RWA",
       "Native"
     ],
     "networks": [
@@ -1671,6 +1671,107 @@
       "telegram": "https://t.me/+kh4RQgAcmZAzYWQx"
     },
     "logo": "/logos/Pumpparty.webp"
+  },
+  {
+    "id": "wink-realm",
+    "name": "Wink Realm",
+    "categories": [
+      "Gaming",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/Wink_Realm"
+    },
+    "logo": "/logos/WinkRealm.webp",
+    "jojoInsight": "New game and NFT collection cooked by my bro Chef Goose, clearly one of the upcoming things I'm watching"
+  },
+  {
+    "id": "dotmegadomains",
+    "name": "MegaDomains",
+    "categories": [
+      "Tools",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/dotmegadomains",
+      "site": "https://dotmega.domains/"
+    },
+    "logo": "/logos/MegaDomains.webp",
+    "jojoInsight": "Cooked by the best bread in the world, MegaDomains lets you own .mega domains, this could become very useful for the eco later on"
+  },
+  {
+    "id": "mega-punk",
+    "name": "MegaPunk",
+    "categories": [
+      "Gambling",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/Megaeth_Punks",
+      "site": "https://megapunks.org/",
+      "discord": "https://discord.com/invite/ZsKZD3XrKg"
+    },
+    "logo": "/logos/MegaPunk.webp",
+    "jojoInsight": "MegaPunk is an NFT collection and gambling platform, not much more to say"
+  },
+  {
+    "id": "bungee",
+    "name": "Bungee",
+    "categories": [
+      "Bridge"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/BungeeExchange",
+      "site": "https://www.bungee.exchange/",
+      "discord": "https://discord.com/invite/fVFRJwu6bv"
+    },
+    "logo": "/logos/Bungee.webp",
+    "jojoInsight": "Bungee is probably your cheapest bridge option, real chads ngl"
+  },
+  {
+    "id": "avail",
+    "name": "Avail",
+    "categories": [
+      "Bridge"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/AvailProject",
+      "site": "https://availproject.org/",
+      "telegram": "https://t.me/AvailCommunity"
+    },
+    "logo": "/logos/Avail.webp",
+    "jojoInsight": "Another Bridge for Megaeth, never tried tbh so can't comment on that one"
+  },
+  {
+    "id": "jumper",
+    "name": "Jumper",
+    "categories": [
+      "Bridge"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/JumperExchange",
+      "site": "https://jumper.exchange/fr"
+    },
+    "logo": "/logos/Jumper.webp",
+    "jojoInsight": "Everyone knows Jumper, I don't know if it's the cheapest option but it's definitely the easiest one for most"
   }
 ]
 

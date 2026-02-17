@@ -522,6 +522,8 @@ export const ConstellationCanvas = ({
   const categoryRingsRef = useRef<
     Array<{ category: string; origin: { x: number; y: number }; radius: number }>
   >([]);
+  const mintProjectIdsRef = useRef<Set<string>>(new Set());
+  const specialEventIdsRef = useRef<Set<string>>(new Set());
   const interactionActiveRef = useRef(false);
   const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
   const ethosScoreFormatter = useMemo(() => new Intl.NumberFormat('fr-FR'), []);
@@ -601,6 +603,84 @@ export const ConstellationCanvas = ({
     });
   }, [ethosScores, ethosScoreFormatter, ethosLogo, devicePixelRatioState, ethosLogoVersion]);
 
+  const categoryOrbitData = useMemo(() => {
+    const orbitMeta = new Map<
+      string,
+      { origin: { x: number; y: number }; radius: number; color: string }
+    >();
+    visibleProjects.forEach((project) => {
+      const key = project.primaryCategory;
+      const origin = project.clusterOrigin;
+      const distance = Math.hypot(project.position.x - origin.x, project.position.y - origin.y);
+      const existing = orbitMeta.get(key);
+      if (!existing) {
+        orbitMeta.set(key, {
+          origin,
+          radius: distance + CATEGORY_RING_PADDING,
+          color: getCategoryColor(key)
+        });
+        return;
+      }
+      if (distance + CATEGORY_RING_PADDING > existing.radius) {
+        existing.radius = distance + CATEGORY_RING_PADDING;
+      }
+    });
+
+    return Array.from(orbitMeta.entries()).map(([category, meta]) => ({
+      category,
+      origin: meta.origin,
+      radius: meta.radius,
+      color: meta.color
+    }));
+  }, [visibleProjects]);
+
+  useEffect(() => {
+    categoryRingsRef.current = categoryOrbitData.map(({ category, origin, radius }) => ({
+      category,
+      origin,
+      radius
+    }));
+  }, [categoryOrbitData]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const updateEventSets = () => {
+      const nowMs = Date.now();
+      const mintIds = new Set(
+        APP_EVENTS.filter((event) => event.title.toLowerCase().includes('mint'))
+          .filter((event) => {
+            const endValue = event.end ?? event.start;
+            const endMs = new Date(endValue).getTime();
+            return !Number.isNaN(endMs) && endMs >= nowMs;
+          })
+          .map((event) => event.projectId)
+      );
+      const specialIds = new Set(
+        APP_EVENTS.filter(
+          (event) =>
+            event.id === 'euphoria-tapathon' ||
+            event.id === 'survivors-presale-live-14d' ||
+            event.id === 'blackhaven-ico-registration'
+        )
+          .filter((event) => {
+            const endValue = event.end ?? event.start;
+            const endMs = new Date(endValue).getTime();
+            return !Number.isNaN(endMs) && endMs >= nowMs;
+          })
+          .map((event) => event.projectId)
+      );
+
+      mintProjectIdsRef.current = mintIds;
+      specialEventIdsRef.current = specialIds;
+    };
+
+    updateEventSets();
+    const intervalId = window.setInterval(updateEventSets, 60000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   useEffect(() => {
     const nextInputs = renderInputsRef.current;
     nextInputs.visibleProjects = visibleProjects;
@@ -673,11 +753,11 @@ export const ConstellationCanvas = ({
     }
 
     let animationFrame: number;
-    let dpr = window.devicePixelRatio || 1;
+    let dpr = devicePixelRatioState;
 
     const resize = () => {
       const { width, height } = canvas.getBoundingClientRect();
-      dpr = window.devicePixelRatio || 1;
+      dpr = devicePixelRatioState;
       canvas.width = width * dpr;
       canvas.height = height * dpr;
     };
@@ -701,7 +781,8 @@ export const ConstellationCanvas = ({
       const isSmallScreen = window.innerWidth < 768;
       const isDensityMode = renderProjects.length > (isSmallScreen ? 30 : 70);
       const isPerformanceMode = isInteractionMode || isDensityMode || isSmallScreen;
-      const starStep = isPerformanceMode ? 3 : 1;
+      const starStep = isPerformanceMode ? 5 : 1;
+      const shouldRenderStars = !isPerformanceMode || renderProjects.length < (isSmallScreen ? 60 : 140);
 
       const width = canvas.width / dpr;
       const height = canvas.height / dpr;
@@ -712,14 +793,16 @@ export const ConstellationCanvas = ({
       context.fillStyle = '#000000';
       context.fillRect(0, 0, width, height);
 
-      for (let idx = 0; idx < stars.length; idx += starStep) {
-        const star = stars[idx];
-        const drift = Math.sin(time * 0.0002 * star.speed + idx) * 4;
-        const brightness = 0.35 + ((Math.sin(time * 0.001 * star.speed + star.twinkle) + 1) / 2) * 0.45;
-        context.beginPath();
-        context.fillStyle = `rgba(255, 255, 255, ${brightness})`;
-        context.arc(star.x * width + drift, star.y * height + drift, star.radius, 0, Math.PI * 2);
-        context.fill();
+      if (shouldRenderStars) {
+        for (let idx = 0; idx < stars.length; idx += starStep) {
+          const star = stars[idx];
+          const drift = Math.sin(time * 0.0002 * star.speed + idx) * 4;
+          const brightness = 0.35 + ((Math.sin(time * 0.001 * star.speed + star.twinkle) + 1) / 2) * 0.45;
+          context.beginPath();
+          context.fillStyle = `rgba(255, 255, 255, ${brightness})`;
+          context.arc(star.x * width + drift, star.y * height + drift, star.radius, 0, Math.PI * 2);
+          context.fill();
+        }
       }
 
       const cameraState = cameraRef.current;
@@ -732,50 +815,8 @@ export const ConstellationCanvas = ({
       const hoveredCategory = hoveredCategoryRef.current;
 
       const nowMs = Date.now();
-      const mintProjectIds = new Set(
-        APP_EVENTS.filter((event) => event.title.toLowerCase().includes('mint'))
-          .filter((event) => {
-            const endValue = event.end ?? event.start;
-            const endMs = new Date(endValue).getTime();
-            return !Number.isNaN(endMs) && endMs >= nowMs;
-          })
-          .map((event) => event.projectId)
-      );
-      const specialEventIds = new Set(
-        APP_EVENTS.filter(
-          (event) =>
-            event.id === 'euphoria-tapathon' ||
-            event.id === 'survivors-presale-live-14d' ||
-            event.id === 'blackhaven-ico-registration'
-        )
-          .filter((event) => {
-            const endValue = event.end ?? event.start;
-            const endMs = new Date(endValue).getTime();
-            return !Number.isNaN(endMs) && endMs >= nowMs;
-          })
-          .map((event) => event.projectId)
-      );
-      const orbitMeta = new Map<
-        string,
-        { origin: { x: number; y: number }; radius: number; color: string }
-      >();
-      renderProjects.forEach((project) => {
-        const key = project.primaryCategory;
-        const origin = project.clusterOrigin;
-        const distance = Math.hypot(project.position.x - origin.x, project.position.y - origin.y);
-        const existing = orbitMeta.get(key);
-        if (!existing) {
-          orbitMeta.set(key, {
-            origin,
-            radius: distance,
-            color: getCategoryColor(key)
-          });
-          return;
-        }
-        if (distance > existing.radius) {
-          existing.radius = distance;
-        }
-      });
+      const mintProjectIds = mintProjectIdsRef.current;
+      const specialEventIds = specialEventIdsRef.current;
 
       const categoryLabels: { x: number; y: number; text: string; color: string; fontSize: number }[] = [];
       const nextCategoryRings: {
@@ -784,12 +825,11 @@ export const ConstellationCanvas = ({
         radius: number;
       }[] = [];
 
-      orbitMeta.forEach(({ origin, radius, color }, category) => {
+      categoryOrbitData.forEach(({ origin, radius, color, category }) => {
         const center = toScreen(origin);
-        const paddedRadius = radius + CATEGORY_RING_PADDING;
-        const screenRadius = Math.max(paddedRadius * cameraState.zoom, CATEGORY_RING_MIN_RADIUS);
+        const screenRadius = Math.max(radius * cameraState.zoom, CATEGORY_RING_MIN_RADIUS);
 
-        nextCategoryRings.push({ category, origin, radius: paddedRadius });
+        nextCategoryRings.push({ category, origin, radius });
 
         context.save();
         context.beginPath();
@@ -1034,7 +1074,7 @@ export const ConstellationCanvas = ({
       cancelAnimationFrame(animationFrame);
       window.removeEventListener('resize', handleResize);
     };
-  }, [images, stars, ethosScoreFormatter, ethosLogo]);
+  }, [images, stars, ethosScoreFormatter, ethosLogo, devicePixelRatioState, categoryOrbitData]);
 
   const endInteraction = () => {
     if (interactionActiveRef.current) {

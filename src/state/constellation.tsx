@@ -27,7 +27,10 @@ export const CORE_CATEGORIES = [
   'Tools',
   'Prediction M.',
   'AI',
-  'Mobile'
+  'Mobile',
+  'Bridge',
+  'RWA',
+  'Trading bot'
 ] as const;
 
 const SPECIAL_CATEGORIES = ['Megamafia', 'Native', 'Jojo'] as const;
@@ -80,7 +83,13 @@ const CATEGORY_ALIASES: Record<string, CanonicalCategory> = {
   payment: 'Megamafia',
   jojo: 'Jojo',
   mobile: 'Mobile',
-  native: 'Native'
+  native: 'Native',
+  bridge: 'Bridge',
+  rwa: 'RWA',
+  'r.w.a': 'RWA',
+  'trading bot': 'Trading bot',
+  'trading-bot': 'Trading bot',
+  'tradingbot': 'Trading bot'
 };
 
 const canonicalizeCategory = (label: string): CanonicalCategory | null => {
