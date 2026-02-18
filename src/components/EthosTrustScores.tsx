@@ -43,6 +43,10 @@ type EcosystemEthosApp = EthosApp & {
 const ETHOS_ENDPOINT = 'https://api.ethos.network/api/v2/apps';
 const ETHOS_CLIENT_HEADER = 'Megabunnish';
 const PAGE_SIZE = 50;
+const ETHOS_REFRESH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
+const ETHOS_REFRESH_CHECK_MS = 12 * 60 * 60 * 1000;
+const ETHOS_LAST_FETCH_KEY = 'ethos:lastFetch';
+const ETHOS_FORCE_REFRESH_KEY = 'ethos:forceRefreshOnce';
 const ETHOS_FILTERS = [
   { label: '> 1600', value: 1600 },
   { label: '> 1400', value: 1400 },
@@ -416,10 +420,61 @@ const fetchAllEthosApps = async (): Promise<EthosApp[]> => {
     .sort((a, b) => b.trustScore - a.trustScore);
 };
 
+const readEthosLastFetch = () => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  try {
+    const raw = window.localStorage.getItem(ETHOS_LAST_FETCH_KEY);
+    if (!raw) {
+      return null;
+    }
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeEthosLastFetch = (timestamp: number) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    window.localStorage.setItem(ETHOS_LAST_FETCH_KEY, String(timestamp));
+  } catch {
+    // Ignore storage failures.
+  }
+};
+
+const readForceRefreshOnce = () => {
+  if (typeof window === 'undefined') {
+    return true;
+  }
+  try {
+    return window.localStorage.getItem(ETHOS_FORCE_REFRESH_KEY) !== 'done';
+  } catch {
+    return true;
+  }
+};
+
+const writeForceRefreshOnce = () => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    window.localStorage.setItem(ETHOS_FORCE_REFRESH_KEY, 'done');
+  } catch {
+    // Ignore storage failures.
+  }
+};
+
 export const EthosTrustScores = ({ isInteracting = false }: { isInteracting?: boolean }) => {
   const [areScoresVisible, setScoresVisible] = useState(false);
   const [apps, setApps] = useState<EthosApp[]>([]);
-  const hasFetchedRef = useRef(false);
+  const lastFetchRef = useRef<number | null>(readEthosLastFetch());
+  const isFetchingRef = useRef(false);
+  const forceRefreshOnceRef = useRef(readForceRefreshOnce());
   const {
     setEthosScores,
     setEthosOverlayActive,
@@ -463,29 +518,59 @@ export const EthosTrustScores = ({ isInteracting = false }: { isInteracting?: bo
 
 
   useEffect(() => {
-    if (!areScoresVisible || hasFetchedRef.current) {
+    if (!areScoresVisible) {
       return;
     }
 
     let isActive = true;
 
-    fetchAllEthosApps()
-      .then((data) => {
-        if (!isActive) {
-          return;
-        }
-        setApps(data);
-        hasFetchedRef.current = true;
-      })
-      .catch((fetchError) => {
-        if (!isActive) {
-          return;
-        }
-        console.error('Unable to fetch Ethos trust scores', fetchError);
-      });
+    const shouldRefresh = () => {
+      if (forceRefreshOnceRef.current) {
+        return true;
+      }
+      const lastFetch = lastFetchRef.current;
+      if (!lastFetch) {
+        return true;
+      }
+      return Date.now() - lastFetch >= ETHOS_REFRESH_INTERVAL_MS;
+    };
+
+    const refreshScores = () => {
+      if (isFetchingRef.current || !shouldRefresh()) {
+        return;
+      }
+      isFetchingRef.current = true;
+      fetchAllEthosApps()
+        .then((data) => {
+          if (!isActive) {
+            return;
+          }
+          setApps(data);
+          const now = Date.now();
+          lastFetchRef.current = now;
+          writeEthosLastFetch(now);
+          if (forceRefreshOnceRef.current) {
+            forceRefreshOnceRef.current = false;
+            writeForceRefreshOnce();
+          }
+        })
+        .catch((fetchError) => {
+          if (!isActive) {
+            return;
+          }
+          console.error('Unable to fetch Ethos trust scores', fetchError);
+        })
+        .finally(() => {
+          isFetchingRef.current = false;
+        });
+    };
+
+    refreshScores();
+    const intervalId = window.setInterval(refreshScores, ETHOS_REFRESH_CHECK_MS);
 
     return () => {
       isActive = false;
+      window.clearInterval(intervalId);
     };
   }, [areScoresVisible]);
 

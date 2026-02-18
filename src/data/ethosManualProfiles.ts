@@ -620,8 +620,9 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     url: 'https://app.ethos.network/profile/x/redstone_defi'
   },
   {
+    projectId: 'priority',
     handle: 'PriorityTrade_',
-    score: 950,
+    score: 987,
     tier: 'Questionable',
     displayName: 'Priority',
     url: 'https://app.ethos.network/profile/x/PriorityTrade_'
