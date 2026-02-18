@@ -904,7 +904,13 @@ export const ProjectDetailDrawer = () => {
           <header>
             <div className="detail-heading">
               <div className="detail-eyebrow">
-                <p className="eyebrow">{project.primaryCategory}</p>
+                <button
+                  type="button"
+                  className="detail-category-button"
+                  onClick={() => setActiveCategory(project.primaryCategory)}
+                >
+                  {project.primaryCategory}
+                </button>
                 {ethosProfileUrl ? (
                   <a
                     className="detail-ethos-link"
@@ -963,7 +969,9 @@ export const ProjectDetailDrawer = () => {
               <div className="icon-link-row">
                 {socialLinks.map(({ key, label, icon, href }) => (
                   <a key={key} className="icon-link" href={href} target="_blank" rel="noreferrer" aria-label={label}>
-                    <img src={icon} alt="" aria-hidden />
+                    <span className="icon-link__badge" aria-hidden="true">
+                      <img src={icon} alt="" aria-hidden />
+                    </span>
                     <span>{label}</span>
                   </a>
                 ))}
@@ -971,22 +979,6 @@ export const ProjectDetailDrawer = () => {
             </section>
           ) : null}
           <JojoOracle projectId={project.id} onNavigate={selectProject} fallbackInsight={project.jojoInsight} />
-          <section>
-            <h3>Categories</h3>
-            <div className="badge-row">
-              {project.categories.map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  className="badge badge--link"
-                  style={{ borderColor: getCategoryColor(category) }}
-                  onClick={() => setActiveCategory(category)}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </section>
           <section>
             <h3>{incentiveSectionLabel}</h3>
             {hasSpecialEvent ? (

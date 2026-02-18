@@ -123,6 +123,9 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
   const hasFavorites = favoriteIds.length > 0;
   const favoritesDisabled = !favoritesOnly && !hasFavorites;
   const showJojoProfiles = filters.jojo && JOJO_PROFILES.length > 1;
+  const mobileCategory = 'Mobile';
+  const isMobileActive = activeCategories.includes(mobileCategory);
+  const categoriesWithoutMobile = categories.filter((category) => category !== mobileCategory);
   const quickSelect = (category: string | null) => {
     setActiveCategory(category);
   };
@@ -263,8 +266,20 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
                   <img className="chip-event-bell" src="/icons/bell.svg" alt="" aria-hidden="true" />
                 </span>
               </button>
+              <button
+                className={isMobileActive ? 'chip chip--category chip--mobile-filter active' : 'chip chip--category chip--mobile-filter'}
+                type="button"
+                onClick={() => quickSelect(mobileCategory)}
+                aria-pressed={isMobileActive}
+              >
+                <span className="chip-label">
+                  Mobile
+                  <img className="chip-mobile-phone" src="/icons/phone.svg" alt="" aria-hidden="true" />
+                </span>
+              </button>
             </div>
-            {categories.map((category) => {
+            <div className="category-rail__divider" role="presentation" />
+            {categoriesWithoutMobile.map((category) => {
               const accent = getCategoryColor(category);
               const isActive = activeCategories.includes(category);
               const style = isActive

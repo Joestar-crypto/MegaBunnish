@@ -3,7 +3,6 @@ import { ConstellationCanvas } from './components/ConstellationCanvas';
 import { FilterOrbitPanel } from './components/FilterOrbitPanel';
 import { ProjectDetailDrawer } from './components/ProjectDetailDrawer';
 import { WalletChecker } from './components/WalletChecker';
-import { ConstellationHUD } from './components/ConstellationHUD';
 import { KpiDashboard } from './components/KpiDashboard';
 import { EthosTrustScores } from './components/EthosTrustScores';
 import { ConstellationProvider, useConstellation } from './state/constellation';
@@ -20,10 +19,6 @@ const AppContent = () => {
 
   const handleInteractionEnd = useCallback(() => {
     setIsInteracting(false);
-  }, []);
-
-  const openDashboards = useCallback(() => {
-    setIsDashboardOpen(true);
   }, []);
 
   const closeDashboards = useCallback(() => {
@@ -59,13 +54,6 @@ const AppContent = () => {
               </a>
             </div>
           </div>
-          <div
-            className={`live-status-legend ${isInteracting ? 'ui-panel--hidden' : ''}`}
-            aria-label="Live app indicator legend"
-          >
-            <span className="live-status-legend__dot" aria-hidden="true" />
-            <span className="live-status-legend__text">: Live</span>
-          </div>
           <button
             type="button"
             className={`reset-anchor ${isInteracting ? 'ui-panel--hidden' : ''}`}
@@ -91,9 +79,6 @@ const AppContent = () => {
           <ProjectDetailDrawer />
           <div className="hud-stack">
             <WalletChecker isInteracting={isInteracting} />
-            <div className={`constellation-hud ${isInteracting ? 'ui-panel--hidden' : ''}`}>
-              <ConstellationHUD onOpenDashboards={openDashboards} />
-            </div>
             <EthosTrustScores isInteracting={isInteracting} />
           </div>
         </div>

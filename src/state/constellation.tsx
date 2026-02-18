@@ -773,11 +773,22 @@ const deriveProjectView = (
     ethosScores
   );
   const filteredPool = applySpecialFilters(ethosFilteredPool, filters, jojoProfileId);
-  const needsRelayout = appliedEthosFilter || shouldAggregateFilters(filters) || liveOnly || eventOnly;
+  const shouldRelayoutForCategories = categories.length > 1;
+  const categoryFilteredPool = shouldRelayoutForCategories
+    ? filteredPool.filter((project) =>
+        project.categories.some((category) => categories.includes(category as CoreCategory))
+      )
+    : filteredPool;
+  const needsRelayout =
+    appliedEthosFilter ||
+    shouldAggregateFilters(filters) ||
+    liveOnly ||
+    eventOnly ||
+    shouldRelayoutForCategories;
   const pool = needsRelayout
-    ? computeLayout(toRawProjectSet(filteredPool)).projects
+    ? computeLayout(toRawProjectSet(categoryFilteredPool)).projects
     : cloneProjects(filteredPool);
-  const visible = filterProjectsByCategory(pool, categories);
+  const visible = shouldRelayoutForCategories ? pool : filterProjectsByCategory(pool, categories);
   return { pool, visible, counts: deriveCategoryCounts(pool) };
 };
 
