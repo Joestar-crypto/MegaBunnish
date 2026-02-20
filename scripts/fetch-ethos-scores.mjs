@@ -1,198 +1,144 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const ETHOS_ENDPOINT = 'https://api.ethos.network/api/v2/apps';
-const ETHOS_CLIENT = 'Megabunnish';
-const PAGE_SIZE = 50;
+// Change to use the bulk score endpoint which returns level
+const ETHOS_SCORE_API_URL = 'https://api.ethos.network/api/v2/score/userkeys';
+const PROJECTS_PATH = path.join(process.cwd(), 'src', 'data', 'projects.json');
+const OUTPUT_PATH = path.join(process.cwd(), 'src', 'data', 'ethosManualProfiles.ts');
 
-const projectsPath = path.join(process.cwd(), 'src', 'data', 'projects.json');
-const projects = JSON.parse(fs.readFileSync(projectsPath, 'utf8'));
-
-const normalizeTwitterHandle = (value) => {
-  if (!value) {
-    return null;
-  }
-  const trimmed = value.trim().replace(/^@+/, '');
-  if (!trimmed) {
-    return null;
-  }
-  const normalized = trimmed.toLowerCase().replace(/[^a-z0-9_]/g, '');
-  return normalized || null;
-};
-
-const isTwitterHost = (host) => host === 'twitter.com' || host === 'x.com';
-
-const extractTwitterHandleFromUrl = (link) => {
-  if (!link) {
-    return null;
-  }
+// Helper to normalize handle from URL
+const normalizeTwitterHandle = (urlProp) => {
+  if (!urlProp) return null;
   try {
-    const url = new URL(link);
-    const host = url.hostname.replace(/^www\./, '').toLowerCase();
-    if (!isTwitterHost(host)) {
-      return null;
+    const url = new URL(urlProp);
+    if (url.hostname === 'x.com' || url.hostname === 'twitter.com') {
+      const parts = url.pathname.split('/').filter(Boolean);
+      return parts[0];
     }
-    const segments = url.pathname.split('/').filter(Boolean);
-    if (!segments.length) {
-      return null;
-    }
-    return normalizeTwitterHandle(segments[0]);
-  } catch {
-    return null;
-  }
-};
-
-const slugify = (value) => {
-  if (!value) {
-    return '';
-  }
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .replace(/[^a-z0-9]/g, '');
-};
-
-const normalizeHost = (link) => {
-  if (!link) {
-    return null;
-  }
-  try {
-    const url = new URL(link);
-    return url.hostname.replace(/^www\./, '').toLowerCase();
-  } catch {
-    return null;
-  }
-};
-
-const buildIndex = () => {
-  const twitterMap = new Map();
-  const hostMap = new Map();
-  const slugMap = new Map();
-
-  projects.forEach((project) => {
-    const ref = {
-      id: project.id,
-      name: project.name,
-      logo: project.logo,
-      slug: slugify(project.name),
-      host: normalizeHost(project.links?.site ?? null),
-      twitterHandle: extractTwitterHandleFromUrl(project.links?.twitter ?? null)
-    };
-
-    if (ref.twitterHandle) {
-      const entries = twitterMap.get(ref.twitterHandle) ?? [];
-      entries.push(ref);
-      twitterMap.set(ref.twitterHandle, entries);
-    }
-
-    if (ref.host) {
-      const entries = hostMap.get(ref.host) ?? [];
-      entries.push(ref);
-      hostMap.set(ref.host, entries);
-    }
-
-    if (ref.slug) {
-      const entries = slugMap.get(ref.slug) ?? [];
-      entries.push(ref);
-      slugMap.set(ref.slug, entries);
-    }
-  });
-
-  return { twitterMap, hostMap, slugMap };
-};
-
-const matchProject = (app, index) => {
-  const twitterHandle =
-    normalizeTwitterHandle(app.author?.username ?? null) ?? extractTwitterHandleFromUrl(app.link ?? null);
-  if (twitterHandle) {
-    const matches = index.twitterMap.get(twitterHandle);
-    if (matches?.length) {
-      if (matches.length === 1) {
-        return matches[0];
-      }
-      const slug = slugify(app.name);
-      return matches.find((candidate) => candidate.slug === slug) ?? matches[0];
-    }
-  }
-
-  const host = normalizeHost(app.link ?? null);
-  if (host) {
-    const matches = index.hostMap.get(host);
-    if (matches?.length) {
-      if (matches.length === 1) {
-        return matches[0];
-      }
-      const slug = slugify(app.name);
-      return matches.find((candidate) => candidate.slug === slug) ?? matches[0];
-    }
-  }
-
-  const slug = slugify(app.name);
-  const matches = index.slugMap.get(slug);
-  if (matches?.length) {
-    return matches[0];
+  } catch (e) {
+    // console.warn('Invalid URL:', urlProp);
   }
   return null;
 };
 
-const fetchAllEthosApps = async () => {
-  const collected = [];
-  let offset = 0;
-  let total = Number.POSITIVE_INFINITY;
+// Helper to capitalize first letter
+const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
-  while (collected.length < total) {
-    const response = await fetch(`${ETHOS_ENDPOINT}?limit=${PAGE_SIZE}&offset=${offset}`, {
-      headers: {
-        'X-Ethos-Client': ETHOS_CLIENT
+const fetchScoresAndLevels = async (handles) => {
+  const chunks = [];
+  const chunkSize = 50; // API limit is 500, let's span requests reasonably
+
+  // Create userkeys. Note: construction is service:x.com:username:<handle>
+  // Handles might be case sensitive? Usually Twitter handles are case insensitive but the key format might matter.
+  // We will use the handle as is.
+  const handleToKey = new Map();
+  const userkeys = handles.map(h => {
+    const key = `service:x.com:username:${h}`;
+    handleToKey.set(key.toLowerCase(), h);
+    return key;
+  });
+
+  const results = [];
+
+  for (let i = 0; i < userkeys.length; i += chunkSize) {
+    const chunk = userkeys.slice(i, i + chunkSize);
+    console.log(`Fetching scores for chunk ${i / chunkSize + 1}/${Math.ceil(userkeys.length / chunkSize)}...`);
+
+    try {
+      const response = await fetch(ETHOS_SCORE_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Ethos-Client': 'ConstellationProject'
+        },
+        body: JSON.stringify({ userkeys: chunk })
+      });
+
+      if (!response.ok) {
+        console.error(`Error fetching chunk: ${response.statusText}`);
+        continue;
       }
-    });
 
-    if (!response.ok) {
-      throw new Error(`Ethos API error ${response.status}`);
+      const data = await response.json();
+      
+      for (const [key, value] of Object.entries(data)) {
+        if (value && typeof value.score === 'number') {
+          const handle = handleToKey.get(key.toLowerCase());
+          if (handle) {
+            results.push({
+              handle,
+              score: value.score,
+              level: value.level
+            });
+          }
+        }
+      }
+
+    } catch (e) {
+      console.error('Fetch error:', e);
     }
-
-    const payload = await response.json();
-    collected.push(...payload.values);
-    total = payload.total;
-    offset += PAGE_SIZE;
-
-    if (!payload.values.length) {
-      break;
-    }
+    
+    await new Promise(r => setTimeout(r, 200));
   }
-
-  return collected;
+  
+  return results;
 };
 
 const main = async () => {
-  const index = buildIndex();
-  const apps = await fetchAllEthosApps();
-  const seen = new Set();
-  const matched = [];
+  console.log('Reading projects...');
+  const projects = JSON.parse(fs.readFileSync(PROJECTS_PATH, 'utf8'));
+  
+  const handleToProject = new Map();
+  const handlesToFetch = new Set();
 
-  apps.forEach((app) => {
-    const match = matchProject(app, index);
-    if (!match || seen.has(match.id)) {
-      return;
+  projects.forEach(p => {
+    const handle = normalizeTwitterHandle(p.links?.twitter);
+    if (handle) {
+      handlesToFetch.add(handle);
+      handleToProject.set(handle.toLowerCase(), p);
     }
-    seen.add(match.id);
-    matched.push({
-      projectId: match.id,
-      projectName: match.name,
-      twitterHandle: match.twitterHandle,
-      ethosName: app.name,
-      trustScore: Math.round(app.author?.score ?? 0),
-      authorDisplayName: app.author?.displayName ?? 'Auteur inconnu',
-      authorUsername: app.author?.username ?? null
-    });
   });
 
-  matched.sort((a, b) => b.trustScore - a.trustScore);
-  console.log(JSON.stringify(matched, null, 2));
+  const handles = Array.from(handlesToFetch);
+  console.log(`Found ${handles.length} unique Twitter handles.`);
+
+  if (handles.length === 0) {
+    console.log('No handles to fetch.');
+    return;
+  }
+
+  const scoreData = await fetchScoresAndLevels(handles);
+  console.log(`Successfully fetched scores for ${scoreData.length} profiles.`);
+
+  const overrides = scoreData.map(item => {
+    const project = handleToProject.get(item.handle.toLowerCase());
+    return {
+      projectId: project ? project.id : undefined,
+      handle: item.handle,
+      score: item.score,
+      tier: item.level ? capitalize(item.level) : undefined,
+      displayName: project ? project.name : item.handle,
+      url: `https://app.ethos.network/profile/x/${item.handle}`
+    };
+  }).filter(item => item.projectId); // Only keep those that map to a project
+
+  // Sort by score
+  overrides.sort((a, b) => b.score - a.score);
+
+  const fileContent = `export type EthosProfileOverride = {
+  handle: string;
+  score: number;
+  tier?: string;
+  displayName?: string;
+  url?: string;
+  projectId?: string;
 };
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = ${JSON.stringify(overrides, null, 2)};
+`;
+
+  fs.writeFileSync(OUTPUT_PATH, fileContent);
+  console.log(`Updated ${OUTPUT_PATH} with ${overrides.length} profiles.`);
+};
+
+main().catch(console.error);
