@@ -553,45 +553,13 @@ export const WalletChecker = ({ isInteracting = false }: WalletCheckerProps) => 
     rootClasses.push('ui-panel--hidden');
   }
 
-  const currentWalletEntry = useMemo(() => {
-    if (!walletAddress) {
-      return null;
-    }
-    const walletLower = walletAddress.toLowerCase();
-    return leaderboardEntries.find((entry) => entry.address.toLowerCase() === walletLower) ?? null;
-  }, [leaderboardEntries, walletAddress]);
-
   const paginatedLeaderboardEntries = useMemo(() => {
-    const entriesWithoutCurrent = leaderboardEntries.filter((entry) => !entry.isCurrentWallet);
     const start = leaderboardPage * LEADERBOARD_PAGE_SIZE;
-    return entriesWithoutCurrent.slice(start, start + LEADERBOARD_PAGE_SIZE);
+    return leaderboardEntries.slice(start, start + LEADERBOARD_PAGE_SIZE);
   }, [leaderboardEntries, leaderboardPage, LEADERBOARD_PAGE_SIZE]);
 
-  const paginatedEntriesWithCurrent = useMemo(() => {
-    if (!currentWalletEntry) {
-      return paginatedLeaderboardEntries;
-    }
-
-    const currentPageForWallet = Math.floor((currentWalletEntry.rank - 1) / LEADERBOARD_PAGE_SIZE);
-    if (leaderboardPage !== currentPageForWallet) {
-      return paginatedLeaderboardEntries;
-    }
-
-    if (!paginatedLeaderboardEntries.length) {
-      return [currentWalletEntry];
-    }
-
-    const insertIndex = Math.floor(paginatedLeaderboardEntries.length / 2);
-    return [
-      ...paginatedLeaderboardEntries.slice(0, insertIndex),
-      currentWalletEntry,
-      ...paginatedLeaderboardEntries.slice(insertIndex)
-    ];
-  }, [paginatedLeaderboardEntries, currentWalletEntry, leaderboardPage, LEADERBOARD_PAGE_SIZE]);
-
   const leaderboardTotalPages = useMemo(() => {
-    const entriesWithoutCurrent = leaderboardEntries.filter((entry) => !entry.isCurrentWallet).length;
-    return Math.max(1, Math.ceil(entriesWithoutCurrent / LEADERBOARD_PAGE_SIZE));
+    return Math.max(1, Math.ceil(leaderboardEntries.length / LEADERBOARD_PAGE_SIZE));
   }, [leaderboardEntries, LEADERBOARD_PAGE_SIZE]);
 
   const rankPresentation = getRankPresentation(walletRank);
@@ -600,10 +568,14 @@ export const WalletChecker = ({ isInteracting = false }: WalletCheckerProps) => 
     toggleClasses.push('wallet-checker__toggle--wallet');
   }
   const toggleLabel = hasWallet && !isOpen ? shortenAddress(walletAddress ?? '') : 'Wallet Checker';
+  const handleWalletToggle = () => {
+    setIsLeaderboardOpen(false);
+    setIsOpen((previous) => !previous);
+  };
 
   return (
     <div className={rootClasses.join(' ')}>
-      <button type="button" className={toggleClasses.join(' ')} onClick={() => setIsOpen((prev) => !prev)}>
+      <button type="button" className={toggleClasses.join(' ')} onClick={handleWalletToggle}>
         <span>{toggleLabel}</span>
         <span className={`wallet-checker__indicator wallet-checker__indicator--${walletStatus}`} />
       </button>
@@ -731,7 +703,7 @@ export const WalletChecker = ({ isInteracting = false }: WalletCheckerProps) => 
                   </span>
                 </div>
                 <ul>
-                  {paginatedEntriesWithCurrent.map((entry) => (
+                  {paginatedLeaderboardEntries.map((entry) => (
                     <li
                       key={`${entry.rank}-${entry.address}`}
                       className={`wallet-checker__leaderboard-item ${
