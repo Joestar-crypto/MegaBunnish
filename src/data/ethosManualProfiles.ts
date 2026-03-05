@@ -389,7 +389,7 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     "handle": "megatruther",
     "score": 1257,
     "tier": "Neutral",
-    "displayName": "MegaTruther",
+    "displayName": "ITS",
     "url": "https://app.ethos.network/profile/x/megatruther"
   },
   {
@@ -481,6 +481,22 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     "url": "https://app.ethos.network/profile/x/SirioApp"
   },
   {
+    "projectId": "backed",
+    "handle": "BackedApp",
+    "score": 1228,
+    "tier": "Neutral",
+    "displayName": "Backed",
+    "url": "https://app.ethos.network/profile/x/BackedApp"
+  },
+  {
+    "projectId": "ferdy",
+    "handle": "ferdybet",
+    "score": 1222,
+    "tier": "Neutral",
+    "displayName": "Ferdy",
+    "url": "https://app.ethos.network/profile/x/ferdybet"
+  },
+  {
     "projectId": "ren",
     "handle": "renprotocol",
     "score": 1225,
@@ -529,6 +545,14 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     "url": "https://app.ethos.network/profile/x/thewarren_app"
   },
   {
+    "projectId": "megafarm",
+    "handle": "MegaFarm_io",
+    "score": 1205,
+    "tier": "Neutral",
+    "displayName": "MegaFarm",
+    "url": "https://app.ethos.network/profile/x/MegaFarm_io"
+  },
+  {
     "projectId": "syndicate",
     "handle": "joinsyndicate_",
     "score": 1201,
@@ -561,6 +585,14 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     "url": "https://app.ethos.network/profile/x/dotmegadomains"
   },
   {
+    "projectId": "pulse",
+    "handle": "pulseai_app",
+    "score": 1200,
+    "tier": "Neutral",
+    "displayName": "Pulse",
+    "url": "https://app.ethos.network/profile/x/pulseai_app"
+  },
+  {
     "projectId": "supernova",
     "handle": "SupernovaLabs_",
     "score": 1194,
@@ -583,6 +615,14 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     "tier": "Questionable",
     "displayName": "Dead Bit Nation",
     "url": "https://app.ethos.network/profile/x/deadbitnation"
+  },
+  {
+    "projectId": "megablobz",
+    "handle": "MegaBlobz",
+    "score": 1184,
+    "tier": "Questionable",
+    "displayName": "MegaBlobz",
+    "url": "https://app.ethos.network/profile/x/MegaBlobz"
   },
   {
     "projectId": "benchmark",

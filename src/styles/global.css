@@ -1740,6 +1740,40 @@ select {
   pointer-events: none;
 }
 
+.wallet-checker__toggle-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  pointer-events: auto;
+}
+
+.wallet-checker__toggle-nft-showcase {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(6, 9, 22, 0.82);
+  padding: 0.26rem 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+}
+
+.wallet-checker__toggle-nft-item {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  background: rgba(5, 6, 18, 0.5);
+}
+
+.wallet-checker__toggle-nft-item--placeholder {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(120, 140, 255, 0.35), rgba(90, 230, 255, 0.3));
+}
+
 .wallet-checker__toggle {
   pointer-events: auto;
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -2015,6 +2049,39 @@ select {
   color: var(--accent);
 }
 
+.wallet-checker__results--summary .wallet-checker__results-header {
+  font-size: 0.8rem;
+}
+
+.wallet-checker__results--summary .wallet-checker__results-header p {
+  color: rgba(5, 6, 18, 0.88);
+}
+
+.wallet-checker__results--summary ul {
+  gap: 0.32rem;
+}
+
+.wallet-checker__results--summary li {
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+  line-height: 1.25;
+}
+
+.wallet-checker__results--summary li span {
+  color: rgba(5, 6, 18, 0.72);
+}
+
+.wallet-checker__results--summary li strong {
+  max-width: 62%;
+  font-size: 0.78rem;
+  line-height: 1.28;
+  text-align: right;
+  color: rgba(5, 6, 18, 0.96);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .wallet-checker__leaderboard-meta {
   display: flex;
   justify-content: space-between;
@@ -2152,6 +2219,205 @@ select {
 
 .wallet-checker__leaderboard-insignia--trailing {
   margin-left: auto;
+}
+
+.wallet-checker__leaderboard-strip {
+  position: fixed;
+  right: 1rem;
+  bottom: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 20;
+}
+
+.wallet-checker__leaderboard-nft-previews {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.45rem;
+}
+
+.wallet-checker__leaderboard-nft-preview {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  object-fit: cover;
+  background: rgba(5, 6, 18, 0.6);
+  margin-left: -5px;
+}
+
+.wallet-checker__leaderboard-nft-preview:first-child {
+  margin-left: 0;
+}
+
+.wallet-checker__leaderboard-nft-showcase {
+  appearance: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.22rem 0.35rem;
+  border-radius: 999px;
+  background: rgba(6, 9, 22, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.wallet-checker__leaderboard-nft-showcase-item {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(5, 6, 18, 0.6);
+}
+
+.wallet-checker__nft-window {
+  position: absolute;
+  top: calc(100% + 0.42rem);
+  left: 0;
+  z-index: 21;
+  width: min(320px, calc(100vw - 2rem));
+  pointer-events: auto;
+}
+
+.wallet-checker__nft-window .wallet-checker__results {
+  max-height: min(44vh, 320px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.7rem;
+  pointer-events: auto;
+  touch-action: pan-y;
+}
+
+.wallet-checker__nft-grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.wallet-checker__nft-grid li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  align-items: center;
+  text-align: center;
+  padding: 0.28rem;
+  border-radius: 0.45rem;
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.wallet-checker__nft-grid-image {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.wallet-checker__nft-grid-image--placeholder {
+  background: rgba(5, 6, 18, 0.16);
+}
+
+.wallet-checker__nft-grid li span {
+  width: 100%;
+  font-size: 0.68rem;
+  line-height: 1.2;
+  color: rgba(5, 6, 18, 0.82);
+  overflow-wrap: anywhere;
+}
+
+.wallet-checker__nft-grid li strong {
+  font-size: 0.72rem;
+  color: rgba(5, 6, 18, 0.96);
+}
+
+.wallet-checker__nft-grid li small {
+  width: 100%;
+  font-size: 0.62rem;
+  color: rgba(5, 6, 18, 0.68);
+  overflow-wrap: anywhere;
+}
+
+.wallet-checker__nft-collection-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.38rem;
+}
+
+.wallet-checker__nft-collection-list--compact {
+  margin-bottom: 0.5rem;
+}
+
+.wallet-checker__nft-collection-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.35rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.wallet-checker__nft-collection-cards {
+  min-width: 76px;
+  max-width: 150px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  gap: 0.16rem;
+  overflow: hidden;
+}
+
+.wallet-checker__nft-collection-cards .wallet-checker__nft-grid-image {
+  width: 34px;
+  height: 34px;
+  margin-left: 0;
+  border-radius: 8px;
+  box-shadow: 0 1px 5px rgba(5, 6, 18, 0.24);
+}
+
+.wallet-checker__nft-collection-meta {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.wallet-checker__nft-collection-meta span {
+  font-size: 0.76rem;
+  color: rgba(5, 6, 18, 0.88);
+  overflow-wrap: anywhere;
+}
+
+.wallet-checker__nft-collection-meta strong {
+  font-size: 0.74rem;
+  color: rgba(5, 6, 18, 0.95);
+}
+
+.wallet-checker__nft-collection-list--compact li {
+  justify-content: space-between;
+  padding: 0.3rem 0.45rem;
+}
+
+.wallet-checker__nft-collection-list--compact li span {
+  font-size: 0.72rem;
+  color: rgba(5, 6, 18, 0.84);
+}
+
+.wallet-checker__nft-collection-list--compact li strong {
+  font-size: 0.72rem;
+  color: rgba(5, 6, 18, 0.96);
+}
+
+.wallet-checker__nft-title {
+  color: var(--accent);
 }
 
 .wallet-checker__leaderboard-insignia-stars,

@@ -27,13 +27,12 @@ export const CORE_CATEGORIES = [
   'Tools',
   'Prediction M.',
   'AI',
-  'Mobile',
   'Bridge',
   'RWA',
   'Trading bot'
 ] as const;
 
-const SPECIAL_CATEGORIES = ['Megamafia', 'Native', 'Jojo'] as const;
+const SPECIAL_CATEGORIES = ['Megamafia', 'Native', 'Jojo', 'Mobile'] as const;
 
 type CoreCategory = (typeof CORE_CATEGORIES)[number];
 type SpecialCategory = (typeof SPECIAL_CATEGORIES)[number];
@@ -149,6 +148,7 @@ const toCategoryMeta = (labels: string[]): ProjectCategoryMeta => {
     }
     if (canonical === 'Mobile') {
       traits.mobile = true;
+      return;
     }
     if (!categories.includes(canonical)) {
       categories.push(canonical);
@@ -905,6 +905,13 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
     walletInput,
     walletStatus,
     walletError,
+    walletTransactionCount,
+    walletUniqueContractCount,
+    walletDiscoveredApps,
+    walletDexProtocols,
+    walletLpPositions,
+    walletNftCollections,
+    walletNftAssets,
     walletInteractionCounts,
     walletNftHoldings,
     walletUpdatedAt,
@@ -1829,6 +1836,13 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       walletInput,
       walletStatus,
       walletError,
+      walletTransactionCount,
+      walletUniqueContractCount,
+      walletDiscoveredApps,
+      walletDexProtocols,
+      walletLpPositions,
+      walletNftCollections,
+      walletNftAssets,
       walletInteractionCounts,
       walletNftHoldings,
       walletUpdatedAt,
@@ -1861,6 +1875,13 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       walletInput,
       walletStatus,
       walletError,
+      walletTransactionCount,
+      walletUniqueContractCount,
+      walletDiscoveredApps,
+      walletDexProtocols,
+      walletLpPositions,
+      walletNftCollections,
+      walletNftAssets,
       walletInteractionCounts,
       walletNftHoldings,
       walletUpdatedAt,

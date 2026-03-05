@@ -8,16 +8,20 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext ts,tsx",
-    "update:scores": "node scripts/fetch-ethos-scores.mjs"
+    "update:scores": "node scripts/fetch-ethos-scores.mjs",
+    "wallet:check": "node scripts/megaeth-wallet-checker-cli.js"
   },
   "dependencies": {
+    "axios": "^1.13.5",
+    "dotenv": "^16.6.1",
+    "ethers": "^6.16.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@types/node": "^20.12.12",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
-    "@types/node": "^20.12.12",
     "@vitejs/plugin-react": "^4.3.1",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",

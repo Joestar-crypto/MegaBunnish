@@ -577,9 +577,9 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
   ],
   megatruther: [
     [
-      textSegment('MegaTruther is a cryptic community crafting games, puzzles, and IRL events across MegaETH.')
+      textSegment('ITS i a pretty cool card game using real time experience to enable spamming card for win lol')
     ],
-    [textSegment("It\'s honestly one of the biggest active squads around Mega, so keep tabs on whatever they tease.")]
+    [textSegment('Ngl this is cool')]
   ],
   huntertales: [
     [
@@ -721,6 +721,13 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
   warren: [
     [
       textSegment('A "Permaweb" app that lets you host anything onchain on MegaETH. Pretty cool tbh, this kind of thing never took off because of fees, but it could work on Mega maybe.')
+    ]
+  ],
+  pulse: [
+    [
+      textSegment('Pulse is an AI agent marketplace for skills, with USDm as currency, pretty cool and useful. It\'s built by '),
+      linkSegment('Warren', 'warren'),
+      textSegment('.')
     ]
   ],
   megacorp: [

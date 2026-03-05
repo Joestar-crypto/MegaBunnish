@@ -59,3 +59,92 @@ VITE_ETHERSCAN_API_KEY=your-key-here
 ```
 
 The app works without a key, but adding one helps avoid shared rate limits when scanning wallets or NFT balances.
+
+## MegaETH Wallet Checker (Node CLI)
+
+This repo includes a standalone **Node.js MegaETH Wallet Checker** that analyzes one wallet using explorer APIs + RPC checks.
+
+### What it does
+
+1. Accepts a single wallet address as input.
+2. Fetches transactions from account endpoints:
+	 - `txlist`
+	 - `txlistinternal`
+	 - `tokentx`
+	 - `tokennfttx`
+3. Uses Etherscan-compatible API first, then auto-falls back to Blockscout-compatible API.
+4. For each transaction, it:
+	 - Checks whether `to` is a smart contract using `eth_getCode`.
+	 - Extracts `methodId` from tx input.
+	 - Fetches and decodes logs (when available).
+5. Classifies interactions into categories (DEX, Lending, NFT, Token, etc.) using method IDs + decoded logs.
+
+### Install / Run
+
+```bash
+npm install
+npm run wallet:check -- 0xYourWalletAddress
+```
+
+### Environment variables
+
+```bash
+MEGAETH_RPC_URL=https://carrot.megaeth.com/rpc
+MEGAETH_ETHERSCAN_API_URL=https://megaeth.blockscout.com/api
+MEGAETH_BLOCKSCOUT_API_URL=https://megaeth.blockscout.com/api
+MEGAETH_EXPLORER_API_KEY=
+
+MEGAETH_PAGE_SIZE=100
+MEGAETH_MAX_PAGES=500
+MEGAETH_REQUEST_DELAY_MS=200
+MEGAETH_MAX_RETRIES=5
+```
+
+### Output
+
+The command prints JSON to stdout and writes a file:
+
+`wallet-checker-<wallet>.json`
+
+Sample JSON structure:
+
+```json
+{
+	"wallet": "0x1234...abcd",
+	"explorerSource": "etherscan-compatible",
+	"warning": null,
+	"totalTransactions": 247,
+	"uniqueContractsInteracted": 39,
+	"breakdownByType": {
+		"DEX": 54,
+		"Lending": 18,
+		"NFT": 27,
+		"Token": 96,
+		"Other Contract": 22,
+		"Internal": 11,
+		"EOA Transfer": 19
+	},
+	"interactions": [
+		{
+			"stream": "txlist",
+			"hash": "0x...",
+			"blockNumber": 123456,
+			"timestamp": 1739980000,
+			"from": "0x...",
+			"to": "0x...",
+			"toIsContract": true,
+			"methodId": "0x38ed1739",
+			"methodName": "swapExactTokensForTokens",
+			"interactionType": "DEX",
+			"decodedLogs": [
+				{
+					"eventName": "Swap",
+					"signature": "Swap(address,uint256,uint256,uint256,uint256,address)",
+					"category": "DEX",
+					"args": {}
+				}
+			]
+		}
+	]
+}
+```

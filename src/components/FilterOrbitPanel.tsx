@@ -124,7 +124,7 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
   const favoritesDisabled = !favoritesOnly && !hasFavorites;
   const showJojoProfiles = filters.jojo && JOJO_PROFILES.length > 1;
   const mobileCategory = 'Mobile';
-  const isMobileActive = activeCategories.includes(mobileCategory);
+  const isMobileActive = filters.mobile;
   const categoriesWithoutMobile = categories.filter((category) => category !== mobileCategory);
   const quickSelect = (category: string | null) => {
     setActiveCategory(category);
@@ -269,7 +269,7 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
               <button
                 className={isMobileActive ? 'chip chip--category chip--mobile-filter active' : 'chip chip--category chip--mobile-filter'}
                 type="button"
-                onClick={() => quickSelect(mobileCategory)}
+                onClick={() => toggleFilter('mobile')}
                 aria-pressed={isMobileActive}
               >
                 <span className="chip-label">

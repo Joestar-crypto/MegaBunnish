@@ -43,8 +43,8 @@
     "categories": [
       "Jojo",
       "Megamafia",
-      "Mobile",
       "Prediction Market",
+      "Mobile",
       "Native"
     ],
     "networks": [
@@ -964,6 +964,7 @@
     "name": "Hitdotone",
     "categories": [
       "Gambling",
+      "Mobile",
       "Native"
     ],
     "networks": [
@@ -1141,18 +1142,19 @@
   },
   {
     "id": "megatruther",
-    "name": "MegaTruther",
+    "name": "ITS",
     "categories": [
-      "Social",
+      "Gaming",
       "Native"
     ],
     "networks": [
       "MegaETH"
     ],
     "links": {
+      "site": "https://itstheseason.xyz/?ref=FX8WPK",
       "twitter": "https://x.com/megatruther"
     },
-    "logo": "/logos/MegaTruther.webp"
+    "logo": "/logos/ITS.webp"
   },
   {
     "id": "huntertales",
@@ -1501,7 +1503,10 @@
       "twitter": "https://x.com/thewarren_app",
       "telegram": "https://t.me/thewarren_app"
     },
-    "logo": "/logos/Warren.webp"
+    "logo": "/logos/Warren.webp",
+    "linkedIds": [
+      "pulse"
+    ]
   },
   {
     "id": "megacorp",
@@ -1773,6 +1778,95 @@
     },
     "logo": "/logos/Jumper.webp",
     "jojoInsight": "Everyone knows Jumper, I don't know if it's the cheapest option but it's definitely the easiest one for most"
+  },
+  {
+    "id": "backed",
+    "name": "Backed",
+    "categories": [
+      "AI",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://www.backed.app/",
+      "twitter": "https://x.com/BackedApp"
+    },
+    "logo": "/logos/Backed.webp",
+    "jojoInsight": "That’s a platform for agents to raise capital and run treasuries, the promise is pretty cool ngl. MegaETH is perfectly fit for everything around agents so I’m curious to see this one live."
+  },
+  {
+    "id": "pulse",
+    "name": "Pulse",
+    "categories": [
+      "AI",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://thepulseai.app/",
+      "twitter": "https://x.com/pulseai_app"
+    },
+    "logo": "/logos/Pulse.webp",
+    "jojoInsight": "Pulse is an AI agent marketplace for skills, with USDm as currency, pretty cool and useful.",
+    "linkedIds": [
+      "warren"
+    ]
+  },
+  {
+    "id": "megafarm",
+    "name": "MegaFarm",
+    "categories": [
+      "Gaming",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://megafarm.io/test/",
+      "twitter": "https://x.com/MegaFarm_io",
+      "discord": "https://discord.com/invite/NHUSy9eT28"
+    },
+    "logo": "/logos/Megafarm.webp",
+    "jojoInsight": "Small farming game using the token $MEGG as mechanics, not much to say on this one, maybe give it a try."
+  },
+  {
+    "id": "ferdy",
+    "name": "Ferdy",
+    "categories": [
+      "Gambling"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://www.ferdy.bet/",
+      "twitter": "https://x.com/ferdybet",
+      "discord": "https://discord.com/invite/gAF4Ru8TTf"
+    },
+    "logo": "/logos/Ferdy.webp",
+    "jojoInsight": "Used to be a quite successful gambling app on Avax, now expanding to MegaETH. Not much to say."
+  },
+  {
+    "id": "megablobz",
+    "name": "MegaBlobz",
+    "categories": [
+      "NFT",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/MegaBlobz",
+      "discord": "https://discord.com/invite/bkhtNHeFXQ"
+    },
+    "logo": "/logos/Megablobz.webp",
+    "jojoInsight": "Seen them active in the community for some months now, i don't know much more about them ngl."
   }
 ]
 

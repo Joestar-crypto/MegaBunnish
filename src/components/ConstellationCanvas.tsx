@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useConstellation } from '../state/constellation';
 import { APP_EVENTS } from '../data/appEvents';
+import { INTERACTION_CONTRACT_MAP, NFT_CONTRACT_MAP } from '../data/contractDirectory';
 import { ConstellationProject, HighlightVariant } from '../types';
 import { getCategoryColor } from '../utils/colors';
 
@@ -348,11 +349,219 @@ type RenderInputs = {
   visibleProjects: ConstellationProject[];
   visibleProjectMap: Map<string, ConstellationProject>;
   favoriteSet: Set<string>;
-  walletInteractionCounts: Record<string, number>;
+  walletOrbitCounts: Record<string, number>;
   ethosScores: Record<string, number>;
   isEthosOverlayActive: boolean;
   ethosScoreThreshold: number | null;
   ethosBadgeSprites: Map<string, EthosBadgeSprite>;
+};
+
+const CONTRACT_PROJECT_OVERRIDES: Record<string, string> = {
+  '0x2ea493384f42d7ea78564f3ef4c86986eab4a890': 'avon',
+  '0xfafddbb3fc7688494971a79cc65dca3ef82079e7': 'avon',
+  '0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb': 'avon',
+  '0xe5bbef8de2db447a7432a47eba58924d94ee470e': 'kumbaya',
+  '0x6c8e5d463a2473b1a8bcd87e1cea2724203a1d8f': 'kumbaya',
+  '0x3fd43a658915a7ce5ae0a2e48f72b9fce7ba0c44': 'netizens'
+};
+
+const PROJECT_ALIAS_OVERRIDES: Record<string, string[]> = {
+  avon: ['avon', 'usdm', 'usdt0', 'usdmy', 'megausd'],
+  dotmegadomains: [
+    'dotmegadomains',
+    'mega domains',
+    'mega domain',
+    'megadomains',
+    'meganame',
+    'mega name',
+    '.mega',
+    'dotmega'
+  ],
+  netizens: ['netizens', 'wcn', 'world computer netizens'],
+  prismfi: ['prism', 'prismfi', 'prism fi'],
+  wrapx: ['warpx', 'wrapx', 'warp x'],
+  smasher: ['smasher'],
+  sectorone: ['sectorone', 'sector one'],
+  canonic: ['canonic'],
+  mania: ['mania'],
+  'leverage-sir': ['sir trading', 'sirtrading'],
+  redstone: ['redstone', 'redstone finance'],
+  'mega-punk': ['megapunks', 'mega punk', 'mega punks'],
+  fluffle: ['crossy fluffle', 'fluffle'],
+  odds: ['odds'],
+  rarible: ['rarible'],
+  gmx: ['gmx'],
+  kumbaya: ['kumbaya'],
+  topstrike: ['topstrike', 'top strike'],
+  mtrkr: ['mtrkr'],
+  syscall: ['syscall sdk', 'syscall'],
+  chainlink: ['chainlink']
+};
+
+const normalizeText = (value: string) => value.trim().toLowerCase();
+
+const tokenize = (value: string) =>
+  normalizeText(value)
+    .split(/[^a-z0-9]+/)
+    .filter((token) => token.length >= 3);
+
+const projectLabelMatches = (projectName: string, candidateLabel: string) => {
+  const projectTokens = tokenize(projectName);
+  const candidateTokens = tokenize(candidateLabel);
+  if (!projectTokens.length || !candidateTokens.length) {
+    return false;
+  }
+  return projectTokens.some((token) => candidateTokens.includes(token));
+};
+
+const buildWalletOrbitCounts = (
+  projects: ConstellationProject[],
+  walletInteractionCounts: Record<string, number>,
+  walletNftHoldings: Record<string, number>,
+  walletNftAssets: Array<{ projectId?: string }>,
+  walletDiscoveredApps: Array<{ address: string; label: string; interactions: number; tags?: string[] }>,
+  walletDexProtocols: Array<{ address: string; label: string; interactions: number }>,
+  walletLpPositions: Array<{ contractAddress: string; symbol: string; name: string; balance: number }>,
+  walletNftCollections: Array<{ contractAddress: string; symbol: string; name: string; balance: number }>
+) => {
+  const counts: Record<string, number> = {};
+
+  Object.entries(walletInteractionCounts).forEach(([projectId, count]) => {
+    if (count > 0) {
+      counts[projectId] = (counts[projectId] || 0) + count;
+    }
+  });
+
+  const projectLookup = projects.map((project) => ({
+    id: project.id,
+    name: project.name,
+    normalizedName: normalizeText(project.name)
+  }));
+
+  const applyWeightToProject = (projectId: string, weight: number) => {
+    if (!projectId || weight <= 0) {
+      return;
+    }
+    counts[projectId] = (counts[projectId] || 0) + weight;
+  };
+
+  const hasMappedNftAssets = walletNftAssets.some((asset) => Boolean(asset.projectId));
+
+  if (hasMappedNftAssets) {
+    walletNftAssets.forEach((asset) => {
+      if (asset.projectId) {
+        applyWeightToProject(asset.projectId, 1);
+      }
+    });
+  } else {
+    Object.entries(walletNftHoldings).forEach(([projectId, count]) => {
+      if (count > 0) {
+        applyWeightToProject(projectId, count);
+      }
+    });
+  }
+
+  const resolveProjectIdByText = (text: string) => {
+    const normalized = normalizeText(text);
+    if (!normalized) {
+      return null;
+    }
+
+    const aliasMatch = Object.entries(PROJECT_ALIAS_OVERRIDES).find(([, aliases]) =>
+      aliases.some((alias) => normalized.includes(alias))
+    );
+    if (aliasMatch) {
+      return aliasMatch[0];
+    }
+
+    const direct = projectLookup.find((project) => projectLabelMatches(project.name, text));
+
+    return direct?.id ?? null;
+  };
+
+  walletLpPositions.forEach((position) => {
+    const contractProjectId = INTERACTION_CONTRACT_MAP[normalizeText(position.contractAddress)];
+    if (contractProjectId) {
+      applyWeightToProject(contractProjectId, 1);
+      return;
+    }
+
+    const overrideProjectId = CONTRACT_PROJECT_OVERRIDES[normalizeText(position.contractAddress)];
+    const lpWeight = 1;
+    if (overrideProjectId) {
+      applyWeightToProject(overrideProjectId, lpWeight);
+      return;
+    }
+
+    const lpLabel = `${position.symbol} ${position.name}`;
+    const textProjectId = resolveProjectIdByText(lpLabel);
+    if (textProjectId) {
+      applyWeightToProject(textProjectId, lpWeight);
+    }
+  });
+
+  walletNftCollections.forEach((collection) => {
+    if (hasMappedNftAssets) {
+      return;
+    }
+    const contractProjectId = NFT_CONTRACT_MAP[normalizeText(collection.contractAddress)];
+    if (contractProjectId) {
+      applyWeightToProject(contractProjectId, Math.max(1, collection.balance));
+      return;
+    }
+
+    const overrideProjectId = CONTRACT_PROJECT_OVERRIDES[normalizeText(collection.contractAddress)];
+    const nftWeight = Math.max(1, collection.balance);
+    if (overrideProjectId) {
+      applyWeightToProject(overrideProjectId, nftWeight);
+      return;
+    }
+
+    const nftLabel = `${collection.symbol} ${collection.name}`;
+    const textProjectId = resolveProjectIdByText(nftLabel);
+    if (textProjectId) {
+      applyWeightToProject(textProjectId, nftWeight);
+    }
+  });
+
+  walletDexProtocols.forEach((dex) => {
+    if (dex.interactions <= 0) {
+      return;
+    }
+
+    const contractProjectId = INTERACTION_CONTRACT_MAP[normalizeText(dex.address)];
+    const overrideProjectId = CONTRACT_PROJECT_OVERRIDES[normalizeText(dex.address)];
+    const textProjectId = resolveProjectIdByText(dex.label);
+    const projectId = contractProjectId ?? overrideProjectId ?? textProjectId;
+    if (!projectId) {
+      return;
+    }
+
+    applyWeightToProject(projectId, Math.max(1, Math.min(3, dex.interactions)));
+  });
+
+  walletDiscoveredApps.forEach((app) => {
+    if (app.interactions <= 0) {
+      return;
+    }
+
+    const normalizedTags = (app.tags ?? []).map((tag) => normalizeText(tag));
+    if (normalizedTags.length && normalizedTags.every((tag) => tag === 'nft')) {
+      return;
+    }
+
+    const contractProjectId = INTERACTION_CONTRACT_MAP[normalizeText(app.address)] ?? NFT_CONTRACT_MAP[normalizeText(app.address)];
+    const overrideProjectId = CONTRACT_PROJECT_OVERRIDES[normalizeText(app.address)];
+    const textProjectId = resolveProjectIdByText(app.label);
+    const projectId = contractProjectId ?? overrideProjectId ?? textProjectId;
+    if (!projectId) {
+      return;
+    }
+
+    applyWeightToProject(projectId, app.interactions);
+  });
+
+  return counts;
 };
 
 const useImageCache = (projects: ConstellationProject[]) => {
@@ -492,10 +701,39 @@ export const ConstellationCanvas = ({
     resetCamera,
     favoriteIds,
     walletInteractionCounts,
+    walletNftHoldings,
+    walletNftAssets,
+    walletDiscoveredApps,
+    walletDexProtocols,
+    walletLpPositions,
+    walletNftCollections,
     ethosScores,
     isEthosOverlayActive,
     ethosScoreThreshold
   } = useConstellation();
+  const walletOrbitCounts = useMemo(
+    () =>
+      buildWalletOrbitCounts(
+        projects,
+        walletInteractionCounts,
+        walletNftHoldings,
+        walletNftAssets,
+        walletDiscoveredApps,
+        walletDexProtocols,
+        walletLpPositions,
+        walletNftCollections
+      ),
+    [
+      projects,
+      walletInteractionCounts,
+      walletNftHoldings,
+      walletNftAssets,
+      walletDiscoveredApps,
+      walletDexProtocols,
+      walletLpPositions,
+      walletNftCollections
+    ]
+  );
   const visibleProjects = useMemo(() => {
     if (!isEthosOverlayActive || ethosScoreThreshold === null) {
       return projects;
@@ -533,7 +771,7 @@ export const ConstellationCanvas = ({
     visibleProjects,
     visibleProjectMap,
     favoriteSet,
-    walletInteractionCounts,
+    walletOrbitCounts,
     ethosScores,
     isEthosOverlayActive,
     ethosScoreThreshold,
@@ -686,7 +924,7 @@ export const ConstellationCanvas = ({
     nextInputs.visibleProjects = visibleProjects;
     nextInputs.visibleProjectMap = visibleProjectMap;
     nextInputs.favoriteSet = favoriteSet;
-    nextInputs.walletInteractionCounts = walletInteractionCounts;
+    nextInputs.walletOrbitCounts = walletOrbitCounts;
     nextInputs.ethosScores = ethosScores;
     nextInputs.isEthosOverlayActive = isEthosOverlayActive;
     nextInputs.ethosScoreThreshold = ethosScoreThreshold;
@@ -695,7 +933,7 @@ export const ConstellationCanvas = ({
     visibleProjects,
     visibleProjectMap,
     favoriteSet,
-    walletInteractionCounts,
+    walletOrbitCounts,
     ethosScores,
     isEthosOverlayActive,
     ethosScoreThreshold
@@ -771,7 +1009,7 @@ export const ConstellationCanvas = ({
         visibleProjects: renderProjects,
         visibleProjectMap,
         favoriteSet: renderFavoriteSet,
-        walletInteractionCounts: renderWalletCounts,
+        walletOrbitCounts: renderWalletCounts,
         ethosScores: renderEthosScores,
         isEthosOverlayActive: renderOverlayActive,
         ethosScoreThreshold: renderScoreThreshold,
@@ -995,7 +1233,7 @@ export const ConstellationCanvas = ({
           context.fillText(project.name[0]?.toUpperCase() ?? '?', x, y);
         }
 
-        if (!isPerformanceMode && beadCount > 0) {
+        if (beadCount > 0) {
           drawInteractionBeads(context, x, y, beadCount, radius, time);
         }
 

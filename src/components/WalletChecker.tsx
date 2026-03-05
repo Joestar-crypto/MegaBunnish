@@ -1,11 +1,37 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useConstellation } from '../state/constellation';
+import { NFT_CONTRACT_MAP } from '../data/contractDirectory';
 
 const MERKL_API_BASE = 'https://api.merkl.xyz';
 const AVON_PROTOCOL_ID = 'avon';
 const AVON_POINTS_LABEL = 'Avon Points';
 const AVON_OPPORTUNITY_IDENTIFIER = '0x2ea493384f42d7ea78564f3ef4c86986eab4a890';
 const AVON_OPPORTUNITY_TYPE = 'erc20logprocessor';
+
+const NFT_PROJECT_ALIASES: Record<string, string> = {
+  badbunnz: 'bad-bunnz',
+  'bad bunnz': 'bad-bunnz',
+  digitrabbits: 'digitrabbits',
+  'digit rabbits': 'digitrabbits',
+  meganame: 'dotmegadomains',
+  'mega name': 'dotmegadomains',
+  megadomains: 'dotmegadomains',
+  'mega domains': 'dotmegadomains',
+  'mega domain': 'dotmegadomains',
+  '.mega': 'dotmegadomains',
+  dotmega: 'dotmegadomains',
+  'dotmega domains': 'dotmegadomains',
+  'world computer netizens': 'netizens',
+  netizens: 'netizens',
+  megalio: 'megalio',
+  meganacci: 'meganacci',
+  fluffle: 'fluffle',
+  odds: 'odds',
+  megapunks: 'mega-punk',
+  'mega punks': 'mega-punk',
+  'mega punk': 'mega-punk'
+};
+
 
 type MerklRewardEntry = {
   amount: string;
@@ -298,12 +324,14 @@ type WalletCheckerProps = {
 
 export const WalletChecker = ({ isInteracting = false }: WalletCheckerProps) => {
   const LEADERBOARD_PAGE_SIZE = 20;
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
   const [leaderboardStatus, setLeaderboardStatus] = useState<LeaderboardStatus>('idle');
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
   const [leaderboardEntries, setLeaderboardEntries] = useState<LeaderboardEntry[]>([]);
   const [leaderboardPage, setLeaderboardPage] = useState(0);
+  const [isNftGalleryOpen, setIsNftGalleryOpen] = useState(false);
   const [walletRank, setWalletRank] = useState<number | null>(null);
   const [walletPointsLabel, setWalletPointsLabel] = useState<string | null>(null);
   const [leaderboardTokenLabel, setLeaderboardTokenLabel] = useState(AVON_POINTS_LABEL);
@@ -313,6 +341,13 @@ export const WalletChecker = ({ isInteracting = false }: WalletCheckerProps) => 
     walletStatus,
     walletError,
     walletUpdatedAt,
+    walletTransactionCount,
+    walletUniqueContractCount,
+    walletDiscoveredApps,
+    walletDexProtocols,
+    walletLpPositions,
+    walletNftCollections,
+    walletNftAssets,
     walletInteractionCounts,
     walletNftHoldings,
     contractDirectoryStatus,
@@ -331,7 +366,31 @@ export const WalletChecker = ({ isInteracting = false }: WalletCheckerProps) => 
   }, [selectedProjectId]);
 
   useEffect(() => {
+    if (!isOpen && !isLeaderboardOpen && !isNftGalleryOpen) {
+      return;
+    }
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (!target) {
+        return;
+      }
+      const root = rootRef.current;
+      if (root && !root.contains(target)) {
+        setIsOpen(false);
+        setIsLeaderboardOpen(false);
+        setIsNftGalleryOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+    };
+  }, [isOpen, isLeaderboardOpen, isNftGalleryOpen]);
+
+  useEffect(() => {
     setIsLeaderboardOpen(false);
+    setIsNftGalleryOpen(false);
     setLeaderboardStatus('idle');
     setLeaderboardError(null);
     setLeaderboardEntries([]);
@@ -370,7 +429,106 @@ export const WalletChecker = ({ isInteracting = false }: WalletCheckerProps) => 
 
   const isBusy = walletStatus === 'loading' || contractDirectoryStatus === 'loading';
   const hasWallet = Boolean(walletAddress);
-  const hasInsights = topInteractions.length > 0 || trackedNfts.length > 0;
+  const hasInsights =
+    walletDiscoveredApps.length > 0 ||
+    walletDexProtocols.length > 0 ||
+    walletLpPositions.length > 0 ||
+    walletNftCollections.length > 0 ||
+    topInteractions.length > 0 ||
+    trackedNfts.length > 0;
+  const summaryApps = useMemo(
+    () => walletDiscoveredApps.slice(0, 4).map((entry) => entry.label),
+    [walletDiscoveredApps]
+  );
+  const summaryDex = useMemo(
+    () => walletDexProtocols.slice(0, 2).map((entry) => entry.label),
+    [walletDexProtocols]
+  );
+  const summaryLp = useMemo(
+    () => walletLpPositions.slice(0, 2).map((entry) => entry.symbol || entry.name),
+    [walletLpPositions]
+  );
+  const summaryNft = useMemo(
+    () => walletNftCollections.slice(0, 2).map((entry) => entry.name),
+    [walletNftCollections]
+  );
+  const megaEthNftCollections = useMemo(() => walletNftCollections, [walletNftCollections]);
+  const nftDisplayCollections = useMemo(
+    () =>
+      megaEthNftCollections.map((entry) => {
+        const contractAddress = entry.contractAddress.toLowerCase();
+        const byContract = NFT_CONTRACT_MAP[contractAddress];
+
+        const nameKey = entry.name.toLowerCase().trim();
+        const symbolKey = entry.symbol.toLowerCase().trim();
+        const aliasFromName = NFT_PROJECT_ALIASES[nameKey];
+        const aliasFromSymbol = NFT_PROJECT_ALIASES[symbolKey];
+        const normalizedNameId = nameKey.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+        const candidateProjectIds = [
+          byContract,
+          aliasFromName,
+          aliasFromSymbol,
+          normalizedNameId
+        ].filter(Boolean) as string[];
+
+        const projectLogo = candidateProjectIds
+          .map((projectId) => resolveProjectById(projectId)?.logo)
+          .find(Boolean);
+
+        return {
+          ...entry,
+          displayImageUrl: projectLogo || entry.imageUrl || undefined
+        };
+      }),
+    [megaEthNftCollections, resolveProjectById]
+  );
+  const nftPreviewCollections = useMemo(
+    () => nftDisplayCollections.slice(0, 3),
+    [nftDisplayCollections]
+  );
+  const nftGalleryAssets = useMemo(
+    () => walletNftAssets.map((asset) => ({ ...asset, displayImageUrl: asset.imageUrl })),
+    [walletNftAssets]
+  );
+  const nftCollectionFallbackImageByContract = useMemo(() => {
+    return new Map(
+      nftDisplayCollections.map((entry) => [entry.contractAddress.toLowerCase(), entry.displayImageUrl])
+    );
+  }, [nftDisplayCollections]);
+  const nftGalleryTotal = nftGalleryAssets.length;
+  const nftCollectionRows = useMemo(() => {
+    const grouped = new Map<
+      string,
+      {
+        contractAddress: string;
+        collectionName: string;
+        count: number;
+        imageSlots: Array<{ tokenId: string; imageUrl?: string }>;
+      }
+    >();
+
+    nftGalleryAssets.forEach((asset) => {
+      const key = `${asset.contractAddress}:${asset.collectionName.toLowerCase()}`;
+      const current = grouped.get(key) ?? {
+        contractAddress: asset.contractAddress,
+        collectionName: asset.collectionName,
+        count: 0,
+        imageSlots: []
+      };
+      current.count += 1;
+      const fallbackImage = nftCollectionFallbackImageByContract.get(asset.contractAddress.toLowerCase());
+      current.imageSlots.push({
+        tokenId: asset.tokenId,
+        imageUrl: asset.displayImageUrl || fallbackImage
+      });
+      grouped.set(key, current);
+    });
+
+    return Array.from(grouped.values()).sort(
+      (a, b) => b.count - a.count || a.collectionName.localeCompare(b.collectionName)
+    );
+  }, [nftGalleryAssets, nftCollectionFallbackImageByContract]);
 
   const loadAvonLeaderboard = useCallback(async () => {
     if (!walletAddress) {
@@ -574,11 +732,38 @@ export const WalletChecker = ({ isInteracting = false }: WalletCheckerProps) => 
   };
 
   return (
-    <div className={rootClasses.join(' ')}>
-      <button type="button" className={toggleClasses.join(' ')} onClick={handleWalletToggle}>
-        <span>{toggleLabel}</span>
-        <span className={`wallet-checker__indicator wallet-checker__indicator--${walletStatus}`} />
-      </button>
+    <div ref={rootRef} className={rootClasses.join(' ')}>
+      <div className="wallet-checker__toggle-row">
+        {nftPreviewCollections.length ? (
+          <button
+            type="button"
+            className="wallet-checker__toggle-nft-showcase"
+            aria-label="Open MegaETH NFT library"
+            onClick={() => setIsNftGalleryOpen(true)}
+          >
+            {nftPreviewCollections.map((entry) => (
+              entry.displayImageUrl ? (
+                <img
+                  key={`nft-preview-toggle-${entry.contractAddress}`}
+                  src={entry.displayImageUrl}
+                  alt=""
+                  className="wallet-checker__toggle-nft-item"
+                />
+              ) : (
+                <span
+                  key={`nft-preview-toggle-${entry.contractAddress}`}
+                  className="wallet-checker__toggle-nft-item wallet-checker__toggle-nft-item--placeholder"
+                  aria-hidden="true"
+                />
+              )
+            ))}
+          </button>
+        ) : null}
+        <button type="button" className={toggleClasses.join(' ')} onClick={handleWalletToggle}>
+          <span>{toggleLabel}</span>
+          <span className={`wallet-checker__indicator wallet-checker__indicator--${walletStatus}`} />
+        </button>
+      </div>
       <div className={`wallet-checker__panel ${isOpen ? 'wallet-checker__panel--visible' : ''}`}>
         <header className="wallet-checker__header">
           <div>
@@ -623,6 +808,9 @@ export const WalletChecker = ({ isInteracting = false }: WalletCheckerProps) => 
           {walletUpdatedAt && walletStatus === 'ready' ? (
             <p className="wallet-checker__meta">Updated at {formatTimestamp(walletUpdatedAt)}</p>
           ) : null}
+          {walletStatus === 'ready' ? (
+            <p className="wallet-checker__meta">Transactions detected: {walletTransactionCount}</p>
+          ) : null}
         </div>
         {contractDirectoryStatus === 'error' ? (
           <p className="wallet-checker__error">
@@ -630,12 +818,16 @@ export const WalletChecker = ({ isInteracting = false }: WalletCheckerProps) => 
           </p>
         ) : null}
         {walletStatus === 'ready' && !hasInsights ? (
-          <p className="wallet-checker__hint">No MegaETH interactions were detected for this wallet.</p>
+          <p className="wallet-checker__hint">
+            {walletTransactionCount > 0
+              ? `${walletTransactionCount} transactions detected, but none matched the tracked contract list yet.`
+              : 'No MegaETH interactions were detected for this wallet.'}
+          </p>
         ) : null}
-        {topInteractions.length ? (
-          <div className="wallet-checker__results">
+        {walletStatus === 'ready' ? (
+          <div className="wallet-checker__results wallet-checker__results--summary">
             <div className="wallet-checker__results-header">
-              <p>Interacted projects</p>
+              <p>Activity summary</p>
               {hasWallet ? (
                 <button type="button" onClick={refreshWalletInsights} disabled={isBusy}>
                   Refresh
@@ -643,27 +835,26 @@ export const WalletChecker = ({ isInteracting = false }: WalletCheckerProps) => 
               ) : null}
             </div>
             <ul>
-              {topInteractions.map((entry) => (
-                <li key={entry.id}>
-                  <span>{entry.name}</span>
-                  <strong>{entry.count}</strong>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-        {trackedNfts.length ? (
-          <div className="wallet-checker__results wallet-checker__results--nft">
-            <div className="wallet-checker__results-header">
-              <p>Tracked collections (NFT)</p>
-            </div>
-            <ul>
-              {trackedNfts.map((entry) => (
-                <li key={`${entry.id}-nft`}>
-                  <span>{entry.name}</span>
-                  <strong>{entry.count}</strong>
-                </li>
-              ))}
+              <li>
+                <span>Scope</span>
+                <strong>{walletTransactionCount} tx • {walletUniqueContractCount} contracts</strong>
+              </li>
+              <li>
+                <span>Main apps</span>
+                <strong>{summaryApps.length ? summaryApps.join(', ') : 'Not identified yet'}</strong>
+              </li>
+              <li>
+                <span>DEX</span>
+                <strong>{summaryDex.length ? summaryDex.join(', ') : 'None detected'}</strong>
+              </li>
+              <li>
+                <span>LP</span>
+                <strong>{summaryLp.length ? summaryLp.join(', ') : 'None detected'}</strong>
+              </li>
+              <li>
+                <span>NFT</span>
+                <strong>{summaryNft.length ? summaryNft.join(', ') : 'None detected'}</strong>
+              </li>
             </ul>
           </div>
         ) : null}
@@ -744,51 +935,114 @@ export const WalletChecker = ({ isInteracting = false }: WalletCheckerProps) => 
         </div>
       ) : null}
       {hasWallet ? (
-        <button
-          type="button"
-          className={`wallet-checker__leaderboard-pill ${
-            leaderboardStatus === 'error'
-              ? 'wallet-checker__leaderboard-pill--error'
-              : leaderboardStatus === 'loading'
-                ? 'wallet-checker__leaderboard-pill--loading'
-                : rankPresentation.pillClassName
-          }`}
-          aria-live="polite"
-          onClick={handlePillClick}
-        >
-          <img src="/logos/Avon.webp" alt="" aria-hidden="true" className="wallet-checker__leaderboard-pill-logo" />
-          <span className="wallet-checker__leaderboard-pill-text">
-            Avon Rank{' '}
-            {leaderboardStatus === 'loading'
-              ? '#...'
-              : leaderboardStatus === 'error'
-                ? '#--'
-                : walletRank
-                  ? `#${walletRank}`
-                  : '#--'}
-          </span>
-          {leaderboardStatus === 'ready' ? (
-            <span
-              className={`wallet-checker__leaderboard-insignia wallet-checker__leaderboard-insignia--trailing ${rankPresentation.insigniaClassName}`}
-              aria-hidden="true"
-            >
-              {rankPresentation.stars > 0 ? (
-                <span className="wallet-checker__leaderboard-insignia-stars">
-                  {Array.from({ length: rankPresentation.stars }).map((_, index) => (
-                    <span key={`star-${index}`} className="wallet-checker__leaderboard-insignia-star" />
-                  ))}
-                </span>
-              ) : null}
-              {rankPresentation.bars > 0 ? (
-                <span className="wallet-checker__leaderboard-insignia-bars">
-                  {Array.from({ length: rankPresentation.bars }).map((_, index) => (
-                    <span key={`bar-${index}`} className="wallet-checker__leaderboard-insignia-bar" />
-                  ))}
-                </span>
-              ) : null}
+        <div className="wallet-checker__leaderboard-strip">
+          <button
+            type="button"
+            className={`wallet-checker__leaderboard-pill ${
+              leaderboardStatus === 'error'
+                ? 'wallet-checker__leaderboard-pill--error'
+                : leaderboardStatus === 'loading'
+                  ? 'wallet-checker__leaderboard-pill--loading'
+                  : rankPresentation.pillClassName
+            }`}
+            aria-live="polite"
+            onClick={handlePillClick}
+          >
+            <img src="/logos/Avon.webp" alt="" aria-hidden="true" className="wallet-checker__leaderboard-pill-logo" />
+            <span className="wallet-checker__leaderboard-pill-text">
+              Avon Rank{' '}
+              {leaderboardStatus === 'loading'
+                ? '#...'
+                : leaderboardStatus === 'error'
+                  ? '#--'
+                  : walletRank
+                    ? `#${walletRank}`
+                    : '#--'}
             </span>
-          ) : null}
-        </button>
+            {leaderboardStatus === 'ready' ? (
+              <span
+                className={`wallet-checker__leaderboard-insignia wallet-checker__leaderboard-insignia--trailing ${rankPresentation.insigniaClassName}`}
+                aria-hidden="true"
+              >
+                {rankPresentation.stars > 0 ? (
+                  <span className="wallet-checker__leaderboard-insignia-stars">
+                    {Array.from({ length: rankPresentation.stars }).map((_, index) => (
+                      <span key={`star-${index}`} className="wallet-checker__leaderboard-insignia-star" />
+                    ))}
+                  </span>
+                ) : null}
+                {rankPresentation.bars > 0 ? (
+                  <span className="wallet-checker__leaderboard-insignia-bars">
+                    {Array.from({ length: rankPresentation.bars }).map((_, index) => (
+                      <span key={`bar-${index}`} className="wallet-checker__leaderboard-insignia-bar" />
+                    ))}
+                  </span>
+                ) : null}
+              </span>
+            ) : null}
+          </button>
+        </div>
+      ) : null}
+      {hasWallet && isNftGalleryOpen ? (
+        <div className="wallet-checker__nft-window" role="dialog" aria-label="MegaETH NFT collections">
+          <div className="wallet-checker__results wallet-checker__leaderboard">
+            <div className="wallet-checker__results-header">
+              <p className="wallet-checker__nft-title">MegaETH NFTs ({nftGalleryTotal})</p>
+              <button type="button" className="wallet-checker__leaderboard-close" onClick={() => setIsNftGalleryOpen(false)}>
+                Close
+              </button>
+            </div>
+            {nftGalleryAssets.length ? (
+              <ul className="wallet-checker__nft-collection-list">
+                {nftCollectionRows.map((entry) => (
+                  <li key={`nft-gallery-collection-${entry.contractAddress}-${entry.collectionName}`}>
+                    <div className="wallet-checker__nft-collection-cards" aria-hidden="true">
+                      {entry.imageSlots.length ? (
+                        entry.imageSlots.slice(0, 8).map((slot, index) => (
+                          slot.imageUrl ? (
+                            <img
+                              key={`${entry.contractAddress}-${slot.tokenId}-${index}`}
+                              src={slot.imageUrl}
+                              alt=""
+                              className="wallet-checker__nft-grid-image"
+                            />
+                          ) : (
+                            <div
+                              key={`${entry.contractAddress}-${slot.tokenId}-${index}`}
+                              className="wallet-checker__nft-grid-image wallet-checker__nft-grid-image--placeholder"
+                            />
+                          )
+                        ))
+                      ) : (
+                        <div className="wallet-checker__nft-grid-image wallet-checker__nft-grid-image--placeholder" />
+                      )}
+                    </div>
+                    <div className="wallet-checker__nft-collection-meta">
+                      <span>{entry.collectionName}</span>
+                      <strong>x{entry.count}</strong>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : nftDisplayCollections.length ? (
+              <ul className="wallet-checker__nft-grid">
+                {nftDisplayCollections.map((entry) => (
+                  <li key={`nft-gallery-${entry.contractAddress}`}>
+                    {entry.displayImageUrl ? (
+                      <img src={entry.displayImageUrl} alt="" className="wallet-checker__nft-grid-image" />
+                    ) : (
+                      <div className="wallet-checker__nft-grid-image wallet-checker__nft-grid-image--placeholder" />
+                    )}
+                    <span>{entry.name}</span>
+                    <strong>x{entry.balance}</strong>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="wallet-checker__hint">No MegaETH NFT collections found.</p>
+            )}
+          </div>
+        </div>
       ) : null}
     </div>
   );
