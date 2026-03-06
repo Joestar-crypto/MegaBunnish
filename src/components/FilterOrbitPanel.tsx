@@ -1,3 +1,11 @@
+import type { CSSProperties } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
+import { useConstellation } from '../state/constellation';
+import { SpecialFilters } from '../types';
+import { getCategoryColor } from '../utils/colors';
+import { JOJO_PROFILES } from '../data/jojoProfiles';
+import { EventsBell } from './EthosTrustScores';
+
 const FavoriteIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
     <path
@@ -9,12 +17,32 @@ const FavoriteIcon = () => (
     />
   </svg>
 );
-import type { CSSProperties } from 'react';
-import { useConstellation } from '../state/constellation';
-import { SpecialFilters } from '../types';
-import { getCategoryColor } from '../utils/colors';
-import { JOJO_PROFILES } from '../data/jojoProfiles';
-import { EventsBell } from './EthosTrustScores';
+
+const SearchIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" strokeWidth="1.9" />
+    <line x1="15.2" y1="15.2" x2="20" y2="20" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+  </svg>
+);
+
+const fuzzyMatch = (query: string, target: string): boolean => {
+  const q = query.toLowerCase();
+  const t = target.toLowerCase();
+  if (t.includes(q)) return true;
+  let qi = 0;
+  for (let ti = 0; ti < t.length && qi < q.length; ti++) {
+    if (t[ti] === q[qi]) qi++;
+  }
+  return qi === q.length;
+};
+
+const fuzzyScore = (query: string, target: string): number => {
+  const q = query.toLowerCase();
+  const t = target.toLowerCase();
+  if (t.startsWith(q)) return 0;
+  if (t.includes(q)) return 1;
+  return 2;
+};
 
 const MegamafiaIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -117,8 +145,51 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
     liveOnly,
     toggleLiveOnly,
     eventOnly,
-    toggleEventOnly
+    toggleEventOnly,
+    allProjects,
+    selectProject
   } = useConstellation();
+
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchWrapRef = useRef<HTMLDivElement>(null);
+
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim();
+    if (!q) return [];
+    return allProjects
+      .filter((p) => fuzzyMatch(q, p.name))
+      .sort((a, b) => fuzzyScore(q, a.name) - fuzzyScore(q, b.name))
+      .slice(0, 8);
+  }, [searchQuery, allProjects]);
+
+  const openSearch = () => {
+    setIsSearchOpen(true);
+    setTimeout(() => searchInputRef.current?.focus(), 50);
+  };
+
+  const closeSearch = () => {
+    setIsSearchOpen(false);
+    setSearchQuery('');
+  };
+
+  const handleSelect = (projectId: string) => {
+    selectProject(projectId);
+    closeSearch();
+  };
+
+  useEffect(() => {
+    if (!isSearchOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchWrapRef.current && !searchWrapRef.current.contains(e.target as Node)) {
+        closeSearch();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isSearchOpen]);
+
   const totalProjects = projectPoolSize + NOISE_PROJECT_OFFSET;
   const hasFavorites = favoriteIds.length > 0;
   const favoritesDisabled = !favoritesOnly && !hasFavorites;
@@ -182,6 +253,47 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
               </span>
             </button>
             <EventsBell />
+            {isSearchOpen ? (
+              <div className="search-bar-wrap" ref={searchWrapRef}>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  className="search-bar-input"
+                  placeholder="Search project…"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Escape') closeSearch(); }}
+                  aria-label="Search projects"
+                />
+                {searchResults.length > 0 && (
+                  <div className="search-results-dropdown" role="listbox">
+                    {searchResults.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className="search-result-item"
+                        role="option"
+                        aria-selected={false}
+                        onClick={() => handleSelect(p.id)}
+                      >
+                        {p.logo && <img src={p.logo} alt="" className="search-result-logo" />}
+                        <span>{p.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="chip--search"
+                onClick={openSearch}
+                aria-label="Search projects"
+                title="Search a project"
+              >
+                <SearchIcon />
+              </button>
+            )}
           </div>
         </div>
         {showJojoProfiles ? (

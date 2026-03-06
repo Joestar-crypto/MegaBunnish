@@ -849,6 +849,7 @@ type ConstellationContextShape = ConstellationState &
   setEthosOverlayActive: (isActive: boolean) => void;
   setEthosProfileLinks: (links: Record<string, string | null>) => void;
   setEthosScoreThreshold: (threshold: number | null) => void;
+  allProjects: ConstellationProject[];
   };
 
 const ConstellationContext = createContext<ConstellationContextShape | undefined>(undefined);
@@ -1867,7 +1868,8 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       setEthosScores,
       setEthosProfileLinks,
       setEthosOverlayActive,
-      setEthosScoreThreshold
+      setEthosScoreThreshold,
+      allProjects: layout.projects
     }),
     [
       state,
@@ -1906,7 +1908,8 @@ export const ConstellationProvider = ({ children }: { children: ReactNode }) => 
       setEthosScores,
       setEthosProfileLinks,
       setEthosOverlayActive,
-      setEthosScoreThreshold
+      setEthosScoreThreshold,
+      layout.projects
     ]
   );
 

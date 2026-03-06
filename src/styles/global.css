@@ -2817,6 +2817,121 @@ select {
   color: rgba(255, 255, 255, 0.45);
 }
 
+/* Search button */
+.chip--search {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(5, 8, 20, 0.6);
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: var(--accent);
+  flex-shrink: 0;
+  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.chip--search svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.chip--search:hover {
+  border-color: rgba(78, 241, 255, 0.55);
+  transform: translateY(-1px);
+  background: rgba(78, 241, 255, 0.1);
+}
+
+.chip__leading-icon--search {
+  background: rgba(78, 241, 255, 0.12);
+  color: var(--accent);
+}
+
+.chip--search:hover .chip__leading-icon--search {
+  background: rgba(78, 241, 255, 0.2);
+}
+
+/* Search bar wrap */
+.search-bar-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.search-bar-input {
+  background: rgba(5, 8, 20, 0.92);
+  border: 1px solid rgba(78, 241, 255, 0.45);
+  border-radius: 999px;
+  color: var(--text);
+  padding: 0.28rem 0.9rem;
+  font-size: 0.8rem;
+  width: 180px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  height: 2.2rem;
+}
+
+.search-bar-input:focus {
+  border-color: rgba(78, 241, 255, 0.7);
+  box-shadow: 0 0 0 2px rgba(78, 241, 255, 0.12);
+}
+
+.search-bar-input::placeholder {
+  color: var(--text-dim);
+}
+
+/* Search results dropdown */
+.search-results-dropdown {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  left: 0;
+  min-width: 100%;
+  background: rgba(5, 8, 20, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  backdrop-filter: blur(20px);
+  overflow: hidden;
+  z-index: 30;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.45rem 0.75rem;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: background 0.15s ease;
+}
+
+.search-result-item:hover {
+  background: rgba(78, 241, 255, 0.1);
+}
+
+.search-result-logo {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .search-bar-input {
+    width: 140px;
+  }
+}
+
 .chip--category.chip.active {
   font-weight: 600;
   color: inherit;
