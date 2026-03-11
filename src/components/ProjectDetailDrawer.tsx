@@ -845,7 +845,7 @@ export const ProjectDetailDrawer = () => {
       });
   }, [project, nowTick]);
   const specialEvent = useMemo(() => {
-    if (!project || (project.id !== 'euphoria' && project.id !== 'survivors' && project.id !== 'blackhaven')) {
+    if (!project || (project.id !== 'euphoria' && project.id !== 'survivors' && project.id !== 'blackhaven' && project.id !== 'aveforge')) {
       return null;
     }
     const targetId =
@@ -853,7 +853,9 @@ export const ProjectDetailDrawer = () => {
         ? 'euphoria-tapathon'
         : project.id === 'survivors'
           ? 'survivors-presale-live-14d'
-          : 'blackhaven-ico-registration';
+          : project.id === 'aveforge'
+            ? 'aveforge-tournament-march-2026'
+            : 'blackhaven-ico-registration';
     const event = APP_EVENTS.find((entry) => entry.id === targetId);
     if (!event) {
       return null;

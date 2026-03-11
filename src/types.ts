@@ -56,7 +56,7 @@ export type ConstellationProject = RawProject & {
   traits: SpecialFilters;
 };
 
-export type HighlightVariant = 'badbunnz' | 'megalio';
+export type HighlightVariant = 'badbunnz' | 'megalio' | 'warren';
 
 export type CameraState = {
   x: number;

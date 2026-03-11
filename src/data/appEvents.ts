@@ -117,6 +117,22 @@ export const APP_EVENTS: AppEvent[] = [
     ]
   },
   {
+    id: 'aveforge-tournament-march-2026',
+    title: 'Tournament',
+    projectId: 'aveforge',
+    start: '2026-03-09T00:00:00-05:00',
+    end: '2026-03-22T23:59:00-05:00',
+    tweetUrl: 'https://x.com/AveForge',
+    detailsUrl: 'https://aveforge.gg/?referralCode=joestar633',
+    phases: [
+      {
+        label: 'Tournament',
+        start: '2026-03-09T00:00:00-05:00',
+        end: '2026-03-22T23:59:00-05:00'
+      }
+    ]
+  },
+  {
     id: 'aveforge-cosmetic-sbt-early-users',
     title: 'Cosmetic SBT offered for early users this week',
     projectId: 'aveforge',

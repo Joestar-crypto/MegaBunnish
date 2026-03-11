@@ -15,6 +15,11 @@ const highlightStyles: Record<HighlightVariant, { stroke: string; glow: string; 
     stroke: '#b58bff',
     glow: 'rgba(181, 139, 255, 0.45)',
     halo: 'rgba(181, 139, 255, 0.22)'
+  },
+  warren: {
+    stroke: '#4ef1d1',
+    glow: 'rgba(78, 241, 209, 0.45)',
+    halo: 'rgba(78, 241, 209, 0.22)'
   }
 };
 
@@ -900,7 +905,8 @@ export const ConstellationCanvas = ({
           (event) =>
             event.id === 'euphoria-tapathon' ||
             event.id === 'survivors-presale-live-14d' ||
-            event.id === 'blackhaven-ico-registration'
+            event.id === 'blackhaven-ico-registration' ||
+            event.id === 'aveforge-tournament-march-2026'
         )
           .filter((event) => {
             const endValue = event.end ?? event.start;

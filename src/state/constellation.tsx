@@ -319,7 +319,9 @@ const ECOSYSTEM_HIGHLIGHTS: Record<string, HighlightVariant> = {
   faster: 'badbunnz',
   bunnzpaw: 'badbunnz',
   megalio: 'megalio',
-  priority: 'megalio'
+  priority: 'megalio',
+  warren: 'warren',
+  pulse: 'warren'
 };
 
 const FAVORITES_STORAGE_KEY = 'constellation:favorites';
