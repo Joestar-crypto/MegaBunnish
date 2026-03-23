@@ -661,6 +661,14 @@ const createEthosBadgeSprite = (
   return { canvas, width: badgeWidth, height: badgeHeight, score, label, devicePixelRatio: scale };
 };
 
+type ShootingStar = {
+  x0: number; y0: number;
+  x1: number; y1: number;
+  startTime: number;
+  duration: number;
+  angle: number;
+};
+
 type ConstellationCanvasProps = {
   onInteractionStart?: () => void;
   onInteractionEnd?: () => void;
@@ -782,6 +790,14 @@ export const ConstellationCanvas = ({
     ethosScoreThreshold,
     ethosBadgeSprites: ethosBadgeSpritesRef.current
   });
+
+  // Shooting star (MegaETH logo flying across the screen)
+  const shootingStarRef = useRef<ShootingStar | null>(null);
+  const megaEthImg = useMemo(() => {
+    const img = new Image();
+    img.src = '/logos/MegaETH.webp';
+    return img;
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -1010,6 +1026,41 @@ export const ConstellationCanvas = ({
     const handleResize = () => resize();
     window.addEventListener('resize', handleResize);
 
+    // Shooting star spawn logic
+    const spawnShootingStar = () => {
+      const edge = Math.floor(Math.random() * 4); // 0=top, 1=right, 2=bottom, 3=left
+      let x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+      // Spawn from a random point on one edge, exit via the opposite edge
+      if (edge === 0) {        // top → bottom
+        x0 = Math.random(); y0 = -0.05;
+        x1 = x0 + (Math.random() - 0.5) * 0.6; y1 = 1.05;
+      } else if (edge === 1) { // right → left
+        x0 = 1.05; y0 = Math.random();
+        x1 = -0.05; y1 = y0 + (Math.random() - 0.5) * 0.6;
+      } else if (edge === 2) { // bottom → top
+        x0 = Math.random(); y0 = 1.05;
+        x1 = x0 + (Math.random() - 0.5) * 0.6; y1 = -0.05;
+      } else {                  // left → right
+        x0 = -0.05; y0 = Math.random();
+        x1 = 1.05; y1 = y0 + (Math.random() - 0.5) * 0.6;
+      }
+      const angle = Math.atan2(y1 - y0, x1 - x0);
+      shootingStarRef.current = {
+        x0, y0, x1, y1,
+        startTime: performance.now(),
+        duration: 2200 + Math.random() * 1200,
+        angle
+      };
+    };
+
+    // First spawn after a random delay of 4-12 s
+    const firstDelay = 4000 + Math.random() * 8000;
+    let nextTimeout = window.setTimeout(function scheduleNext() {
+      spawnShootingStar();
+      // Re-schedule 12-25 s later
+      nextTimeout = window.setTimeout(scheduleNext, 12000 + Math.random() * 13000);
+    }, firstDelay);
+
     const render = (time: number) => {
       const {
         visibleProjects: renderProjects,
@@ -1048,6 +1099,72 @@ export const ConstellationCanvas = ({
           context.fill();
         }
       }
+
+      // ── Shooting star ──────────────────────────────────────────────────────
+      const ss = shootingStarRef.current;
+      if (ss) {
+        const elapsed = performance.now() - ss.startTime;
+        const t = Math.min(elapsed / ss.duration, 1);
+        if (t >= 1) {
+          shootingStarRef.current = null;
+        } else {
+          // Current head position in screen px
+          const hx = (ss.x0 + (ss.x1 - ss.x0) * t) * width;
+          const hy = (ss.y0 + (ss.y1 - ss.y0) * t) * height;
+          // Fade in first 10%, hold, fade out last 20%
+          const alpha = t < 0.1 ? t / 0.1 : t > 0.8 ? (1 - t) / 0.2 : 1;
+
+          // --- glowing tail ---
+          const tailLen = 120 + 80 * alpha;
+          const tx = hx - Math.cos(ss.angle) * tailLen;
+          const ty = hy - Math.sin(ss.angle) * tailLen;
+          const tailGrad = context.createLinearGradient(tx, ty, hx, hy);
+          tailGrad.addColorStop(0, `rgba(100,180,255,0)`);
+          tailGrad.addColorStop(0.5, `rgba(160,210,255,${alpha * 0.25})`);
+          tailGrad.addColorStop(1, `rgba(220,240,255,${alpha * 0.7})`);
+          context.save();
+          context.strokeStyle = tailGrad;
+          context.lineWidth = 3 * alpha;
+          context.lineCap = 'round';
+          context.shadowColor = 'rgba(140,200,255,0.6)';
+          context.shadowBlur = 12;
+          context.beginPath();
+          context.moveTo(tx, ty);
+          context.lineTo(hx, hy);
+          context.stroke();
+          context.restore();
+
+          // --- MegaETH logo head ---
+          const imgSize = 72;
+          const half = imgSize / 2;
+          if (megaEthImg.complete && megaEthImg.naturalWidth > 0) {
+            context.save();
+            context.globalAlpha = alpha;
+            context.shadowColor = 'rgba(100,180,255,0.8)';
+            context.shadowBlur = 20;
+            context.translate(hx, hy);
+            context.rotate(ss.angle + Math.PI / 2);
+            context.beginPath();
+            context.arc(0, 0, half, 0, Math.PI * 2);
+            context.closePath();
+            context.clip();
+            context.drawImage(megaEthImg, -half, -half, imgSize, imgSize);
+            context.restore();
+          } else {
+            // Fallback: glowing circle
+            context.save();
+            context.globalAlpha = alpha;
+            context.fillStyle = 'rgba(160,220,255,0.9)';
+            context.shadowColor = 'rgba(100,180,255,0.9)';
+            context.shadowBlur = 24;
+            context.beginPath();
+            context.arc(hx, hy, half, 0, Math.PI * 2);
+            context.fill();
+            context.restore();
+          }
+        }
+      }
+      // ───────────────────────────────────────────────────────────────────────
 
       const cameraState = cameraRef.current;
       const hoveredId = hoveredRef.current;
@@ -1317,6 +1434,7 @@ export const ConstellationCanvas = ({
     return () => {
       cancelAnimationFrame(animationFrame);
       window.removeEventListener('resize', handleResize);
+      clearTimeout(nextTimeout);
     };
   }, [images, stars, ethosScoreFormatter, ethosLogo, devicePixelRatioState, categoryOrbitData]);
 
