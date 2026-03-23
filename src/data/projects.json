@@ -244,7 +244,7 @@
     ],
     "links": {
       "site": "https://lemonade.social/",
-      "twitter": "https://x.com/LemonadedApp"
+      "twitter": "https://x.com/lemonation_xyz"
     },
     "logo": "/logos/Lemonade.webp"
   },
@@ -1303,23 +1303,6 @@
       "twitter": "https://x.com/JoinSurvivors"
     },
     "logo": "/logos/Survivors.webp"
-  },
-  {
-    "id": "reach",
-    "name": "Reach",
-    "categories": [
-      "Social",
-      "Native"
-    ],
-    "networks": [
-      "MegaETH"
-    ],
-    "links": {
-      "site": "https://megareach.xyz/links",
-      "twitter": "https://x.com/reach_eth",
-      "discord": "https://discord.com/invite/megareach"
-    },
-    "logo": "/logos/Reach.webp"
   },
   {
     "id": "miniminds",

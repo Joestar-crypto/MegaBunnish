@@ -217,6 +217,14 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     "url": "https://app.ethos.network/profile/x/enjoyooors"
   },
   {
+    "projectId": "lemonade",
+    "handle": "lemonation_xyz",
+    "score": 1451,
+    "tier": "Known",
+    "displayName": "Lemonade",
+    "url": "https://app.ethos.network/profile/x/lemonation_xyz"
+  },
+  {
     "projectId": "stomp",
     "handle": "stompdotgg",
     "score": 1451,
@@ -839,21 +847,5 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     "tier": "Questionable",
     "displayName": "Mania",
     "url": "https://app.ethos.network/profile/x/ManiaDotFun"
-  },
-  {
-    "projectId": "lemonade",
-    "handle": "LemonadedApp",
-    "score": 0,
-    "tier": "Untrusted",
-    "displayName": "Lemonade",
-    "url": "https://app.ethos.network/profile/x/LemonadedApp"
-  },
-  {
-    "projectId": "reach",
-    "handle": "reach_eth",
-    "score": 0,
-    "tier": "Untrusted",
-    "displayName": "Reach",
-    "url": "https://app.ethos.network/profile/x/reach_eth"
   }
 ];
