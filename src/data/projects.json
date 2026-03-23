@@ -924,25 +924,6 @@
     "logo": "/logos/Nunchi.webp"
   },
   {
-    "id": "sirio",
-    "name": "Sirio",
-    "categories": [
-      "Jojo",
-      "Launchpad",
-      "Native"
-    ],
-    "networks": [
-      "MegaETH"
-    ],
-    "links": {
-      "site": "https://www.sirio.gg/",
-      "twitter": "https://x.com/SirioApp",
-      "discord": "https://discord.com/invite/husM3pZbBA",
-      "telegram": "https://t.me/sirioapp"
-    },
-    "logo": "/logos/Sirio.webp"
-  },
-  {
     "id": "telis",
     "name": "Telis",
     "categories": [
@@ -1867,6 +1848,23 @@
     },
     "logo": "/logos/Megablobz.webp",
     "jojoInsight": "Seen them active in the community for some months now, i don't know much more about them ngl."
+  },
+  {
+    "id": "megahop",
+    "name": "MegaHop",
+    "categories": [
+      "NFT",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://megahopnft.xyz/",
+      "twitter": "https://x.com/MegahopNFT"
+    },
+    "logo": "/logos/Megahop.webp",
+    "jojoInsight": "Tbh I don't know this new collection but it's a free mint so I guess it's cool DYOR"
   }
 ]
 

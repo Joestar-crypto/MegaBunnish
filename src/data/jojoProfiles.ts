@@ -41,7 +41,6 @@ export const JOJO_PROFILES: JojoProfile[] = [
       'premarket',
       'clutch',
       'offshore',
-      'sirio',
       'tulpea',
       'brix',
       'benchmark',

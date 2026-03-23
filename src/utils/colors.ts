@@ -1,19 +1,33 @@
 const accentOverrides: Record<string, string> = {
-  DeFi: '#4ef1ff',
-  Trading: '#ff9a62',
-  NFT: '#b17bff',
-  Gaming: '#66f2a2',
-  Social: '#ff7ad9',
-  Launchpad: '#f8d477',
-  Tools: '#9ff7c1',
-  Depin: '#9bd8ff',
-  Meme: '#ffd966',
-  Gambling: '#ff6f91',
-  'Prediction M.': '#c4a2ff',
-  AI: '#7ad6ff',
-  Bridge: '#6ad5ff',
-  RWA: '#f2b86e',
-  'Trading bot': '#ffa0b6'
+  // Core financial
+  DeFi: '#4ef1ff',        // cyan
+  Trading: '#ff9a3c',     // orange
+  'Trading bot': '#ff5e7a', // rose-red
+  RWA: '#f4a84a',         // amber
+  Launchpad: '#ffe566',   // yellow
+
+  // NFT / Gaming / Social
+  NFT: '#bf6fff',         // purple
+  Gaming: '#39e88f',      // green
+  Social: '#ff6fea',      // magenta-pink
+  Meme: '#ffe0a0',        // cream-yellow
+  Gambling: '#ff4d6d',    // crimson
+
+  // Infrastructure
+  Bridge: '#38c9ff',      // sky blue
+  Depin: '#5bc8f5',       // light blue (distinct from Bridge)
+  AI: '#90e0ff',          // pale blue
+  Tools: '#95f7c4',       // mint
+
+  // Prediction
+  'Prediction Market': '#a78bfa', // violet (raw data alias)
+  'Prediction M.': '#a78bfa',     // violet (canonical label)
+
+  // Special/meta
+  Native: '#34d9b5',      // teal
+  Mobile: '#ffb347',      // peach
+  Megamafia: '#ff3864',   // hot red
+  Jojo: '#f9d46e',        // warm gold
 };
 
 const generatedColorCache: Record<string, string> = {};
