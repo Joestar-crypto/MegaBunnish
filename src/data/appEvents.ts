@@ -224,20 +224,5 @@ export const APP_EVENTS: AppEvent[] = [
         end: '2026-02-26T23:59:00-05:00'
       }
     ]
-  },
-  {
-    id: 'megahop-free-mint',
-    title: 'Free mint NFT',
-    projectId: 'megahop',
-    start: '2026-03-26T00:00:00-05:00',
-    end: '2026-03-26T23:59:00-05:00',
-    tweetUrl: 'https://x.com/MegahopNFT/status/2035367095857217901',
-    phases: [
-      {
-        label: 'Free mint',
-        start: '2026-03-26T00:00:00-05:00',
-        end: '2026-03-26T23:59:00-05:00'
-      }
-    ]
   }
 ];

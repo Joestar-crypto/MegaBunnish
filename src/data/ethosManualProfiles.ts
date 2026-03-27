@@ -593,14 +593,6 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     "url": "https://app.ethos.network/profile/x/pulseai_app"
   },
   {
-    "projectId": "megahop",
-    "handle": "MegahopNFT",
-    "score": 1200,
-    "tier": "Neutral",
-    "displayName": "MegaHop",
-    "url": "https://app.ethos.network/profile/x/MegahopNFT"
-  },
-  {
     "projectId": "offshore",
     "handle": "OffshoreOnMega",
     "score": 1198,

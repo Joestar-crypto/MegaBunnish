@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { APP_EVENTS, type AppEvent } from '../data/appEvents';
 import { useConstellation } from '../state/constellation';
 import { getCategoryColor } from '../utils/colors';
+import { EthosReviewModal } from './EthosReviewWidget';
 
 const SOCIAL_LINKS: { key: 'site' | 'twitter' | 'discord' | 'telegram' | 'nft'; label: string; icon: string }[] = [
   { key: 'site', label: 'Website', icon: '/logos/Website.webp' },
@@ -814,6 +815,7 @@ const JojoOracle = ({
 
 export const ProjectDetailDrawer = () => {
   const [nowTick, setNowTick] = useState(() => Date.now());
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const {
     selectedProjectId,
     selectProject,
@@ -896,6 +898,10 @@ export const ProjectDetailDrawer = () => {
     : null;
 
   const isVisible = Boolean(project);
+
+  useEffect(() => {
+    setReviewModalOpen(false);
+  }, [selectedProjectId]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -987,6 +993,27 @@ export const ProjectDetailDrawer = () => {
               </div>
             </section>
           ) : null}
+          {/* Review on Ethos button — hidden for now, re-enable later
+          {extractTwitterHandleFromUrl(project.links?.twitter) ? (
+            <section>
+              <button
+                type="button"
+                className="ethos-review-trigger"
+                onClick={() => setReviewModalOpen(true)}
+              >
+                <img src="/logos/Ethos.webp" alt="" aria-hidden="true" className="ethos-review-trigger__icon" />
+                Review on Ethos
+              </button>
+            </section>
+          ) : null}
+          {reviewModalOpen && extractTwitterHandleFromUrl(project.links?.twitter) ? (
+            <EthosReviewModal
+              projectName={project.name}
+              twitterUsername={extractTwitterHandleFromUrl(project.links?.twitter)!}
+              onClose={() => setReviewModalOpen(false)}
+            />
+          ) : null}
+          */}
           <JojoOracle projectId={project.id} onNavigate={selectProject} fallbackInsight={project.jojoInsight} />
           <section>
             <h3>{incentiveSectionLabel}</h3>

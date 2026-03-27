@@ -589,9 +589,30 @@ const generateStars = (maxStars: number) =>
   Array.from({ length: maxStars }, () => ({
     x: Math.random(),
     y: Math.random(),
-    radius: Math.pow(Math.random(), 2) * 1.5 + 0.4, // Non-linear distribution for depth effect
+    radius: Math.pow(Math.random(), 2) * 1.5 + 0.4,
     speed: Math.random() * 0.3 + 0.05,
-    twinkle: Math.random() * Math.PI * 2
+    twinkle: Math.random() * Math.PI * 2,
+    depth: Math.random()  // 0 = far background, 1 = near foreground
+  }));
+
+type DustParticle = {
+  x: number; y: number;
+  radius: number;
+  speed: number;
+  drift: number;
+  phase: number;
+  curve: number;  // curvature of drift path
+};
+
+const generateDust = (count: number): DustParticle[] =>
+  Array.from({ length: count }, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    radius: Math.random() * 0.6 + 0.15,
+    speed: Math.random() * 0.5 + 0.1,
+    drift: (Math.random() - 0.5) * 0.00008,
+    phase: Math.random() * Math.PI * 2,
+    curve: (Math.random() - 0.5) * 2
   }));
 
 const worldFromClient = (
@@ -698,9 +719,15 @@ export const ConstellationCanvas = ({
   const stars = useMemo(() => {
     // Generate fewer stars on mobile
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      return generateStars(100);
+      return generateStars(300);
     }
-    return generateStars(600); // Significantly increased for galaxy effect on desktop
+    return generateStars(1500);
+  }, []);
+  const dust = useMemo(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return generateDust(250);
+    }
+    return generateDust(1000);
   }, []);
   const {
     projects,
@@ -1053,12 +1080,12 @@ export const ConstellationCanvas = ({
       };
     };
 
-    // First spawn after a random delay of 4-12 s
-    const firstDelay = 4000 + Math.random() * 8000;
+    // First spawn after a random delay of 2-6 s
+    const firstDelay = 2000 + Math.random() * 4000;
     let nextTimeout = window.setTimeout(function scheduleNext() {
       spawnShootingStar();
-      // Re-schedule 12-25 s later
-      nextTimeout = window.setTimeout(scheduleNext, 12000 + Math.random() * 13000);
+      // Re-schedule 6-14 s later
+      nextTimeout = window.setTimeout(scheduleNext, 6000 + Math.random() * 8000);
     }, firstDelay);
 
     const render = (time: number) => {
@@ -1076,7 +1103,7 @@ export const ConstellationCanvas = ({
       const isSmallScreen = window.innerWidth < 768;
       const isDensityMode = renderProjects.length > (isSmallScreen ? 30 : 70);
       const isPerformanceMode = isInteractionMode || isDensityMode || isSmallScreen;
-      const starStep = isPerformanceMode ? 5 : 1;
+      const starStep = isPerformanceMode ? 6 : 1;
       const shouldRenderStars = !isPerformanceMode || renderProjects.length < (isSmallScreen ? 60 : 140);
 
       const width = canvas.width / dpr;
@@ -1085,17 +1112,57 @@ export const ConstellationCanvas = ({
       context.clearRect(0, 0, canvas.width, canvas.height);
       context.scale(dpr, dpr);
 
-      context.fillStyle = '#000000';
+      context.fillStyle = '#020208';
       context.fillRect(0, 0, width, height);
 
+      // (nebulae & core glow removed — pure black starfield)
+
+      // ── Flowing space dust (batched single-path per color bucket) ──
       if (shouldRenderStars) {
+        const dustStep = isPerformanceMode ? 5 : 1;
+        context.beginPath();
+        for (let idx = 0; idx < dust.length; idx += dustStep) {
+          const d = dust[idx];
+          const t01 = (time * d.drift * 0.8 + d.phase) * 0.5;
+          const dx = ((d.x + Math.sin(t01 * d.curve) * 0.03 + time * d.drift) % 1 + 1) % 1;
+          const dy = ((d.y + Math.cos(t01 * d.curve * 0.7) * 0.02 + time * d.drift * 0.6) % 1 + 1) % 1;
+          const px = dx * width;
+          const py = dy * height;
+          context.moveTo(px + d.radius, py);
+          context.arc(px, py, d.radius, 0, Math.PI * 2);
+        }
+        const dustAlpha = 0.18 + Math.sin(time * 0.0008) * 0.06;
+        context.fillStyle = `rgba(170, 195, 255, ${dustAlpha})`;
+        context.fill();
+      }
+
+      // ── Parallax star field (batched by brightness bucket) ────────
+      if (shouldRenderStars) {
+        // 4 brightness buckets to minimize fillStyle changes
+        const buckets: number[][] = [[], [], [], []];
         for (let idx = 0; idx < stars.length; idx += starStep) {
           const star = stars[idx];
-          const drift = Math.sin(time * 0.0002 * star.speed + idx) * 4;
-          const brightness = 0.35 + ((Math.sin(time * 0.001 * star.speed + star.twinkle) + 1) / 2) * 0.45;
+          const parallax = 0.5 + star.depth * 1.5;
+          const driftX = Math.sin(time * 0.00015 * star.speed + idx) * (2 + star.depth * 4);
+          const driftY = Math.cos(time * 0.0001 * star.speed + idx * 0.7) * (1 + star.depth * 3);
+          const brightness = (0.25 + star.depth * 0.2) + ((Math.sin(time * 0.001 * star.speed + star.twinkle) + 1) / 2) * (0.3 + star.depth * 0.2);
+          const r = star.radius * (0.6 + star.depth * 0.6);
+          const px = star.x * width + driftX * parallax;
+          const py = star.y * height + driftY * parallax;
+          const bucket = Math.min(3, (brightness * 4) | 0);
+          buckets[bucket].push(px, py, r);
+        }
+        const alphas = [0.28, 0.42, 0.58, 0.78];
+        for (let b = 0; b < 4; b++) {
+          const data = buckets[b];
+          if (data.length === 0) continue;
           context.beginPath();
-          context.fillStyle = `rgba(255, 255, 255, ${brightness})`;
-          context.arc(star.x * width + drift, star.y * height + drift, star.radius, 0, Math.PI * 2);
+          for (let i = 0; i < data.length; i += 3) {
+            const px = data[i], py = data[i + 1], r = data[i + 2];
+            context.moveTo(px + r, py);
+            context.arc(px, py, r, 0, Math.PI * 2);
+          }
+          context.fillStyle = `rgba(220, 230, 255, ${alphas[b]})`;
           context.fill();
         }
       }
@@ -1169,10 +1236,15 @@ export const ConstellationCanvas = ({
       const cameraState = cameraRef.current;
       const hoveredId = hoveredRef.current;
       const selectedId = selectedRef.current;
-      const toScreen = (point: { x: number; y: number }) => ({
-        x: (point.x - cameraState.x) * cameraState.zoom + width / 2,
-        y: (point.y - cameraState.y) * cameraState.zoom + height / 2
-      });
+
+      const toScreen = (point: { x: number; y: number }) => {
+        const wx = point.x - cameraState.x;
+        const wy = point.y - cameraState.y;
+        return {
+          x: wx * cameraState.zoom + width / 2,
+          y: wy * cameraState.zoom + height / 2
+        };
+      };
       const hoveredCategory = hoveredCategoryRef.current;
 
       const nowMs = Date.now();
@@ -1201,6 +1273,15 @@ export const ConstellationCanvas = ({
           context.shadowColor = color;
           context.shadowBlur = 14;
         }
+        context.setLineDash([8, 16]);
+        context.arc(center.x, center.y, screenRadius, 0, Math.PI * 2);
+        context.stroke();
+        // Second pass: solid dim ring underneath
+        context.beginPath();
+        context.globalAlpha = 0.08;
+        context.setLineDash([]);
+        context.lineWidth = 0.75;
+        context.shadowBlur = 0;
         context.arc(center.x, center.y, screenRadius, 0, Math.PI * 2);
         context.stroke();
         context.restore();
@@ -1436,7 +1517,7 @@ export const ConstellationCanvas = ({
       window.removeEventListener('resize', handleResize);
       clearTimeout(nextTimeout);
     };
-  }, [images, stars, ethosScoreFormatter, ethosLogo, devicePixelRatioState, categoryOrbitData]);
+  }, [images, stars, dust, ethosScoreFormatter, ethosLogo, devicePixelRatioState, categoryOrbitData]);
 
   const endInteraction = () => {
     if (interactionActiveRef.current) {
