@@ -4,7 +4,7 @@ import { PrivyProvider } from '@privy-io/react-auth';
 import App from './App';
 import './styles/global.css';
 
-const PRIVY_APP_ID = import.meta.env.VITE_PRIVY_APP_ID as string;
+const PRIVY_APP_ID = import.meta.env.VITE_PRIVY_APP_ID || 'cmn5xqu7o00ge0cl4aztig426';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
