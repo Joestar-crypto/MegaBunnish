@@ -113,9 +113,9 @@ select {
 
 @media (max-width: 480px) {
   .hero-overlay {
-    padding: 0.75rem;
-    padding-bottom: 0.5rem;
+    padding: 0;
     justify-content: flex-end;
+    align-items: center;
   }
 }
 
@@ -134,9 +134,10 @@ select {
 @media (max-width: 480px) {
   .hero-overlay__content {
     max-width: 100%;
-    align-items: flex-end;
-    text-align: right;
+    align-items: center;
+    text-align: center;
     row-gap: 0.15rem;
+    padding-bottom: 0.4rem;
   }
 }
 
@@ -910,7 +911,7 @@ select {
     width: auto;
     left: 0;
     right: auto;
-    top: 3.8rem;
+    top: 4.5rem;
     bottom: auto;
     max-height: none;
     height: auto;
