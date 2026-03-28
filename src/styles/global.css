@@ -31,6 +31,7 @@
 body {
   margin: 0;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   font-family: 'Space Grotesk', 'Segoe UI', Tahoma, sans-serif;
   color: var(--text);
@@ -40,6 +41,7 @@ body {
 #root {
   height: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 button,
@@ -56,6 +58,7 @@ select {
   position: relative;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   min-height: 0;
   overflow: hidden;
   padding: 0;
@@ -113,9 +116,16 @@ select {
 
 @media (max-width: 480px) {
   .hero-overlay {
-    padding: 0;
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0.5rem;
+    padding-bottom: env(safe-area-inset-bottom, 0.4rem);
     justify-content: flex-end;
     align-items: center;
+    z-index: 3;
   }
 }
 
