@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { useRef, useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useConstellation } from '../state/constellation';
 import { SpecialFilters } from '../types';
 import { getCategoryColor } from '../utils/colors';
@@ -117,7 +118,7 @@ const SPECIAL_FILTERS: SpecialFilterDefinition[] = [
     hint: 'Personal farming list',
     iconSrc: '/logos/Jojo2.webp'
   },
-  { key: 'native', label: 'MegaETH', hint: 'Core native', iconSrc: '/logos/MegaETH.webp', Icon: NativeCoreIcon }
+  { key: 'native', label: 'Native', hint: 'Core native', iconSrc: '/logos/MegaETH.webp', Icon: NativeCoreIcon }
 ];
 
 type FilterOrbitPanelProps = {
@@ -154,6 +155,7 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchWrapRef = useRef<HTMLDivElement>(null);
+  const searchAnchorRef = useRef<HTMLDivElement>(null);
 
   const searchResults = useMemo(() => {
     const q = searchQuery.trim();
@@ -166,7 +168,11 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
 
   const openSearch = () => {
     setIsSearchOpen(true);
-    setTimeout(() => searchInputRef.current?.focus(), 50);
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 150);
+    });
   };
 
   const closeSearch = () => {
@@ -181,13 +187,21 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
 
   useEffect(() => {
     if (!isSearchOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (searchWrapRef.current && !searchWrapRef.current.contains(e.target as Node)) {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (
+        searchAnchorRef.current && !searchAnchorRef.current.contains(target) &&
+        searchWrapRef.current && !searchWrapRef.current.contains(target)
+      ) {
         closeSearch();
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, [isSearchOpen]);
 
   const totalProjects = projectPoolSize + NOISE_PROJECT_OFFSET;
@@ -253,47 +267,52 @@ export const FilterOrbitPanel = ({ isInteracting = false }: FilterOrbitPanelProp
               </span>
             </button>
             <EventsBell />
-            {isSearchOpen ? (
-              <div className="search-bar-wrap" ref={searchWrapRef}>
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  className="search-bar-input"
-                  placeholder="Search project…"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Escape') closeSearch(); }}
-                  aria-label="Search projects"
-                />
-                {searchResults.length > 0 && (
-                  <div className="search-results-dropdown" role="listbox">
-                    {searchResults.map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        className="search-result-item"
-                        role="option"
-                        aria-selected={false}
-                        onClick={() => handleSelect(p.id)}
-                      >
-                        {p.logo && <img src={p.logo} alt="" className="search-result-logo" />}
-                        <span>{p.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
+            <div className="search-anchor" ref={searchAnchorRef}>
               <button
                 type="button"
                 className="chip--search"
-                onClick={openSearch}
+                onClick={isSearchOpen ? closeSearch : openSearch}
                 aria-label="Search projects"
                 title="Search a project"
               >
                 <SearchIcon />
               </button>
-            )}
+              {isSearchOpen && createPortal(
+                <div className="search-dropdown search-dropdown--portal" ref={searchWrapRef}>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    inputMode="search"
+                    autoComplete="off"
+                    className="search-bar-input"
+                    placeholder="Search project…"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Escape') closeSearch(); }}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    aria-label="Search projects"
+                  />
+                  {searchResults.length > 0 && (
+                    <div className="search-results-dropdown" role="listbox">
+                      {searchResults.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          className="search-result-item"
+                          role="option"
+                          aria-selected={false}
+                          onClick={() => handleSelect(p.id)}
+                        >
+                          {p.logo && <img src={p.logo} alt="" className="search-result-logo" />}
+                          <span>{p.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>,
+                document.body
+              )}
+            </div>
           </div>
         </div>
         {showJojoProfiles ? (

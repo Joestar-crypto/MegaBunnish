@@ -78,8 +78,8 @@ const AppContent = () => {
           ) : null}
           <ProjectDetailDrawer />
           <div className="hud-stack">
-            <WalletChecker isInteracting={isInteracting} />
             <EthosTrustScores isInteracting={isInteracting} />
+            <WalletChecker isInteracting={isInteracting} />
           </div>
         </div>
         <div className="immersive-stage__rail">

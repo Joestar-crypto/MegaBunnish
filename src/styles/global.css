@@ -113,7 +113,8 @@ select {
 
 @media (max-width: 480px) {
   .hero-overlay {
-    padding-bottom: 2.5rem;
+    padding: 0.75rem;
+    padding-bottom: 1.5rem;
   }
 }
 
@@ -132,8 +133,9 @@ select {
 @media (max-width: 480px) {
   .hero-overlay__content {
     max-width: 100%;
-    align-items: center; /* Center align on mobile portrait? Or stay right? */
+    align-items: flex-end;
     text-align: right;
+    row-gap: 0.15rem;
   }
 }
 
@@ -180,7 +182,7 @@ select {
 
 @media (max-width: 480px) {
   .hero-overlay__title img {
-    width: 180px;
+    width: 140px;
   }
 }
 
@@ -233,14 +235,15 @@ select {
 
 @media (max-width: 480px) {
   .hero-overlay__credit {
-    font-size: 0.65rem;
-    padding: 0.15rem 0.3rem 0.15rem 0.7rem;
-    gap: 0.25rem;
-    letter-spacing: 0.12em;
+    font-size: 0.55rem;
+    padding: 0.12rem 0.25rem 0.12rem 0.55rem;
+    gap: 0.2rem;
+    letter-spacing: 0.1em;
+    margin-top: 0.3rem;
   }
   .hero-overlay__credit-avatar {
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
   }
 }
 
@@ -437,6 +440,7 @@ select {
   display: inline-flex;
   align-items: center;
   align-self: center;
+  overflow: visible;
 }
 
 .events-bell .ethos-events-panel {
@@ -444,6 +448,30 @@ select {
   top: calc(100% + 0.75rem);
   right: 0;
   z-index: 10;
+}
+
+@media (max-width: 480px) {
+  .events-bell .ethos-events-panel {
+    position: fixed;
+    top: 3.5rem;
+    left: 0.5rem;
+    right: auto;
+    bottom: auto;
+    width: min(320px, calc(100vw - 1rem));
+    max-height: min(55vh, 400px);
+    z-index: 30;
+    overflow-y: auto;
+  }
+}
+
+.ethos-events-panel--portal {
+  position: fixed;
+  top: 3.5rem;
+  left: 0.5rem;
+  width: min(320px, calc(100vw - 1rem));
+  max-height: min(55vh, 400px);
+  z-index: 50;
+  overflow-y: auto;
 }
 
 
@@ -598,7 +626,6 @@ select {
 
 @media (max-width: 480px) {
   .ethos-events-panel {
-    width: calc(100vw - 1rem);
     padding: 1rem;
     border-radius: 1rem;
   }
@@ -883,7 +910,7 @@ select {
     left: 0;
     right: auto;
     top: auto;
-    bottom: 0.3rem;
+    bottom: 2.8rem;
     max-height: none;
     height: auto;
     pointer-events: none;
@@ -1343,10 +1370,10 @@ select {
   .hud-stack {
     top: 0.5rem;
     right: 0.5rem;
-    gap: 0.2rem;
+    gap: 0.35rem;
     max-width: none;
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-end;
   }
 }
 
@@ -2000,14 +2027,37 @@ select {
   .wallet-checker__panel {
     position: fixed;
     top: auto;
-    left: 0.5rem;
-    right: 0.5rem;
-    bottom: 0.5rem;
-    width: auto;
-    max-height: 65vh;
+    left: 50%;
+    right: auto;
+    bottom: 3.5rem;
+    width: 220px;
+    max-height: 42vh;
     border-radius: 1rem;
-    padding: 1rem;
-    z-index: 20;
+    padding: 0.7rem;
+    z-index: 60;
+    font-size: 0.75rem;
+    margin-left: -110px;
+  }
+  .wallet-checker__header h2 {
+    font-size: 0.95rem;
+  }
+  .wallet-checker__eyebrow {
+    font-size: 0.55rem;
+  }
+  .wallet-checker__form {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+  }
+  .wallet-checker__form input {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.72rem;
+  }
+  .wallet-checker__submit,
+  .wallet-checker__ghost,
+  .wallet-checker__results button {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.72rem;
   }
 }
 
@@ -2795,6 +2845,7 @@ select {
     justify-content: flex-start;
     border-radius: 0.75rem;
     overflow-x: auto;
+    overflow-y: visible;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
@@ -2871,15 +2922,15 @@ select {
     height: 16px;
   }
 
-  /* Reduce bell button size on mobile */
+  /* Make bell button same size as other icons */
   .ethos-events-button {
-    width: 30px;
-    height: 30px;
+    width: 40px;
+    height: 40px;
   }
   
   .ethos-events-button img {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
   }
   
   .ethos-events-button__badge {
@@ -2893,10 +2944,14 @@ select {
 
   /* Reduce right-side HUD components */
   .wallet-checker__toggle {
-    padding: 0.25rem 0.55rem;
-    font-size: 0.6rem;
-    gap: 0.2rem;
+    padding: 0.2rem 0.45rem;
+    font-size: 0.52rem;
+    gap: 0.15rem;
     border-radius: 999px;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .wallet-checker__indicator {
@@ -2905,25 +2960,25 @@ select {
   }
 
   .ethos-trust-widget {
-    gap: 0.15rem;
-    flex-direction: row;
-    align-items: center;
+    gap: 0.2rem;
+    flex-direction: column;
+    align-items: flex-end;
   }
 
   .ethos-trust-button {
-    width: 30px;
-    height: 30px;
+    width: 44px;
+    height: 44px;
   }
 
   .ethos-trust-button img {
-    width: 26px;
-    height: 26px;
-    padding: 0.08rem;
+    width: 40px;
+    height: 40px;
+    padding: 0.1rem;
   }
 
   .ethos-filter-pill {
-    padding: 0.12rem 0.4rem;
-    font-size: 0.55rem;
+    padding: 0.25rem 0.7rem;
+    font-size: 0.68rem;
   }
   
   .chip__stack {
@@ -2931,10 +2986,10 @@ select {
   }
 
   .search-bar-input {
-    width: min(120px, calc(100vw - 6rem));
-    font-size: 0.7rem;
-    padding: 0.18rem 0.5rem;
-    height: 1.7rem;
+    width: min(140px, calc(100vw - 6rem));
+    font-size: 0.72rem;
+    padding: 0.2rem 0.55rem;
+    height: 1.8rem;
   }
 
   .jojo-profile-menu {
@@ -3093,6 +3148,63 @@ select {
 
 .chip--search:hover .chip__leading-icon--search {
   background: rgba(78, 241, 255, 0.2);
+}
+
+/* Search anchor wrapper */
+.search-anchor {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.search-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+}
+
+.search-dropdown--portal {
+  position: fixed;
+  top: 4rem;
+  left: 1rem;
+  width: calc(100vw - 2rem);
+  max-width: 320px;
+  z-index: 9999;
+  background: rgba(5, 8, 20, 0.95);
+  border: 1px solid rgba(78, 241, 255, 0.4);
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+  pointer-events: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+}
+
+.search-dropdown--portal .search-results-dropdown {
+  position: relative;
+  top: 0;
+  left: 0;
+  right: auto;
+  bottom: auto;
+  border-radius: 0 0 0.75rem 0.75rem;
+  border-top: none;
+}
+
+.search-dropdown--portal .search-bar-input {
+  width: 100%;
+  border-radius: 0.6rem;
+  box-sizing: border-box;
+  font-size: 0.85rem;
+  height: 2.4rem;
+  padding: 0.3rem 0.75rem;
+}
+
+.search-dropdown--portal .search-results-dropdown + .search-bar-input,
+.search-dropdown--portal .search-bar-input:first-child {
+  border-radius: 0.75rem 0.75rem 0 0;
 }
 
 /* Search bar wrap */
@@ -3531,6 +3643,13 @@ select {
   font-size: 0.75rem;
   color: var(--accent);
   margin: 0;
+}
+
+@media (max-width: 480px) {
+  .eyebrow {
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+  }
 }
 
 .muted {
@@ -3989,7 +4108,7 @@ select {
     max-height: 45vh;
   }
   .wallet-checker__panel {
-    max-height: 55vh;
+    max-height: 50vh;
   }
   .hero-overlay {
     padding: 0.75rem;

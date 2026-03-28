@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { APP_EVENTS, type AppEvent } from '../data/appEvents';
 import { ETHOS_PROFILE_OVERRIDES } from '../data/ethosManualProfiles';
 import rawProjects from '../data/projects.json';
@@ -705,6 +706,101 @@ export const EventsBell = () => {
     };
   }, [areEventsVisible]);
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 480;
+
+  const eventsPanel = areEventsVisible ? (
+    <div className="ethos-events-panel ethos-events-panel--portal" role="dialog" aria-label="Upcoming events">
+      <div className="ethos-events-panel__header">
+        <div>
+          <h3>Events</h3>
+        </div>
+        <button
+          type="button"
+          className="ethos-events-panel__close"
+          onClick={handleEventsToggle}
+          aria-label="Close events"
+        >
+          Close
+        </button>
+      </div>
+      {upcomingEvents.length ? (
+        <ul className="ethos-events-panel__list">
+          {upcomingEvents.map((event) => {
+            const project = PROJECT_BY_ID.get(event.projectId);
+            const projectName = project?.name ?? event.projectId;
+            const calendarUrl = buildGoogleCalendarUrl(event, projectName);
+            const countdownLabel = formatCountdown(event.start, event.end, nowTick);
+            return (
+              <li key={event.id} className="ethos-events-panel__item">
+                <div className="ethos-events-panel__meta">
+                  <button
+                    type="button"
+                    className="ethos-events-panel__logo"
+                    onClick={() => handleEventProjectClick(event.projectId)}
+                    aria-label={`Open ${projectName}`}
+                  >
+                    <img src={project?.logo ?? '/logos/MegaETH.webp'} alt={projectName} />
+                  </button>
+                  <div>
+                    <div className="ethos-events-panel__title">{event.title}</div>
+                    <div className="ethos-events-panel__details">
+                      <span>{formatEventDateRange(event.start, event.end)}</span>
+                      <span className="ethos-events-panel__divider" aria-hidden="true">
+                        •
+                      </span>
+                      <span>{projectName}</span>
+                    </div>
+                    <div className="ethos-events-panel__phases">
+                      {event.phases
+                        .filter((phase) => phase.label.toLowerCase() !== 'all day')
+                        .map((phase) => (
+                        <div key={phase.label} className="ethos-events-panel__phase">
+                          <span className="ethos-events-panel__phase-label">{phase.label}</span>
+                          {phase.label.toLowerCase().startsWith('end at')
+                            ? null
+                            : formatEventTimeRange(phase.start, phase.end) && (
+                                <span className="ethos-events-panel__phase-time">
+                                  {formatEventTimeRange(phase.start, phase.end)}
+                                </span>
+                              )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {countdownLabel ? (
+                    <div className="ethos-events-panel__countdown" aria-label={countdownLabel}>
+                      {countdownLabel}
+                    </div>
+                  ) : null}
+                </div>
+                <div className="ethos-events-panel__actions">
+                  <a
+                    className="ethos-events-panel__action"
+                    href={calendarUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  >
+                    Google Calendar
+                  </a>
+                  <a
+                    className="ethos-events-panel__action"
+                    href={event.detailsUrl ?? event.tweetUrl}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  >
+                    Details
+                  </a>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <div className="ethos-events-panel__empty">No upcoming events.</div>
+      )}
+    </div>
+  ) : null;
+
   return (
     <div className="events-bell" ref={containerRef}>
       <button
@@ -722,98 +818,9 @@ export const EventsBell = () => {
           </span>
         ) : null}
       </button>
-      {areEventsVisible ? (
-        <div className="ethos-events-panel" role="dialog" aria-label="Upcoming events">
-          <div className="ethos-events-panel__header">
-            <div>
-              <h3>Events</h3>
-            </div>
-            <button
-              type="button"
-              className="ethos-events-panel__close"
-              onClick={handleEventsToggle}
-              aria-label="Close events"
-            >
-              Close
-            </button>
-          </div>
-          {upcomingEvents.length ? (
-            <ul className="ethos-events-panel__list">
-              {upcomingEvents.map((event) => {
-                const project = PROJECT_BY_ID.get(event.projectId);
-                const projectName = project?.name ?? event.projectId;
-                const calendarUrl = buildGoogleCalendarUrl(event, projectName);
-                const countdownLabel = formatCountdown(event.start, event.end, nowTick);
-                return (
-                  <li key={event.id} className="ethos-events-panel__item">
-                    <div className="ethos-events-panel__meta">
-                      <button
-                        type="button"
-                        className="ethos-events-panel__logo"
-                        onClick={() => handleEventProjectClick(event.projectId)}
-                        aria-label={`Open ${projectName}`}
-                      >
-                        <img src={project?.logo ?? '/logos/MegaETH.webp'} alt={projectName} />
-                      </button>
-                      <div>
-                        <div className="ethos-events-panel__title">{event.title}</div>
-                        <div className="ethos-events-panel__details">
-                          <span>{formatEventDateRange(event.start, event.end)}</span>
-                          <span className="ethos-events-panel__divider" aria-hidden="true">
-                            •
-                          </span>
-                          <span>{projectName}</span>
-                        </div>
-                        <div className="ethos-events-panel__phases">
-                          {event.phases
-                            .filter((phase) => phase.label.toLowerCase() !== 'all day')
-                            .map((phase) => (
-                            <div key={phase.label} className="ethos-events-panel__phase">
-                              <span className="ethos-events-panel__phase-label">{phase.label}</span>
-                              {phase.label.toLowerCase().startsWith('end at')
-                                ? null
-                                : formatEventTimeRange(phase.start, phase.end) && (
-                                    <span className="ethos-events-panel__phase-time">
-                                      {formatEventTimeRange(phase.start, phase.end)}
-                                    </span>
-                                  )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      {countdownLabel ? (
-                        <div className="ethos-events-panel__countdown" aria-label={countdownLabel}>
-                          {countdownLabel}
-                        </div>
-                      ) : null}
-                    </div>
-                    <div className="ethos-events-panel__actions">
-                      <a
-                        className="ethos-events-panel__action"
-                        href={calendarUrl}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                      >
-                        Google Calendar
-                      </a>
-                      <a
-                        className="ethos-events-panel__action"
-                        href={event.detailsUrl ?? event.tweetUrl}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                      >
-                        Details
-                      </a>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <div className="ethos-events-panel__empty">No upcoming events.</div>
-          )}
-        </div>
-      ) : null}
+      {isMobile
+        ? eventsPanel && createPortal(eventsPanel, document.body)
+        : eventsPanel}
     </div>
   );
 };
