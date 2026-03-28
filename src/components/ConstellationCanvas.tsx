@@ -119,7 +119,8 @@ const drawInteractionBeads = (
     return;
   }
 
-  const visibleBeads = Math.min(totalInteractions, MAX_VISIBLE_BEADS);
+  const isMobile = window.innerWidth < 768;
+  const visibleBeads = Math.min(totalInteractions, isMobile ? 8 : MAX_VISIBLE_BEADS);
   const extraTransactions = Math.max(0, totalInteractions - visibleBeads);
   const fullGrowthCycles = Math.floor(extraTransactions / MAX_VISIBLE_BEADS);
   const incrementalGrowth = extraTransactions % MAX_VISIBLE_BEADS;
@@ -127,21 +128,25 @@ const drawInteractionBeads = (
   const orbitRadius = projectRadius + BEAD_ORBIT_OFFSET;
   const angleStep = (Math.PI * 2) / visibleBeads;
 
+  // Batch all beads in a single path on mobile (no shadow)
+  context.save();
+  context.fillStyle = 'rgba(255, 255, 255, 0.95)';
+  if (!isMobile) {
+    context.shadowColor = 'rgba(255, 255, 255, 0.7)';
+    context.shadowBlur = 10;
+  }
+  context.beginPath();
   for (let idx = 0; idx < visibleBeads; idx += 1) {
     const growthBoost = fullGrowthCycles * BEAD_GROWTH_STEP + (idx < incrementalGrowth ? BEAD_GROWTH_STEP : 0);
     const radius = BEAD_RADIUS + growthBoost;
     const angle = rotation + idx * angleStep;
     const beadX = x + Math.cos(angle) * orbitRadius;
     const beadY = y + Math.sin(angle) * orbitRadius;
-    context.save();
-    context.beginPath();
-    context.fillStyle = 'rgba(255, 255, 255, 0.95)';
-    context.shadowColor = 'rgba(255, 255, 255, 0.7)';
-    context.shadowBlur = 10 + growthBoost * 2;
+    context.moveTo(beadX + radius, beadY);
     context.arc(beadX, beadY, radius, 0, Math.PI * 2);
-    context.fill();
-    context.restore();
   }
+  context.fill();
+  context.restore();
 };
 
 const ETHOS_BADGE_HEIGHT = 20;
@@ -701,13 +706,14 @@ export const ConstellationCanvas = ({
 }: ConstellationCanvasProps = {}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [pointerState, setPointerState] = useState<PointerState>(defaultPointerState);
+  const lowPowerRef = useRef(false);
+  const frameTimesRef = useRef<number[]>([]);
   const [devicePixelRatioState, setDevicePixelRatioState] = useState(() => {
     if (typeof window === 'undefined') return 1;
-    // Cap pixel ratio at 2x to save performance on high-density mobile screens
-    // If it's a small screen (likely mobile), maybe even cap at 1.5x
     const isSmallScreen = window.innerWidth < 768;
+    if (isSmallScreen) return 1; // Always 1x on mobile for performance
     const ratio = window.devicePixelRatio || 1;
-    return Math.min(ratio, isSmallScreen ? 1.5 : 2);
+    return Math.min(ratio, 2);
   });
   const pinchStateRef = useRef<PinchState>({
     activePointers: new Map(),
@@ -717,15 +723,14 @@ export const ConstellationCanvas = ({
     isPinching: false
   });
   const stars = useMemo(() => {
-    // Generate fewer stars on mobile
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      return generateStars(300);
+      return generateStars(150);
     }
     return generateStars(1500);
   }, []);
   const dust = useMemo(() => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      return generateDust(250);
+      return generateDust(100);
     }
     return generateDust(1000);
   }, []);
@@ -832,8 +837,12 @@ export const ConstellationCanvas = ({
     }
     const handleResize = () => {
       const isSmallScreen = window.innerWidth < 768;
+      if (isSmallScreen) {
+        setDevicePixelRatioState(1);
+        return;
+      }
       const ratio = window.devicePixelRatio || 1;
-      setDevicePixelRatioState(Math.min(ratio, isSmallScreen ? 1.5 : 2));
+      setDevicePixelRatioState(Math.min(ratio, 2));
     };
     window.addEventListener('resize', handleResize);
     return () => {
@@ -1041,6 +1050,8 @@ export const ConstellationCanvas = ({
 
     let animationFrame: number;
     let dpr = devicePixelRatioState;
+    let lastFrameTime = 0;
+    const FRAME_BUDGET = 1000 / 30; // Target 30fps on low-end devices
 
     const resize = () => {
       const { width, height } = canvas.getBoundingClientRect();
@@ -1080,15 +1091,39 @@ export const ConstellationCanvas = ({
       };
     };
 
+    // Shooting stars only on desktop
+    const isDesktop = window.innerWidth >= 768;
+
     // First spawn after a random delay of 2-6 s
     const firstDelay = 2000 + Math.random() * 4000;
-    let nextTimeout = window.setTimeout(function scheduleNext() {
+    let nextTimeout = isDesktop ? window.setTimeout(function scheduleNext() {
       spawnShootingStar();
       // Re-schedule 6-14 s later
       nextTimeout = window.setTimeout(scheduleNext, 6000 + Math.random() * 8000);
-    }, firstDelay);
+    }, firstDelay) : 0;
 
     const render = (time: number) => {
+      // Frame throttling: skip frames on mobile to maintain smooth 30fps
+      const isSmallScreen = window.innerWidth < 768;
+      if (isSmallScreen) {
+        const delta = time - lastFrameTime;
+        if (delta < FRAME_BUDGET) {
+          animationFrame = requestAnimationFrame(render);
+          return;
+        }
+        // Auto-detect slow device: if frames take > 40ms, enable low-power
+        if (lastFrameTime > 0) {
+          const frameTimes = frameTimesRef.current;
+          frameTimes.push(delta);
+          if (frameTimes.length > 30) frameTimes.shift();
+          if (frameTimes.length >= 20) {
+            const avg = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
+            lowPowerRef.current = avg > 40;
+          }
+        }
+        lastFrameTime = time;
+      }
+      const isLowPower = lowPowerRef.current;
       const {
         visibleProjects: renderProjects,
         visibleProjectMap,
@@ -1100,11 +1135,10 @@ export const ConstellationCanvas = ({
         ethosBadgeSprites: renderBadgeSprites
       } = renderInputsRef.current;
       const isInteractionMode = interactionActiveRef.current;
-      const isSmallScreen = window.innerWidth < 768;
       const isDensityMode = renderProjects.length > (isSmallScreen ? 30 : 70);
-      const isPerformanceMode = isInteractionMode || isDensityMode || isSmallScreen;
-      const starStep = isPerformanceMode ? 6 : 1;
-      const shouldRenderStars = !isPerformanceMode || renderProjects.length < (isSmallScreen ? 60 : 140);
+      const isPerformanceMode = isInteractionMode || isDensityMode || isSmallScreen || isLowPower;
+      const starStep = isLowPower ? 12 : isPerformanceMode ? 6 : 1;
+      const shouldRenderStars = !isLowPower && (!isPerformanceMode || renderProjects.length < (isSmallScreen ? 60 : 140));
 
       const width = canvas.width / dpr;
       const height = canvas.height / dpr;
@@ -1332,14 +1366,14 @@ export const ConstellationCanvas = ({
             const pulseWidth = sharedHighlight ? 0.9 : 0.6;
             const baseAlpha = sharedHighlight ? 0.28 : 0.18;
             const alphaPulse = sharedHighlight ? 0.32 : 0.25;
-            const shadowBlur = sharedHighlight ? 24 : 16;
+            const shadowBlur = isSmallScreen ? 0 : sharedHighlight ? 24 : 16;
 
             context.save();
             context.globalAlpha = baseAlpha + pulse * alphaPulse;
             context.strokeStyle = stroke;
             context.lineWidth = baseWidth + pulse * pulseWidth;
             context.shadowBlur = shadowBlur;
-            context.shadowColor = glow;
+            if (!isSmallScreen) context.shadowColor = glow;
             context.beginPath();
             context.moveTo(sourceScreen.x, sourceScreen.y);
             context.quadraticCurveTo(controlX, controlY, targetScreen.x, targetScreen.y);
@@ -1393,8 +1427,10 @@ export const ConstellationCanvas = ({
           context.save();
           context.strokeStyle = highlightStyle.stroke;
           context.lineWidth = baseLineWidth + 2;
-          context.shadowColor = highlightStyle.glow;
-          context.shadowBlur = 25;
+          if (!isSmallScreen) {
+            context.shadowColor = highlightStyle.glow;
+            context.shadowBlur = 25;
+          }
           context.beginPath();
           context.arc(x, y, radius + 4, 0, Math.PI * 2);
           context.stroke();
