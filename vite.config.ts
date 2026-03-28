@@ -11,7 +11,6 @@ export default defineConfig({
     port: 5174,
     strictPort: true,
     host: '0.0.0.0',
-    https: true,
     proxy: {
       '/ethos-api': {
         target: 'https://api.ethos.network',
