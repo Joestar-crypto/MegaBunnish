@@ -114,7 +114,8 @@ select {
 @media (max-width: 480px) {
   .hero-overlay {
     padding: 0.75rem;
-    padding-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    justify-content: flex-end;
   }
 }
 
@@ -909,8 +910,8 @@ select {
     width: auto;
     left: 0;
     right: auto;
-    top: auto;
-    bottom: 2.8rem;
+    top: 3.8rem;
+    bottom: auto;
     max-height: none;
     height: auto;
     pointer-events: none;
