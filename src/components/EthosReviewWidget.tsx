@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { usePrivy, useGetAccessTokenForProvider, useIdentityToken } from '@privy-io/react-auth';
+import { usePrivy, useGetAccessTokenForProvider, getIdentityToken } from '@privy-io/react-auth';
 import type { ReviewScore } from '../utils/ethosApi';
 import {
   exchangePrivyToken,
@@ -20,7 +20,6 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
   const backdropRef = useRef<HTMLDivElement>(null);
   const { ready, authenticated, login, logout, user, getAccessToken } = usePrivy();
   const { getAccessTokenForProvider } = useGetAccessTokenForProvider();
-  const { identityToken } = useIdentityToken();
 
   // Auth state
   const [ethosAuthed, setEthosAuthed] = useState(false);
@@ -89,8 +88,9 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
         const { token: providerToken } = getAccessTokenForProvider({ appId: ETHOS_PRIVY_APP_ID });
         tokens.push({ name: 'cross-app-provider', value: providerToken });
 
-        // Token 2: Privy identity token (from hook, synchronous)
-        tokens.push({ name: 'identity', value: identityToken });
+        // Token 2: Privy identity token (async standalone fetch)
+        const idToken = await getIdentityToken();
+        tokens.push({ name: 'identity', value: idToken });
 
         // Token 3: Our app's access token (async)
         const appToken = await getAccessToken();
@@ -155,7 +155,7 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
     })();
 
     return () => { cancelled = true; };
-  }, [authenticated, ready, ethosAuthed, getAccessTokenForProvider, identityToken, getAccessToken]);
+  }, [authenticated, ready, ethosAuthed, getAccessTokenForProvider, getAccessToken]);
 
   // Sign in with Ethos via Privy
   const handleLogin = useCallback(async () => {
