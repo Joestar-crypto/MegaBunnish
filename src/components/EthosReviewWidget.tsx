@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useGetAccessTokenForProvider } from '@privy-io/react-auth';
 import type { ReviewScore } from '../utils/ethosApi';
 import {
   exchangePrivyToken,
@@ -14,9 +14,12 @@ type Props = {
   onClose: () => void;
 };
 
+const ETHOS_PRIVY_APP_ID = 'cm5l76en107pt1lpl2ve2ocfy';
+
 export function EthosReviewModal({ projectName, twitterUsername, onClose }: Props) {
   const backdropRef = useRef<HTMLDivElement>(null);
-  const { ready, authenticated, login, logout, getAccessToken, user } = usePrivy();
+  const { ready, authenticated, login, logout, user } = usePrivy();
+  const { getAccessTokenForProvider } = useGetAccessTokenForProvider();
 
   // Auth state
   const [ethosAuthed, setEthosAuthed] = useState(false);
@@ -51,12 +54,13 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
 
   /**
    * After Privy auth:
-   * 1. Get Privy access token
+   * 1. Get cross-app access token for Ethos's Privy app (NOT our app's token)
    * 2. Exchange it for Ethos session cookies (POST /auth/exchange)
    * 3. Verify session with auth-check (GET /wallets/privy/auth-check)
    *
-   * Per the official Ethos EEW Partner Guide, authentication is cookie-based.
-   * The exchange sets HttpOnly cookies on the Ethos API domain.
+   * Key insight: getAccessToken() returns OUR app's JWT, but /auth/exchange
+   * expects a token from ETHOS's Privy app. useGetAccessTokenForProvider()
+   * returns the correct cross-app token.
    */
   useEffect(() => {
     if (!authenticated || !ready || ethosAuthed) return;
@@ -65,12 +69,12 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
     (async () => {
       setAuthChecking(true);
       try {
-        // Step 1: Get Privy access token
-        const token = await getAccessToken();
-        console.log('[Ethos] Privy access token:', token ? `obtained (${token.substring(0, 20)}…)` : 'null');
-        if (!token) throw new Error('Could not get Privy access token. Please try signing in again.');
+        // Step 1: Get cross-app access token for Ethos's Privy app
+        const { token } = getAccessTokenForProvider({ appId: ETHOS_PRIVY_APP_ID });
+        console.log('[Ethos] Cross-app token for Ethos:', token ? `obtained (${token.substring(0, 20)}…)` : 'null');
+        if (!token) throw new Error('Could not get cross-app access token for Ethos. Make sure you are logged in with your Ethos account.');
 
-        // Step 2: Exchange Privy token for Ethos session cookies
+        // Step 2: Exchange cross-app Privy token for Ethos session cookies
         const exchangeOk = await exchangePrivyToken(token);
         if (!exchangeOk) {
           throw new Error('Token exchange returned ok=false. Your Ethos Everywhere Wallet may not be activated.');
@@ -105,7 +109,7 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
     })();
 
     return () => { cancelled = true; };
-  }, [authenticated, ready, ethosAuthed, getAccessToken]);
+  }, [authenticated, ready, ethosAuthed, getAccessTokenForProvider]);
 
   // Sign in with Ethos via Privy
   const handleLogin = useCallback(async () => {
