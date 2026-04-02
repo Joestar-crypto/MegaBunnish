@@ -21,8 +21,9 @@ const baseHeaders = (): HeadersInit => ({
  * All subsequent wallet calls use those cookies via credentials: 'include'.
  */
 export async function exchangePrivyToken(privyAccessToken: string): Promise<boolean> {
-  console.log('[Ethos] Exchanging Privy token for Ethos session cookies…');
+  console.log('[Ethos] Exchanging token for Ethos session cookies…');
   console.log('[Ethos] API base:', ETHOS_API_BASE);
+  console.log('[Ethos] Token preview:', privyAccessToken.substring(0, 40) + '…');
   const res = await fetch(`${ETHOS_API_BASE}/auth/exchange`, {
     method: 'POST',
     headers: {
@@ -32,6 +33,8 @@ export async function exchangePrivyToken(privyAccessToken: string): Promise<bool
     credentials: 'include', // Required: accept HttpOnly cookies from Ethos
   });
   console.log('[Ethos] exchange response status:', res.status);
+  // Log visible headers for diagnostics (Set-Cookie is hidden by browser)
+  console.log('[Ethos] exchange response headers:', Object.fromEntries(res.headers.entries()));
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { usePrivy, useGetAccessTokenForProvider } from '@privy-io/react-auth';
+import { usePrivy, useGetAccessTokenForProvider, useIdentityToken } from '@privy-io/react-auth';
 import type { ReviewScore } from '../utils/ethosApi';
 import {
   exchangePrivyToken,
@@ -18,8 +18,9 @@ const ETHOS_PRIVY_APP_ID = 'cm5l76en107pt1lpl2ve2ocfy';
 
 export function EthosReviewModal({ projectName, twitterUsername, onClose }: Props) {
   const backdropRef = useRef<HTMLDivElement>(null);
-  const { ready, authenticated, login, logout, user } = usePrivy();
+  const { ready, authenticated, login, logout, user, getAccessToken } = usePrivy();
   const { getAccessTokenForProvider } = useGetAccessTokenForProvider();
+  const { identityToken } = useIdentityToken();
 
   // Auth state
   const [ethosAuthed, setEthosAuthed] = useState(false);
@@ -53,14 +54,13 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
   }, [onClose]);
 
   /**
-   * After Privy auth:
-   * 1. Get cross-app access token for Ethos's Privy app (NOT our app's token)
-   * 2. Exchange it for Ethos session cookies (POST /auth/exchange)
-   * 3. Verify session with auth-check (GET /wallets/privy/auth-check)
+   * After Privy auth, try multiple token sources against /auth/exchange.
    *
-   * Key insight: getAccessToken() returns OUR app's JWT, but /auth/exchange
-   * expects a token from ETHOS's Privy app. useGetAccessTokenForProvider()
-   * returns the correct cross-app token.
+   * Token sources (tried in order):
+   * 1. Direct auth-check — maybe cookies already exist from a previous session
+   * 2. Cross-app provider token — getAccessTokenForProvider (synchronous cache)
+   * 3. Privy identity token — platform-level, NOT app-specific
+   * 4. Our app's access token — last resort (Ethos may not accept it)
    */
   useEffect(() => {
     if (!authenticated || !ready || ethosAuthed) return;
@@ -69,22 +69,68 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
     (async () => {
       setAuthChecking(true);
       try {
-        // Step 1: Get cross-app access token for Ethos's Privy app
-        const { token } = getAccessTokenForProvider({ appId: ETHOS_PRIVY_APP_ID });
-        console.log('[Ethos] Cross-app token for Ethos:', token ? `obtained (${token.substring(0, 20)}…)` : 'null');
-        if (!token) throw new Error('Could not get cross-app access token for Ethos. Make sure you are logged in with your Ethos account.');
-
-        // Step 2: Exchange cross-app Privy token for Ethos session cookies
-        const exchangeOk = await exchangePrivyToken(token);
-        if (!exchangeOk) {
-          throw new Error('Token exchange returned ok=false. Your Ethos Everywhere Wallet may not be activated.');
+        // ── Step 0: Try auth-check directly (cached cookies?) ──
+        console.log('[Ethos] Step 0: Checking for existing session cookies…');
+        const directCheck = await checkEthosAuth();
+        if (directCheck.ok) {
+          console.log('[Ethos] ✓ Already authenticated! ProfileId:', directCheck.profileId);
+          if (!cancelled) {
+            setEthosAuthed(true);
+            setEthosProfileId(directCheck.profileId ?? null);
+          }
+          return;
         }
-        console.log('[Ethos] Session cookies set successfully');
+        console.log('[Ethos] No existing session. Trying token exchange…');
 
-        // Step 3: Verify session with auth-check (uses cookies)
+        // ── Collect all available tokens ──
+        const tokens: { name: string; value: string | null }[] = [];
+
+        // Token 1: Cross-app provider token (synchronous)
+        const { token: providerToken } = getAccessTokenForProvider({ appId: ETHOS_PRIVY_APP_ID });
+        tokens.push({ name: 'cross-app-provider', value: providerToken });
+
+        // Token 2: Privy identity token (from hook, synchronous)
+        tokens.push({ name: 'identity', value: identityToken });
+
+        // Token 3: Our app's access token (async)
+        const appToken = await getAccessToken();
+        tokens.push({ name: 'app-access', value: appToken });
+
+        console.log('[Ethos] Available tokens:', tokens.map(t =>
+          `${t.name}: ${t.value ? `present (${t.value.substring(0, 30)}…)` : 'null'}`
+        ));
+
+        // ── Try each non-null token with /auth/exchange ──
+        let exchangeOk = false;
+        for (const { name, value } of tokens) {
+          if (!value || cancelled) continue;
+          console.log(`[Ethos] Trying exchange with ${name} token…`);
+          try {
+            const ok = await exchangePrivyToken(value);
+            if (ok) {
+              console.log(`[Ethos] ✓ Exchange succeeded with "${name}" token!`);
+              exchangeOk = true;
+              break;
+            }
+            console.warn(`[Ethos] Exchange with "${name}" returned ok=false`);
+          } catch (err) {
+            console.warn(`[Ethos] ✗ Exchange with "${name}" failed:`, err instanceof Error ? err.message : err);
+          }
+        }
+
+        if (!exchangeOk) {
+          const available = tokens.filter(t => t.value).map(t => t.name).join(', ') || 'none';
+          throw new Error(
+            `Could not establish an Ethos session. ` +
+            `Tokens tried: ${available}. ` +
+            `Check the browser console for details.`
+          );
+        }
+
+        // ── Verify session ──
         if (cancelled) return;
         const check = await checkEthosAuth();
-        console.log('[Ethos] auth-check result:', check);
+        console.log('[Ethos] Post-exchange auth-check:', check);
 
         if (!cancelled) {
           if (check.ok) {
@@ -93,7 +139,7 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
           } else {
             setToast({
               type: 'err',
-              msg: 'Session established but auth-check failed. You may not have Ethos Everywhere Wallet enabled in your Ethos settings.',
+              msg: 'Exchange succeeded but auth-check still failed. Check console for details.',
             });
           }
         }
@@ -109,7 +155,7 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
     })();
 
     return () => { cancelled = true; };
-  }, [authenticated, ready, ethosAuthed, getAccessTokenForProvider]);
+  }, [authenticated, ready, ethosAuthed, getAccessTokenForProvider, identityToken, getAccessToken]);
 
   // Sign in with Ethos via Privy
   const handleLogin = useCallback(async () => {
