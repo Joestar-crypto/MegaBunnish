@@ -1,12 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import type { BrowserProvider } from 'ethers';
+import { usePrivy } from '@privy-io/react-auth';
 import type { ReviewScore } from '../utils/ethosApi';
 import {
-  connectWallet,
-  getUserByAddress,
-  createApiKey,
-  revokeApiKey,
+  exchangePrivyToken,
+  checkEthosAuth,
   postReviewByX,
 } from '../utils/ethosApi';
 
@@ -18,13 +16,13 @@ type Props = {
 
 export function EthosReviewModal({ projectName, twitterUsername, onClose }: Props) {
   const backdropRef = useRef<HTMLDivElement>(null);
+  const { ready, authenticated, login, logout, getAccessToken, user } = usePrivy();
 
-  // Wallet state
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [walletProvider, setWalletProvider] = useState<BrowserProvider | null>(null);
+  // Auth state
+  const [ethosAuthed, setEthosAuthed] = useState(false);
+  const [ethosProfileId, setEthosProfileId] = useState<number | null>(null);
+  const [authChecking, setAuthChecking] = useState(false);
   const [connecting, setConnecting] = useState(false);
-  const [ethosProfile, setEthosProfile] = useState<{ profileId: number; displayName: string } | null>(null);
-  const [profileChecked, setProfileChecked] = useState(false);
 
   // Review form
   const [score, setScore] = useState<ReviewScore | null>(null);
@@ -34,6 +32,11 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
   const [toast, setToast] = useState<{ type: 'ok' | 'err'; msg: string } | null>(null);
 
   const ethosProfileUrl = `https://www.ethos.network/profile/x/${encodeURIComponent(twitterUsername)}`;
+
+  // Get the EEW address from Privy cross-app linked account
+  const linkedAccount = user?.linkedAccounts?.find((a) => a.type === 'cross_app');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const eewAddress = (linkedAccount as any)?.embeddedWallets?.[0]?.address as string | undefined;
 
   // Close handlers
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -46,55 +49,73 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
     return () => document.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  // After wallet connection, check Ethos profile
+  // After Privy auth, exchange token for Ethos session cookies
   useEffect(() => {
-    if (!walletAddress || profileChecked) return;
+    if (!authenticated || !ready || ethosAuthed) return;
     let cancelled = false;
 
-    getUserByAddress(walletAddress).then((profile) => {
-      if (!cancelled) {
-        setEthosProfile(profile);
-        setProfileChecked(true);
+    (async () => {
+      setAuthChecking(true);
+      try {
+        // First check if we already have valid Ethos session cookies
+        const authStatus = await checkEthosAuth();
+        if (!cancelled && authStatus.ok) {
+          setEthosAuthed(true);
+          setEthosProfileId(authStatus.profileId ?? null);
+          setAuthChecking(false);
+          return;
+        }
+
+        // Exchange Privy token for Ethos session
+        const token = await getAccessToken();
+        if (!token) throw new Error('Could not get Privy access token.');
+        await exchangePrivyToken(token);
+
+        // Verify exchange worked
+        const check = await checkEthosAuth();
+        if (!cancelled) {
+          if (check.ok) {
+            setEthosAuthed(true);
+            setEthosProfileId(check.profileId ?? null);
+          } else {
+            setToast({ type: 'err', msg: 'Ethos session could not be established. Make sure you have an Ethos profile with Everywhere Wallet enabled.' });
+          }
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const msg = err instanceof Error ? err.message : 'Auth exchange failed.';
+          setToast({ type: 'err', msg });
+        }
+      } finally {
+        if (!cancelled) setAuthChecking(false);
       }
-    });
+    })();
 
     return () => { cancelled = true; };
-  }, [walletAddress, profileChecked]);
+  }, [authenticated, ready, ethosAuthed, getAccessToken]);
 
-  // Connect wallet
-  const handleConnect = useCallback(async () => {
+  // Sign in with Ethos via Privy
+  const handleLogin = useCallback(async () => {
     setConnecting(true);
     setToast(null);
     try {
-      const { address, provider } = await connectWallet();
-      setWalletAddress(address);
-      setWalletProvider(provider);
-      setProfileChecked(false);
+      login();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setToast({ type: 'err', msg });
     } finally {
       setConnecting(false);
     }
-  }, []);
+  }, [login]);
 
-  // Submit review: sign SIWE → create API key → post review → revoke key
+  // Submit review using Ethos session cookies
   const handleSubmit = useCallback(async () => {
-    if (!score || !title.trim() || !walletAddress || !walletProvider) return;
+    if (!score || !title.trim() || !ethosAuthed) return;
     setSubmitting(true);
     setToast(null);
 
-    let keyId: string | null = null;
-    let apiKeyToken: string | null = null;
-
     try {
-      // 1. Create ephemeral API key (triggers MetaMask signature)
-      const key = await createApiKey(walletProvider, walletAddress);
-      keyId = key.id;
-      apiKeyToken = key.token;
-
-      // 2. Post review
-      const result = await postReviewByX(apiKeyToken, twitterUsername, score, title, content);
+      const result = await postReviewByX(twitterUsername, score, title, content);
       const viewUrl = result.reviewSlug ? `ethos.network/review/${result.reviewSlug}` : '';
       setToast({ type: 'ok', msg: `Review posted!${viewUrl ? ` View: ${viewUrl}` : ''}` });
       setScore(null);
@@ -105,56 +126,61 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
       const msg = err instanceof Error ? err.message : 'Something went wrong.';
       setToast({ type: 'err', msg });
     } finally {
-      // 3. Revoke API key (best-effort)
-      if (keyId && apiKeyToken) {
-        revokeApiKey(keyId, apiKeyToken);
-      }
       setSubmitting(false);
     }
-  }, [score, title, content, twitterUsername, walletAddress, walletProvider, onClose]);
+  }, [score, title, content, twitterUsername, ethosAuthed, onClose]);
 
   // ── Render sections ───────────────────────────────────────────
 
-  const connectSection = (
+  const loginSection = (
     <div className="ethos-review-modal__login">
       <p style={{ marginBottom: '0.5em', color: '#9da2c9' }}>
         Leave a review for <strong style={{ color: '#f4f6ff' }}>@{twitterUsername}</strong> on Ethos Network.
       </p>
       <p style={{ fontSize: '0.78rem', color: '#666', marginBottom: '12px' }}>
-        Connect a wallet linked to your Ethos profile to submit reviews.
+        Sign in with your Ethos account to submit reviews.
       </p>
       <button
         type="button"
         className="ethos-review-modal__login-btn"
-        onClick={handleConnect}
-        disabled={connecting}
+        onClick={handleLogin}
+        disabled={connecting || !ready}
       >
-        {connecting ? 'Connecting…' : 'Connect Wallet'}
+        {connecting ? 'Connecting…' : 'Sign in with Ethos'}
       </button>
+    </div>
+  );
+
+  const authCheckingSection = (
+    <div className="ethos-review-modal__form">
+      <p style={{ color: '#9da2c9', fontSize: '0.85rem', textAlign: 'center', padding: '24px 0' }}>
+        Connecting to Ethos…
+      </p>
     </div>
   );
 
   const noProfileSection = (
     <div className="ethos-review-modal__form">
-      <div className="ethos-review-modal__sub">
-        Wallet: {walletAddress?.slice(0, 6)}…{walletAddress?.slice(-4)}
-      </div>
+      {eewAddress && (
+        <div className="ethos-review-modal__sub">
+          EEW: {eewAddress.slice(0, 6)}…{eewAddress.slice(-4)}
+        </div>
+      )}
       <p style={{ color: '#c84', fontSize: '0.85rem', margin: '16px 0 8px' }}>
-        This wallet is not linked to any Ethos profile.
+        Could not establish an Ethos session.
       </p>
       <p style={{ color: '#666', fontSize: '0.75rem', marginBottom: '16px' }}>
-        Link this wallet on <a href="https://app.ethos.network" target="_blank" rel="noreferrer noopener" style={{ color: '#7a8cff' }}>app.ethos.network</a>,
-        or connect a different wallet.
+        Make sure you have an <a href="https://app.ethos.network" target="_blank" rel="noreferrer noopener" style={{ color: '#7a8cff' }}>Ethos profile</a> with
+        Everywhere Wallet enabled, then try again.
       </p>
       <div style={{ display: 'flex', gap: 8 }}>
         <button
           type="button"
           className="ethos-review-modal__login-btn"
-          onClick={handleConnect}
-          disabled={connecting}
+          onClick={() => { setEthosAuthed(false); setEthosProfileId(null); setToast(null); }}
           style={{ flex: 1 }}
         >
-          {connecting ? 'Connecting…' : 'Try Another Wallet'}
+          Retry
         </button>
       </div>
     </div>
@@ -164,7 +190,7 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
     <div className="ethos-review-modal__form">
       <div className="ethos-review-modal__sub">
         Reviewing <a href={ethosProfileUrl} target="_blank" rel="noreferrer noopener">@{twitterUsername}</a>
-        <span> · {ethosProfile?.displayName ?? walletAddress?.slice(0, 6) + '…' + walletAddress?.slice(-4)}</span>
+        {ethosProfileId && <span> · Profile #{ethosProfileId}</span>}
       </div>
 
       {/* Score selector */}
@@ -211,33 +237,18 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
           onClick={handleSubmit}
           disabled={submitting || !score || !title.trim()}
         >
-          {submitting ? 'Signing & submitting…' : 'Submit Review'}
+          {submitting ? 'Submitting…' : 'Submit Review'}
         </button>
       </div>
-
-      <p style={{ fontSize: '0.65rem', color: '#555', marginTop: 8, textAlign: 'center' }}>
-        Your wallet will sign a message to authenticate with Ethos.
-      </p>
-    </div>
-  );
-
-  const checkingSection = (
-    <div className="ethos-review-modal__form">
-      <div className="ethos-review-modal__sub">
-        Wallet: {walletAddress?.slice(0, 6)}…{walletAddress?.slice(-4)}
-      </div>
-      <p style={{ color: '#9da2c9', fontSize: '0.85rem', textAlign: 'center', padding: '24px 0' }}>
-        Checking Ethos profile…
-      </p>
     </div>
   );
 
   let bodyContent: React.ReactNode;
-  if (!walletAddress) {
-    bodyContent = connectSection;
-  } else if (!profileChecked) {
-    bodyContent = checkingSection;
-  } else if (!ethosProfile) {
+  if (!authenticated) {
+    bodyContent = loginSection;
+  } else if (authChecking) {
+    bodyContent = authCheckingSection;
+  } else if (!ethosAuthed) {
     bodyContent = noProfileSection;
   } else {
     bodyContent = reviewFormSection;
@@ -249,21 +260,20 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
         <div className="ethos-review-modal__header">
           <h3>Review <strong>{projectName}</strong></h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {walletAddress && (
+            {authenticated && (
               <button
                 type="button"
                 onClick={() => {
-                  setWalletAddress(null);
-                  setWalletProvider(null);
-                  setEthosProfile(null);
-                  setProfileChecked(false);
+                  logout();
+                  setEthosAuthed(false);
+                  setEthosProfileId(null);
                 }}
                 style={{
                   background: 'none', border: '1px solid #444', borderRadius: 6,
                   color: '#888', fontSize: '0.72rem', padding: '3px 10px', cursor: 'pointer',
                 }}
               >
-                Disconnect
+                Sign out
               </button>
             )}
             <button type="button" className="ethos-review-modal__close" onClick={onClose} aria-label="Close">&times;</button>
