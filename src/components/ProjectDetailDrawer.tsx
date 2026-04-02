@@ -993,7 +993,6 @@ export const ProjectDetailDrawer = () => {
               </div>
             </section>
           ) : null}
-          {/* Review on Ethos button — hidden for now, re-enable later
           {extractTwitterHandleFromUrl(project.links?.twitter) ? (
             <section>
               <button
@@ -1013,7 +1012,6 @@ export const ProjectDetailDrawer = () => {
               onClose={() => setReviewModalOpen(false)}
             />
           ) : null}
-          */}
           <JojoOracle projectId={project.id} onNavigate={selectProject} fallbackInsight={project.jojoInsight} />
           <section>
             <h3>{incentiveSectionLabel}</h3>
