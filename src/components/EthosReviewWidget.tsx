@@ -49,7 +49,15 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
     return () => document.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  // After Privy auth, exchange token for Ethos session cookies
+  /**
+   * After Privy auth:
+   * 1. Get Privy access token
+   * 2. Exchange it for Ethos session cookies (POST /auth/exchange)
+   * 3. Verify session with auth-check (GET /wallets/privy/auth-check)
+   *
+   * Per the official Ethos EEW Partner Guide, authentication is cookie-based.
+   * The exchange sets HttpOnly cookies on the Ethos API domain.
+   */
   useEffect(() => {
     if (!authenticated || !ready || ethosAuthed) return;
     let cancelled = false;
@@ -57,33 +65,38 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
     (async () => {
       setAuthChecking(true);
       try {
-        // First check if we already have valid Ethos session cookies
-        const authStatus = await checkEthosAuth();
-        if (!cancelled && authStatus.ok) {
-          setEthosAuthed(true);
-          setEthosProfileId(authStatus.profileId ?? null);
-          setAuthChecking(false);
-          return;
-        }
-
-        // Exchange Privy token for Ethos session
+        // Step 1: Get Privy access token
         const token = await getAccessToken();
-        if (!token) throw new Error('Could not get Privy access token.');
-        await exchangePrivyToken(token);
+        console.log('[Ethos] Privy access token:', token ? `obtained (${token.substring(0, 20)}…)` : 'null');
+        if (!token) throw new Error('Could not get Privy access token. Please try signing in again.');
 
-        // Verify exchange worked
+        // Step 2: Exchange Privy token for Ethos session cookies
+        const exchangeOk = await exchangePrivyToken(token);
+        if (!exchangeOk) {
+          throw new Error('Token exchange returned ok=false. Your Ethos Everywhere Wallet may not be activated.');
+        }
+        console.log('[Ethos] Session cookies set successfully');
+
+        // Step 3: Verify session with auth-check (uses cookies)
+        if (cancelled) return;
         const check = await checkEthosAuth();
+        console.log('[Ethos] auth-check result:', check);
+
         if (!cancelled) {
           if (check.ok) {
             setEthosAuthed(true);
             setEthosProfileId(check.profileId ?? null);
           } else {
-            setToast({ type: 'err', msg: 'Ethos session could not be established. Make sure you have an Ethos profile with Everywhere Wallet enabled.' });
+            setToast({
+              type: 'err',
+              msg: 'Session established but auth-check failed. You may not have Ethos Everywhere Wallet enabled in your Ethos settings.',
+            });
           }
         }
       } catch (err) {
         if (!cancelled) {
           const msg = err instanceof Error ? err.message : 'Auth exchange failed.';
+          console.error('[Ethos] Auth flow error:', err);
           setToast({ type: 'err', msg });
         }
       } finally {
@@ -107,6 +120,13 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
       setConnecting(false);
     }
   }, [login]);
+
+  // Retry: clear state and re-trigger auth flow
+  const handleRetry = useCallback(() => {
+    setEthosAuthed(false);
+    setEthosProfileId(null);
+    setToast(null);
+  }, []);
 
   // Submit review using Ethos session cookies
   const handleSubmit = useCallback(async () => {
@@ -177,7 +197,7 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
         <button
           type="button"
           className="ethos-review-modal__login-btn"
-          onClick={() => { setEthosAuthed(false); setEthosProfileId(null); setToast(null); }}
+          onClick={handleRetry}
           style={{ flex: 1 }}
         >
           Retry
