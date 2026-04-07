@@ -839,5 +839,13 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     "tier": "Questionable",
     "displayName": "Mania",
     "url": "https://app.ethos.network/profile/x/ManiaDotFun"
+  },
+  {
+    "projectId": "dream",
+    "handle": "dreaming",
+    "score": 1222,
+    "tier": "Neutral",
+    "displayName": "Dream",
+    "url": "https://app.ethos.network/profile/x/dreaming"
   }
 ];

@@ -24,7 +24,8 @@ export const JOJO_PROFILES: JojoProfile[] = [
       'dorado',
       'aqua',
       'blackhaven',
-      'aveforge'
+      'aveforge',
+      'dream'
     ]
   },
   {

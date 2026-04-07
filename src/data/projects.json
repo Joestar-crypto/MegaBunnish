@@ -1831,6 +1831,25 @@
     },
     "logo": "/logos/Megablobz.webp",
     "jojoInsight": "Seen them active in the community for some months now, i don't know much more about them ngl."
+  },
+  {
+    "id": "dream",
+    "name": "Dream",
+    "categories": [
+      "Jojo",
+      "Megamafia",
+      "Trading",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://dreamos.app/",
+      "twitter": "https://x.com/dreaming"
+    },
+    "logo": "/logos/dream.webp",
+    "jojoInsight": "Dream is the latest app to join the Megamafia program they already have an app focused on options trading which is a category with a lot of potential. I'd definitely keep an eye on them."
   }
 ]
 

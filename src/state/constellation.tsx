@@ -15,21 +15,21 @@ import {
 import { useWalletInsights, WalletInsights } from './useWalletInsights';
 
 export const CORE_CATEGORIES = [
-  'Gambling',
-  'Depin',
   'DeFi',
-  'Trading',
-  'Meme',
-  'NFT',
   'Gaming',
-  'Social',
+  'NFT',
+  'Trading',
+  'Gambling',
   'Launchpad',
-  'Tools',
-  'Prediction M.',
   'AI',
+  'Tools',
+  'Social',
   'Bridge',
+  'Prediction M.',
+  'Depin',
+  'Trading bot',
   'RWA',
-  'Trading bot'
+  'Meme'
 ] as const;
 
 const SPECIAL_CATEGORIES = ['Megamafia', 'Native', 'Jojo', 'Mobile'] as const;
