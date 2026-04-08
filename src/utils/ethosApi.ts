@@ -8,54 +8,10 @@ const baseHeaders = (): HeadersInit => ({
   'X-Ethos-Client': ETHOS_CLIENT,
 });
 
-/* ── Privy → Ethos session exchange ──────────────────────────────── */
-
-/**
- * Exchange a Privy access token for Ethos HttpOnly session cookies.
- * Must be called once before any /wallets/privy/ endpoint.
- *
- * Per the official EEW Partner Guide:
- *   POST /auth/exchange  with  Authorization: Bearer <privyToken>
- *   → sets Ethos access/refresh JWTs as HttpOnly cookies
- *
- * All subsequent wallet calls use those cookies via credentials: 'include'.
- */
-export async function exchangePrivyToken(privyAccessToken: string): Promise<boolean> {
-  console.log('[Ethos] Exchanging token for Ethos session cookies…');
-  console.log('[Ethos] API base:', ETHOS_API_BASE);
-  console.log('[Ethos] Token preview:', privyAccessToken.substring(0, 40) + '…');
-  const res = await fetch(`${ETHOS_API_BASE}/auth/exchange`, {
-    method: 'POST',
-    headers: {
-      ...baseHeaders(),
-      Authorization: `Bearer ${privyAccessToken}`,
-    },
-    credentials: 'include', // Required: accept HttpOnly cookies from Ethos
-  });
-  console.log('[Ethos] exchange response status:', res.status);
-  // Log visible headers for diagnostics (Set-Cookie is hidden by browser)
-  console.log('[Ethos] exchange response headers:', Object.fromEntries(res.headers.entries()));
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    console.error('[Ethos] exchange error body:', text);
-    let detail = `Auth exchange failed (HTTP ${res.status})`;
-    try {
-      const errData = JSON.parse(text);
-      detail = errData.message || errData.error || errData.code || detail;
-      if (errData.code) detail += ` [${errData.code}]`;
-    } catch { if (text) detail += ': ' + text.slice(0, 200); }
-    throw new Error(detail);
-  }
-
-  const data = await res.json();
-  console.log('[Ethos] exchange result:', data);
-  return data.ok === true;
-}
-
 /**
  * Check if the user has an active Ethos session (cookie-based).
  * Per the EEW guide: GET /wallets/privy/auth-check with credentials: 'include'.
+ * If 401 → user must log in at app.ethos.network first.
  */
 export async function checkEthosAuth(): Promise<{ ok: boolean; profileId?: number }> {
   const res = await fetch(`${ETHOS_API_BASE}/wallets/privy/auth-check`, {
