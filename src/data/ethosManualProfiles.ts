@@ -847,5 +847,21 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     "tier": "Neutral",
     "displayName": "Dream",
     "url": "https://app.ethos.network/profile/x/dreaming"
+  },
+  {
+    "projectId": "orchid",
+    "handle": "orchidcredit",
+    "score": 950,
+    "tier": "Questionable",
+    "displayName": "Orchid",
+    "url": "https://app.ethos.network/profile/x/orchidcredit"
+  },
+  {
+    "projectId": "evently",
+    "handle": "eventlymarket",
+    "score": 1200,
+    "tier": "Neutral",
+    "displayName": "Evently",
+    "url": "https://app.ethos.network/profile/x/eventlymarket"
   }
 ];

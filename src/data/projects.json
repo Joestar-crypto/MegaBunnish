@@ -282,7 +282,8 @@
       "site": "https://www.wcm.inc/",
       "twitter": "https://x.com/worldmarketsinc"
     },
-    "logo": "/logos/Worldmarkets.webp"
+    "logo": "/logos/Worldmarkets.webp",
+    "isLive": true
   },
   {
     "id": "benchmark",
@@ -944,6 +945,7 @@
     "id": "hitdotone",
     "name": "Hitdotone",
     "categories": [
+      "Megamafia",
       "Gambling",
       "Mobile",
       "Native"
@@ -955,7 +957,8 @@
       "site": "https://app.hit.one/r/CYP8SS",
       "twitter": "https://x.com/hitdotone"
     },
-    "logo": "/logos/Hitdotone.webp"
+    "logo": "/logos/Hitdotone.webp",
+    "isLive": true
   },
   {
     "id": "sectorone",
@@ -1850,6 +1853,41 @@
     },
     "logo": "/logos/dream.webp",
     "jojoInsight": "Dream is the latest app to join the Megamafia program they already have an app focused on options trading which is a category with a lot of potential. I'd definitely keep an eye on them."
+  },
+  {
+    "id": "orchid",
+    "name": "Orchid",
+    "categories": [
+      "DeFi",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://www.orchid.credit/",
+      "twitter": "https://x.com/orchidcredit"
+    },
+    "logo": "/logos/Orchid.webp",
+    "jojoInsight": "Orchid is a neobank protocol that built a lending and borrowing layer on top of it, so you can borrow, spend the money in real life and let the yield slowly repay your debt. I love neobanks, so this is very interesting to me."
+  },
+  {
+    "id": "evently",
+    "name": "Evently",
+    "categories": [
+      "Prediction Market",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://evently.market/",
+      "twitter": "https://x.com/eventlymarket",
+      "discord": "https://discord.com/invite/axCYVSPKzc"
+    },
+    "logo": "/logos/evently.webp",
+    "jojoInsight": "Evently is a prediction market platform that rewards market creators with 1% of trading volume to incentivize faster and more dynamic market creation."
   }
 ]
 

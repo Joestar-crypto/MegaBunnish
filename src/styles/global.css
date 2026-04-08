@@ -1251,6 +1251,8 @@ select {
   min-height: 0;
   max-height: none;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding-right: 0;
 }
 
@@ -3315,6 +3317,8 @@ select {
   border: 1px solid rgba(255, 255, 255, 0.18);
   padding: 1.5rem;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   opacity: 1;
   visibility: visible;
   transform: translateX(0);
@@ -3324,6 +3328,8 @@ select {
   pointer-events: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(78, 241, 255, 0.7) rgba(255, 255, 255, 0.05);
+  will-change: scroll-position;
+  contain: layout style;
 }
 
 @media (max-width: 768px) {
