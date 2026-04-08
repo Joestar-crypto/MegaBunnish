@@ -14,6 +14,36 @@ const baseHeaders = (): HeadersInit => ({
 });
 
 /**
+ * Request Storage Access so the browser sends .ethos.network cookies cross-site.
+ * Required for browsers that block third-party cookies (Brave, Chrome 3PCD, Safari).
+ * Must be called from a user gesture (click handler).
+ */
+export async function requestEthosStorageAccess(): Promise<boolean> {
+  try {
+    // requestStorageAccessFor: top-level page requests cookie access for another origin
+    if ('requestStorageAccessFor' in document) {
+      console.log('[Ethos] Requesting storage access for api.ethos.network…');
+      await (document as unknown as { requestStorageAccessFor: (origin: string) => Promise<void> })
+        .requestStorageAccessFor('https://api.ethos.network');
+      console.log('[Ethos] ✓ Storage access granted');
+      return true;
+    }
+    // Fallback: requestStorageAccess (mainly for iframes, but worth trying)
+    if ('requestStorageAccess' in document) {
+      console.log('[Ethos] Trying requestStorageAccess fallback…');
+      await document.requestStorageAccess();
+      console.log('[Ethos] ✓ Storage access granted (fallback)');
+      return true;
+    }
+    console.warn('[Ethos] Storage Access API not available in this browser');
+    return false;
+  } catch (err) {
+    console.warn('[Ethos] Storage access denied:', err);
+    return false;
+  }
+}
+
+/**
  * Check if the user has an active Ethos session (cookie-based).
  * Per the EEW guide: GET /wallets/privy/auth-check with credentials: 'include'.
  * If 401 → user must log in at app.ethos.network first.

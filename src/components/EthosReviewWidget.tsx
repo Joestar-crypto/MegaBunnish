@@ -4,6 +4,7 @@ import type { ReviewScore } from '../utils/ethosApi';
 import {
   checkEthosAuth,
   postReviewByX,
+  requestEthosStorageAccess,
 } from '../utils/ethosApi';
 
 type Props = {
@@ -54,6 +55,10 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
     setAuthChecking(true);
     setToast(null);
     try {
+      // Request storage access so the browser sends .ethos.network cookies cross-site.
+      // This is needed for Brave, Safari, and Chrome with third-party cookie blocking.
+      await requestEthosStorageAccess();
+
       const check = await checkEthosAuth();
       console.log('[Ethos] auth-check result:', check);
       setEthosAuthed(check.ok);
@@ -127,6 +132,9 @@ export function EthosReviewModal({ projectName, twitterUsername, onClose }: Prop
       >
         Check again
       </button>
+      <p style={{ fontSize: '0.68rem', color: '#555', marginTop: 10, lineHeight: 1.4 }}>
+        Using Brave? You may need to lower Shields on this site (click the lion icon → Shields Down) so Ethos cookies can be sent.
+      </p>
     </div>
   );
 
