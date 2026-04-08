@@ -1,6 +1,11 @@
 const ETHOS_API_BASE = import.meta.env.DEV
   ? '/ethos-api'
   : 'https://api.ethos.network/api/v2';
+
+// Wallet/cookie endpoints MUST hit the real domain so the browser sends .ethos.network cookies.
+// The Vite proxy rewrites the domain, so cookies set by logging in on app.ethos.network aren't sent.
+const ETHOS_WALLET_BASE = 'https://api.ethos.network/api/v2';
+
 const ETHOS_CLIENT = 'megabunnish@1.0.0';
 
 const baseHeaders = (): HeadersInit => ({
@@ -14,7 +19,7 @@ const baseHeaders = (): HeadersInit => ({
  * If 401 → user must log in at app.ethos.network first.
  */
 export async function checkEthosAuth(): Promise<{ ok: boolean; profileId?: number }> {
-  const res = await fetch(`${ETHOS_API_BASE}/wallets/privy/auth-check`, {
+  const res = await fetch(`${ETHOS_WALLET_BASE}/wallets/privy/auth-check`, {
     method: 'GET',
     headers: { 'X-Ethos-Client': ETHOS_CLIENT },
     credentials: 'include', // Send Ethos session cookies
@@ -92,7 +97,7 @@ export async function postReviewByX(
     body.content = content;
   }
 
-  const res = await fetch(`${ETHOS_API_BASE}/wallets/privy/post/review/by-x`, {
+  const res = await fetch(`${ETHOS_WALLET_BASE}/wallets/privy/post/review/by-x`, {
     method: 'POST',
     headers: baseHeaders(),
     credentials: 'include', // Send Ethos session cookies
