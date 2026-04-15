@@ -43,6 +43,7 @@ export const JOJO_PROFILES: JojoProfile[] = [
       'clutch',
       'offshore',
       'tulpea',
+      'orchid',
       'brix',
       'benchmark',
       'ubitel',

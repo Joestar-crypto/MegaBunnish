@@ -1024,7 +1024,8 @@
       "site": "https://tulpea.org/",
       "twitter": "https://x.com/Tulpea_org"
     },
-    "logo": "/logos/Tulpea.webp"
+    "logo": "/logos/Tulpea.webp",
+    "isLive": true
   },
   {
     "id": "gains",
@@ -1858,6 +1859,7 @@
     "id": "orchid",
     "name": "Orchid",
     "categories": [
+      "Jojo",
       "DeFi",
       "Native"
     ],
