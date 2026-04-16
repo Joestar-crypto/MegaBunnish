@@ -768,6 +768,108 @@ select {
   color: rgba(247, 241, 239, 0.7);
 }
 
+/* ── Email subscribe section ── */
+
+.ethos-events-panel__subscribe {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ethos-events-panel__email-label {
+  display: block;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 0.45rem;
+}
+
+.ethos-events-panel__email-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.ethos-events-panel__email-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.07);
+  color: #f7f1ef;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.ethos-events-panel__email-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.ethos-events-panel__email-input:focus {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.ethos-events-panel__email-btn {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  color: #f7f1ef;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.ethos-events-panel__email-btn:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.ethos-events-panel__email-error {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.72rem;
+  color: #ff6b6b;
+}
+
+.ethos-events-panel__email-success {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.72rem;
+  color: #69db7c;
+}
+
+.ethos-events-panel__subscribed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.ethos-events-panel__subscribed strong {
+  color: #f7f1ef;
+}
+
+.ethos-events-panel__unsubscribe {
+  border: 1px solid rgba(255, 100, 100, 0.3);
+  background: rgba(255, 100, 100, 0.1);
+  color: #ff9b9b;
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.ethos-events-panel__unsubscribe:hover {
+  border-color: rgba(255, 100, 100, 0.6);
+  background: rgba(255, 100, 100, 0.2);
+}
+
 .ethos-trust-panel__header {
   display: flex;
   justify-content: space-between;

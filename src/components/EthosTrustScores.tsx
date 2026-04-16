@@ -650,9 +650,16 @@ export const EthosTrustScores = ({ isInteracting = false }: { isInteracting?: bo
   );
 };
 
+const EMAIL_STORAGE_KEY = 'constellation-events-email';
+
 export const EventsBell = () => {
   const [areEventsVisible, setEventsVisible] = useState(false);
   const [nowTick, setNowTick] = useState(() => Date.now());
+  const [emailInput, setEmailInput] = useState('');
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'saved' | 'invalid'>('idle');
+  const [savedEmail, setSavedEmail] = useState<string | null>(() => {
+    try { return localStorage.getItem(EMAIL_STORAGE_KEY); } catch { return null; }
+  });
   const { selectProject } = useConstellation();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -798,6 +805,66 @@ export const EventsBell = () => {
       ) : (
         <div className="ethos-events-panel__empty">No upcoming events.</div>
       )}
+      <div className="ethos-events-panel__subscribe">
+        {savedEmail ? (
+          <div className="ethos-events-panel__subscribed">
+            <span>Subscribed as <strong>{savedEmail}</strong></span>
+            <button
+              type="button"
+              className="ethos-events-panel__unsubscribe"
+              onClick={() => {
+                try { localStorage.removeItem(EMAIL_STORAGE_KEY); } catch {}
+                setSavedEmail(null);
+                setEmailInput('');
+                setEmailStatus('idle');
+              }}
+            >
+              Unsubscribe
+            </button>
+          </div>
+        ) : (
+          <form
+            className="ethos-events-panel__email-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const trimmed = emailInput.trim();
+              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+                setEmailStatus('invalid');
+                return;
+              }
+              try { localStorage.setItem(EMAIL_STORAGE_KEY, trimmed); } catch {}
+              setSavedEmail(trimmed);
+              setEmailStatus('saved');
+            }}
+          >
+            <label className="ethos-events-panel__email-label">
+              Get notified of new ecosystem events
+            </label>
+            <div className="ethos-events-panel__email-row">
+              <input
+                type="email"
+                className="ethos-events-panel__email-input"
+                placeholder="your@email.com"
+                value={emailInput}
+                onChange={(e) => {
+                  setEmailInput(e.target.value);
+                  if (emailStatus !== 'idle') setEmailStatus('idle');
+                }}
+                required
+              />
+              <button type="submit" className="ethos-events-panel__email-btn">
+                Subscribe
+              </button>
+            </div>
+            {emailStatus === 'invalid' && (
+              <span className="ethos-events-panel__email-error">Please enter a valid email.</span>
+            )}
+            {emailStatus === 'saved' && (
+              <span className="ethos-events-panel__email-success">Subscribed!</span>
+            )}
+          </form>
+        )}
+      </div>
     </div>
   ) : null;
 
