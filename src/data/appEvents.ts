@@ -224,5 +224,20 @@ export const APP_EVENTS: AppEvent[] = [
         end: '2026-02-26T23:59:00-05:00'
       }
     ]
+  },
+  {
+    id: 'megacorp-drone-minting',
+    title: 'Drone Licensing',
+    projectId: 'megacorp',
+    start: '2026-04-23T00:00:00-05:00',
+    end: '2026-04-23T23:59:00-05:00',
+    tweetUrl: 'https://x.com/MegaCorpHQ/status/2044771046700535989',
+    phases: [
+      {
+        label: 'All day',
+        start: '2026-04-23T00:00:00-05:00',
+        end: '2026-04-23T23:59:00-05:00'
+      }
+    ]
   }
 ];
