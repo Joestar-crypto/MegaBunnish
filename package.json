@@ -8,6 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext ts,tsx",
+    "alerts:send": "tsx scripts/send-new-event-alerts.ts",
+    "alerts:dry-run": "tsx scripts/send-new-event-alerts.ts --dry-run",
     "update:scores": "node scripts/fetch-ethos-scores.mjs",
     "wallet:check": "node scripts/megaeth-wallet-checker-cli.js"
   },

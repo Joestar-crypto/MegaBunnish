@@ -1,0 +1,40 @@
+name: Send Event Alerts
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Run without sending broadcasts
+        required: false
+        default: 'false'
+  schedule:
+    - cron: '17 * * * *'
+
+jobs:
+  send-alerts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Send event alerts
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_ADDRESS: ${{ secrets.RESEND_FROM_ADDRESS }}
+          EVENT_ALERTS_BASE_URL: ${{ secrets.EVENT_ALERTS_BASE_URL }}
+          EVENT_ALERTS_SEGMENT_NAME: ${{ secrets.EVENT_ALERTS_SEGMENT_NAME }}
+        run: |
+          EXTRA_ARGS=""
+          if [ "${{ github.event.inputs.dry_run || 'false' }}" = "true" ]; then
+            EXTRA_ARGS="--dry-run"
+          fi
+          npx tsx scripts/send-new-event-alerts.ts $EXTRA_ARGS

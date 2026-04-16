@@ -827,6 +827,17 @@ select {
   transform: translateY(-1px);
 }
 
+.ethos-events-panel__email-btn:disabled,
+.ethos-events-panel__unsubscribe:disabled {
+  cursor: wait;
+  opacity: 0.7;
+  transform: none;
+}
+
+.ethos-events-panel__email-input:disabled {
+  opacity: 0.7;
+}
+
 .ethos-events-panel__email-error {
   display: block;
   margin-top: 0.3rem;

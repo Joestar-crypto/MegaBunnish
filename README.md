@@ -22,6 +22,8 @@ The dev server defaults to http://localhost:5173.
 - `npm run build` – type-check and build the production bundle.
 - `npm run preview` – preview the production build locally.
 - `npm run lint` – run ESLint on the `src` directory.
+- `npm run alerts:send` – send pending event alerts to subscribed contacts.
+- `npm run alerts:dry-run` – preview which pending event alerts would be sent.
 
 ## Data Model
 
@@ -59,6 +61,41 @@ VITE_ETHERSCAN_API_KEY=your-key-here
 ```
 
 The app works without a key, but adding one helps avoid shared rate limits when scanning wallets or NFT balances.
+
+## Event Alerts
+
+The Events panel can subscribe an email address to event notifications. The frontend posts subscriptions to `VITE_EVENT_ALERTS_API_URL` when defined, otherwise it uses `/api/event-alert-subscriptions`.
+
+The included API route stores subscribers in a Resend segment named `Megabunnish Event Alerts` by default. Automatic sends use Resend Broadcasts so each event is only mailed once per segment.
+
+### Required environment variables
+
+For the subscription API and alert sender:
+
+```bash
+RESEND_API_KEY=your-resend-key
+RESEND_FROM_ADDRESS="Megabunnish <alerts@your-domain.com>"
+EVENT_ALERTS_BASE_URL=https://your-public-app-url
+EVENT_ALERTS_SEGMENT_NAME="Megabunnish Event Alerts"
+```
+
+Optional for a custom frontend endpoint or protected dispatch endpoint:
+
+```bash
+VITE_EVENT_ALERTS_API_URL=https://your-api-host/api/event-alert-subscriptions
+EVENT_ALERTS_CRON_SECRET=choose-a-secret
+```
+
+### Automatic dispatch
+
+The repo includes `.github/workflows/send-event-alerts.yml`, scheduled hourly. Configure the matching GitHub Actions secrets before enabling it:
+
+- `RESEND_API_KEY`
+- `RESEND_FROM_ADDRESS`
+- `EVENT_ALERTS_BASE_URL`
+- `EVENT_ALERTS_SEGMENT_NAME`
+
+If you deploy the frontend on a platform with serverless routes, the included `api/event-alert-subscriptions.ts` and `api/send-event-alerts.ts` files can be used directly.
 
 ## MegaETH Wallet Checker (Node CLI)
 
