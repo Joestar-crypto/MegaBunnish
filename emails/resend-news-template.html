@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MegaETH Project Update</title>
+</head>
+<body style="margin:0;padding:0;background:#0d0907;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <!--
+    Single reusable Resend dashboard template.
+    Paste or import this HTML file into Resend Templates.
+    If Resend says the body looks like raw TypeScript, you pasted scripts/send-event-email.ts by mistake.
+    Subject is configured separately in Resend, not in this HTML.
+    Recommended subject:
+    NEW EVENT ON MEGAETH | {{{PROJECT_NAME}}} | {{{NEWS_TITLE}}}
+
+    Core variables:
+    ECOSYSTEM_MAP_URL
+    MEGABUNNISH_SYMBOL_URL
+    ECOSYSTEM_BADGE_TEXT
+    HERO_SUMMARY
+    HERO_SOURCE_NOTE
+    PROJECT_NAME
+    PROJECT_HANDLE
+    PROJECT_TWITTER_URL
+    PROJECT_LOGO_URL
+    NEWS_LABEL
+    NEWS_TITLE
+    NEWS_BODY
+    FACT_1_LABEL
+    FACT_1_VALUE
+    FACT_2_LABEL
+    FACT_2_VALUE
+    PRIMARY_CTA_LABEL
+    PRIMARY_CTA_URL
+    FOOTER_NOTE
+    UNSUBSCRIBE_URL
+
+    Optional raw HTML variables:
+    TIMELINE_SECTION_HTML
+    SECONDARY_CTA_HTML
+    PROJECT_LINK_HTML
+  -->
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0d0907;">
+    <tr>
+      <td align="center" style="padding:0 8px 12px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;border-radius:24px;overflow:hidden;background:#110d0c;border:1px solid #3a2f29;">
+          <tr>
+            <td style="padding:0;background:#080808;line-height:0;">
+              <img
+                src="{{{ECOSYSTEM_MAP_URL}}}"
+                alt="MegaETH ecosystem map"
+                width="600"
+                style="display:block;width:100%;height:auto;border:0;outline:none;text-decoration:none;"
+              />
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:14px 18px 6px;background:linear-gradient(180deg,#15100d 0%,#100c0a 100%);">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding:0;vertical-align:top;">
+                    <span style="display:inline-block;background:#ffd84d;color:#24150f;border-radius:999px;padding:7px 12px;font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;">{{{ECOSYSTEM_BADGE_TEXT}}}</span>
+                  </td>
+                  <td align="right" style="padding:0;vertical-align:top;">
+                    <img src="{{{MEGABUNNISH_SYMBOL_URL}}}" alt="Megabunnish" width="38" height="38" style="display:block;width:38px;height:38px;border-radius:12px;border:1px solid rgba(255,255,255,0.16);background:#ffd84d;" />
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="2" style="padding:12px 0 0;">
+                    <div style="font-size:26px;line-height:1.06;font-weight:800;color:#fff7df;max-width:360px;">New Event Announced</div>
+                    <div style="font-size:14px;line-height:1.65;color:rgba(255,244,214,0.84);max-width:430px;margin-top:10px;">
+                      {{{HERO_SUMMARY}}}
+                    </div>
+                    <div style="font-size:11px;line-height:1.5;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,244,214,0.72);font-weight:700;margin-top:10px;">
+                      {{{HERO_SOURCE_NOTE}}}
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:18px 18px 0;background:linear-gradient(180deg,#16110e 0%,#0f0c0a 100%);">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:rgba(255,216,77,0.06);border:1px solid rgba(255,216,77,0.14);border-radius:18px;">
+                <tr>
+                  <td width="72" style="vertical-align:middle;padding:16px 0 16px 16px;">
+                    <img src="{{{PROJECT_LOGO_URL}}}" alt="{{{PROJECT_NAME}}}" width="52" height="52" style="border-radius:16px;border:1px solid rgba(255,255,255,0.12);display:block;background:#1d1714;" />
+                  </td>
+                  <td style="vertical-align:middle;padding:16px 18px 16px 14px;">
+                    <div style="font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#d2bb77;font-weight:700;">Project</div>
+                    <div style="font-size:21px;line-height:1.15;font-weight:800;color:#fff7df;margin-top:4px;">{{{PROJECT_NAME}}}</div>
+                    <div style="font-size:13px;color:#d9ccff;margin-top:4px;">
+                      <a href="{{{PROJECT_TWITTER_URL}}}" style="color:#d9ccff;text-decoration:none;">@{{{PROJECT_HANDLE}}}</a>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:18px 18px 0;background:linear-gradient(180deg,#16110e 0%,#0f0c0a 100%);">
+              <div style="font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#d2bb77;font-weight:700;">{{{NEWS_LABEL}}}</div>
+              <div style="font-size:30px;line-height:1.06;font-weight:800;color:#fff7df;margin-top:8px;">
+                {{{NEWS_TITLE}}}
+              </div>
+              <div style="font-size:14px;line-height:1.65;color:rgba(255,244,214,0.78);margin-top:12px;">
+                {{{NEWS_BODY}}}
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:18px 18px 0;background:linear-gradient(180deg,#16110e 0%,#0f0c0a 100%);">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="width:50%;padding:0 8px 0 0;vertical-align:top;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#1a1511;border:1px solid rgba(255,216,77,0.12);border-radius:16px;">
+                      <tr>
+                        <td style="padding:14px 16px;">
+                          <div style="font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#d2bb77;font-weight:700;">{{{FACT_1_LABEL}}}</div>
+                          <div style="font-size:16px;line-height:1.45;font-weight:700;color:#fff7df;margin-top:6px;">{{{FACT_1_VALUE}}}</div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td style="width:50%;padding:0 0 0 8px;vertical-align:top;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#1a1511;border:1px solid rgba(217,204,255,0.12);border-radius:16px;">
+                      <tr>
+                        <td style="padding:14px 16px;">
+                          <div style="font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#d9ccff;font-weight:700;">{{{FACT_2_LABEL}}}</div>
+                          <div style="font-size:16px;line-height:1.45;font-weight:700;color:#fff7df;margin-top:6px;">{{{FACT_2_VALUE}}}</div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          {{{TIMELINE_SECTION_HTML}}}
+
+          <tr>
+            <td style="padding:20px 18px 0;background:linear-gradient(180deg,#16110e 0%,#0f0c0a 100%);">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding:0 10px 10px 0;">
+                    <a href="{{{PRIMARY_CTA_URL}}}" style="display:inline-block;background:#ffd84d;color:#24150f;font-weight:800;font-size:14px;text-decoration:none;padding:13px 20px;border-radius:999px;">
+                      {{{PRIMARY_CTA_LABEL}}}
+                    </a>
+                  </td>
+                  {{{SECONDARY_CTA_HTML}}}
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          {{{PROJECT_LINK_HTML}}}
+
+          <tr>
+            <td style="padding:20px 18px 18px;background:linear-gradient(180deg,#110d0c 0%,#0d0907 100%);">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:rgba(255,216,77,0.05);border:1px solid rgba(255,216,77,0.12);border-radius:16px;">
+                <tr>
+                  <td style="padding:16px 18px;font-size:11px;color:rgba(255,244,214,0.52);text-align:center;line-height:1.7;">
+                    You received this because you subscribed to Megabunnish ecosystem updates.<br />
+                    {{{FOOTER_NOTE}}}<br />
+                    <a href="{{{UNSUBSCRIBE_URL}}}" style="color:rgba(255,244,214,0.68);text-decoration:underline;">Unsubscribe</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
