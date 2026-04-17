@@ -129,7 +129,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       return;
     }
 
-    const email = readEmail(request.body);
+    const email = readEmail(request.body) || readQueryValue(request.query, 'email');
 
     if (!isValidEventAlertEmail(email)) {
       sendJson(response, 400, { error: 'Please enter a valid email address.' });

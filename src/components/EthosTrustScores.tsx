@@ -666,7 +666,12 @@ const persistSavedEmail = (email: string | null) => {
 };
 
 const updateEventAlertSubscription = async (email: string, method: 'POST' | 'DELETE') => {
-  const response = await fetch(EVENT_ALERTS_API_URL, {
+  const requestUrl = new URL(EVENT_ALERTS_API_URL, window.location.origin);
+  if (method === 'DELETE') {
+    requestUrl.searchParams.set('email', email);
+  }
+
+  const response = await fetch(requestUrl.toString(), {
     method,
     headers: {
       'Content-Type': 'application/json'
@@ -878,18 +883,25 @@ export const EventsBell = () => {
       )}
       <div className="ethos-events-panel__subscribe">
         {savedEmail ? (
-          <div className="ethos-events-panel__subscribed">
-            <span>Subscribed as <strong>{savedEmail}</strong></span>
-            <button
-              type="button"
-              className="ethos-events-panel__unsubscribe"
-              onClick={() => {
-                void handleUnsubscribe();
-              }}
-              disabled={emailStatus === 'saving'}
-            >
-              {emailStatus === 'saving' ? 'Working...' : 'Unsubscribe'}
-            </button>
+          <div className="ethos-events-panel__subscribed-block">
+            <div className="ethos-events-panel__subscribed">
+              <span>Subscribed as <strong>{savedEmail}</strong></span>
+              <button
+                type="button"
+                className="ethos-events-panel__unsubscribe"
+                onClick={() => {
+                  void handleUnsubscribe();
+                }}
+                disabled={emailStatus === 'saving'}
+              >
+                {emailStatus === 'saving' ? 'Working...' : 'Unsubscribe'}
+              </button>
+            </div>
+            {(emailStatus === 'error' || emailStatus === 'saved') && emailFeedback && (
+              <span className={emailStatus === 'error' ? 'ethos-events-panel__email-error' : 'ethos-events-panel__email-success'}>
+                {emailFeedback}
+              </span>
+            )}
           </div>
         ) : (
           <form

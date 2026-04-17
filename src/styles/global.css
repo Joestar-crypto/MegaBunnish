@@ -861,6 +861,12 @@ select {
   color: rgba(255, 255, 255, 0.75);
 }
 
+.ethos-events-panel__subscribed-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
 .ethos-events-panel__subscribed strong {
   color: #f7f1ef;
 }
