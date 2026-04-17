@@ -1,9 +1,25 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { Redis } from '@upstash/redis';
 
-export type EventAlertsStorageDriver = 'file' | 'upstash' | 'resend-segment';
+export type KVNamespaceLike = {
+  get(key: string, type: 'json'): Promise<unknown | null>;
+  get(key: string): Promise<string | null>;
+  put(key: string, value: string): Promise<void>;
+};
+
+export type EventAlertsEnv = {
+  EVENT_ALERTS?: KVNamespaceLike;
+  UPSTASH_REDIS_REST_URL?: string;
+  UPSTASH_REDIS_REST_TOKEN?: string;
+  EVENT_ALERTS_STORAGE_KEY?: string;
+  EVENT_ALERTS_ADMIN_SECRET?: string;
+  EVENT_ALERTS_CRON_SECRET?: string;
+  EVENT_ALERTS_UNSUBSCRIBE_SECRET?: string;
+  EVENT_ALERTS_BASE_URL?: string;
+  EVENT_ALERTS_RESEND_SEGMENT_NAME?: string;
+  EVENT_ALERTS_RESEND_TOPIC_NAME?: string;
+  RESEND_API_KEY?: string;
+  RESEND_FROM_ADDRESS?: string;
+};
 
 export type EventAlertSubscriber = {
   email: string;
@@ -29,7 +45,7 @@ export type EventAlertDelivery = {
   updatedAt: string;
 };
 
-type EventAlertsStoreData = {
+export type EventAlertsStoreData = {
   version: 1;
   subscribers: EventAlertSubscriber[];
   deliveries: EventAlertDelivery[];
@@ -43,17 +59,6 @@ type DeliveryUpdate = {
   failedEmails: string[];
   attemptedCount: number;
 };
-
-const DEFAULT_STORAGE_PATH = fileURLToPath(new URL('../../.data/event-alerts.json', import.meta.url));
-const DEFAULT_STORAGE_KEY = 'megabunnish:event-alerts';
-const RESEND_API_BASE_URL = 'https://api.resend.com';
-const DEFAULT_RESEND_SEGMENT_NAME = 'Megabunnish Event Alerts';
-const DEFAULT_RESEND_TOPIC_NAME = 'Megabunnish Event Alerts';
-const RESEND_EVENT_BROADCAST_PREFIX = 'megabunnish:event-alert:';
-
-let cachedRedisClient: Redis | null = null;
-let cachedResendSegmentId: string | null = null;
-let cachedResendTopicId: string | null = null;
 
 type ResendPaginatedResponse<T> = {
   data: T[];
@@ -85,6 +90,29 @@ type ResendBroadcast = {
   scheduled_at: string | null;
   sent_at: string | null;
 };
+
+type CreateResendEventAlertBroadcastOptions = {
+  eventId: string;
+  segmentId: string;
+  topicId?: string | null;
+  from: string;
+  subject: string;
+  html: string;
+  text: string;
+  previewText?: string;
+};
+
+export type EventAlertsStorageDriver = 'cloudflare-kv' | 'upstash' | 'resend-segment';
+
+const DEFAULT_STORAGE_KEY = 'megabunnish:event-alerts';
+const DEFAULT_RESEND_SEGMENT_NAME = 'Megabunnish Event Alerts';
+const DEFAULT_RESEND_TOPIC_NAME = 'Megabunnish Event Alerts';
+const RESEND_API_BASE_URL = 'https://api.resend.com';
+const RESEND_EVENT_BROADCAST_PREFIX = 'megabunnish:event-alert:';
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
+
+let cachedResendSegmentId: string | null = null;
+let cachedResendTopicId: string | null = null;
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
@@ -168,54 +196,30 @@ function normalizeStoreData(raw: unknown): EventAlertsStoreData {
   });
 }
 
-function getStorageDriver(): EventAlertsStorageDriver {
-  const configuredDriver = process.env.EVENT_ALERTS_STORAGE_DRIVER?.trim().toLowerCase();
-  if (configuredDriver === 'upstash' || configuredDriver === 'redis') {
-    return 'upstash';
-  }
-  if (configuredDriver === 'resend' || configuredDriver === 'resend-segment') {
-    return 'resend-segment';
-  }
-  if (configuredDriver === 'file') {
-    return 'file';
-  }
-  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-    return 'upstash';
-  }
-  if (process.env.RESEND_API_KEY) {
-    return 'resend-segment';
-  }
-  return 'file';
+export function isValidEventAlertEmail(email: string) {
+  return EMAIL_PATTERN.test(normalizeEmail(email));
 }
 
-function getStoragePath() {
-  return process.env.EVENT_ALERTS_STORAGE_PATH?.trim() || DEFAULT_STORAGE_PATH;
+function getResendSegmentName(env: EventAlertsEnv) {
+  return env.EVENT_ALERTS_RESEND_SEGMENT_NAME?.trim() || DEFAULT_RESEND_SEGMENT_NAME;
 }
 
-function getStorageKey() {
-  return process.env.EVENT_ALERTS_STORAGE_KEY?.trim() || DEFAULT_STORAGE_KEY;
+function getResendTopicName(env: EventAlertsEnv) {
+  return env.EVENT_ALERTS_RESEND_TOPIC_NAME?.trim() || DEFAULT_RESEND_TOPIC_NAME;
 }
 
-function getResendSegmentName() {
-  return process.env.EVENT_ALERTS_RESEND_SEGMENT_NAME?.trim() || DEFAULT_RESEND_SEGMENT_NAME;
-}
-
-function getResendTopicName() {
-  return process.env.EVENT_ALERTS_RESEND_TOPIC_NAME?.trim() || DEFAULT_RESEND_TOPIC_NAME;
-}
-
-function getResendApiKey() {
-  const apiKey = process.env.RESEND_API_KEY?.trim();
+function getResendApiKey(env: EventAlertsEnv) {
+  const apiKey = env.RESEND_API_KEY?.trim();
   if (!apiKey) {
-    throw new Error('Missing RESEND_API_KEY.');
+    throw new Error('Missing RESEND_API_KEY on this deployment.');
   }
 
   return apiKey;
 }
 
-async function resendRequest<T>(path: string, init: RequestInit = {}) {
+async function resendRequest<T>(env: EventAlertsEnv, path: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers);
-  headers.set('Authorization', `Bearer ${getResendApiKey()}`);
+  headers.set('Authorization', `Bearer ${getResendApiKey(env)}`);
   if (init.body && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
@@ -238,12 +242,12 @@ async function resendRequest<T>(path: string, init: RequestInit = {}) {
   return payload as T;
 }
 
-async function listAllResendPages<T extends { id: string }>(pathBuilder: (after?: string) => string) {
+async function listAllResendPages<T extends { id: string }>(env: EventAlertsEnv, pathBuilder: (after?: string) => string) {
   const items: T[] = [];
   let after: string | undefined;
 
   while (true) {
-    const page = await resendRequest<ResendPaginatedResponse<T>>(pathBuilder(after));
+    const page = await resendRequest<ResendPaginatedResponse<T>>(env, pathBuilder(after));
     const chunk = Array.isArray(page.data) ? page.data : [];
     items.push(...chunk);
 
@@ -258,13 +262,13 @@ async function listAllResendPages<T extends { id: string }>(pathBuilder: (after?
   }
 }
 
-async function ensureResendSegment() {
+async function ensureResendSegment(env: EventAlertsEnv) {
   if (cachedResendSegmentId) {
     return cachedResendSegmentId;
   }
 
-  const segmentName = getResendSegmentName();
-  const segments = await listAllResendPages<ResendSegment>((after) => {
+  const segmentName = getResendSegmentName(env);
+  const segments = await listAllResendPages<ResendSegment>(env, (after) => {
     const params = new URLSearchParams({ limit: '100' });
     if (after) {
       params.set('after', after);
@@ -278,7 +282,7 @@ async function ensureResendSegment() {
     return existing.id;
   }
 
-  const created = await resendRequest<{ id: string }>('/segments', {
+  const created = await resendRequest<{ id: string }>(env, '/segments', {
     method: 'POST',
     body: JSON.stringify({ name: segmentName })
   });
@@ -287,13 +291,13 @@ async function ensureResendSegment() {
   return created.id;
 }
 
-async function ensureResendTopic() {
+async function ensureResendTopic(env: EventAlertsEnv) {
   if (cachedResendTopicId) {
     return cachedResendTopicId;
   }
 
-  const topicName = getResendTopicName();
-  const response = await resendRequest<{ data: ResendTopic[] }>('/topics');
+  const topicName = getResendTopicName(env);
+  const response = await resendRequest<{ data: ResendTopic[] }>(env, '/topics');
   const topics = Array.isArray(response.data) ? response.data : [];
   const existing = topics.find((topic) => topic.name === topicName);
   if (existing) {
@@ -301,7 +305,7 @@ async function ensureResendTopic() {
     return existing.id;
   }
 
-  const created = await resendRequest<{ id: string }>('/topics', {
+  const created = await resendRequest<{ id: string }>(env, '/topics', {
     method: 'POST',
     body: JSON.stringify({
       name: topicName,
@@ -314,9 +318,9 @@ async function ensureResendTopic() {
   return created.id;
 }
 
-async function listResendSegmentContacts() {
-  const segmentId = await ensureResendSegment();
-  return listAllResendPages<ResendContact>((after) => {
+async function listResendSegmentContacts(env: EventAlertsEnv) {
+  const segmentId = await ensureResendSegment(env);
+  return listAllResendPages<ResendContact>(env, (after) => {
     const params = new URLSearchParams({ limit: '100' });
     if (after) {
       params.set('after', after);
@@ -325,8 +329,8 @@ async function listResendSegmentContacts() {
   });
 }
 
-async function listResendEventBroadcasts() {
-  const broadcasts = await listAllResendPages<ResendBroadcast>((after) => {
+async function listResendEventBroadcasts(env: EventAlertsEnv) {
+  const broadcasts = await listAllResendPages<ResendBroadcast>(env, (after) => {
     const params = new URLSearchParams({ limit: '100' });
     if (after) {
       params.set('after', after);
@@ -337,11 +341,11 @@ async function listResendEventBroadcasts() {
   return broadcasts.filter((broadcast) => broadcast.name.startsWith(RESEND_EVENT_BROADCAST_PREFIX));
 }
 
-async function getResendContact(email: string) {
+async function getResendContact(env: EventAlertsEnv, email: string) {
   const normalizedEmail = normalizeEmail(email);
   const response = await fetch(`${RESEND_API_BASE_URL}/contacts/${encodeURIComponent(normalizedEmail)}`, {
     headers: {
-      Authorization: `Bearer ${getResendApiKey()}`
+      Authorization: `Bearer ${getResendApiKey(env)}`
     }
   });
 
@@ -349,7 +353,7 @@ async function getResendContact(email: string) {
     return null;
   }
 
-  const payload = await response.json().catch(() => null) as { message?: string; name?: string } | (ResendContact & { properties?: Record<string, { value: string | number }>; object?: string }) | null;
+  const payload = await response.json().catch(() => null) as { message?: string; name?: string } | ResendContact | null;
   if (!response.ok) {
     const message = payload && typeof payload === 'object' && 'message' in payload && typeof payload.message === 'string'
       ? payload.message
@@ -371,8 +375,8 @@ function buildResendProperties(source: string, nowIso: string, status: 'subscrib
   };
 }
 
-async function readResendStoreData(): Promise<EventAlertsStoreData> {
-  const contacts = await listResendSegmentContacts();
+async function readResendStoreData(env: EventAlertsEnv): Promise<EventAlertsStoreData> {
+  const contacts = await listResendSegmentContacts(env);
   const subscribers = contacts.map((contact) => ({
     email: normalizeEmail(contact.email),
     status: 'subscribed' as const,
@@ -382,7 +386,7 @@ async function readResendStoreData(): Promise<EventAlertsStoreData> {
     updatedAt: contact.created_at
   }));
   const activeEmails = uniqueSorted(subscribers.map((subscriber) => subscriber.email));
-  const broadcasts = await listResendEventBroadcasts();
+  const broadcasts = await listResendEventBroadcasts(env);
   const deliveries = broadcasts
     .filter((broadcast) => broadcast.status === 'queued' || broadcast.status === 'sent')
     .map((broadcast) => {
@@ -411,62 +415,93 @@ async function readResendStoreData(): Promise<EventAlertsStoreData> {
   });
 }
 
-function getRedisClient() {
-  if (cachedRedisClient) {
-    return cachedRedisClient;
+export function getStorageDriver(env: EventAlertsEnv): EventAlertsStorageDriver {
+  if (env.EVENT_ALERTS) {
+    return 'cloudflare-kv';
   }
 
-  cachedRedisClient = Redis.fromEnv();
-  return cachedRedisClient;
+  if (env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN) {
+    return 'upstash';
+  }
+
+  if (env.RESEND_API_KEY) {
+    return 'resend-segment';
+  }
+
+  throw new Error('Event alert storage is not configured on this deployment. Configure the EVENT_ALERTS KV binding, Upstash Redis environment variables, or RESEND_API_KEY.');
 }
 
-async function readStoreData(): Promise<EventAlertsStoreData> {
-  if (getStorageDriver() === 'resend-segment') {
-    return readResendStoreData();
+function getStorageKey(env: EventAlertsEnv) {
+  return env.EVENT_ALERTS_STORAGE_KEY?.trim() || DEFAULT_STORAGE_KEY;
+}
+
+function getBaseUrl(request: Request, env: EventAlertsEnv) {
+  const configured = env.EVENT_ALERTS_BASE_URL?.trim();
+  if (configured) {
+    return configured.replace(/\/$/, '');
   }
 
-  if (getStorageDriver() === 'upstash') {
-    const redis = getRedisClient();
-    const rawValue = await redis.get(getStorageKey());
-    if (!rawValue) {
-      return createEmptyStoreData();
-    }
+  return new URL(request.url).origin.replace(/\/$/, '');
+}
 
-    if (typeof rawValue === 'string') {
-      return normalizeStoreData(JSON.parse(rawValue) as unknown);
-    }
-
-    return normalizeStoreData(rawValue);
+function getKvNamespace(env: EventAlertsEnv) {
+  if (!env.EVENT_ALERTS) {
+    throw new Error('Event alert storage is not configured on this deployment. Configure the EVENT_ALERTS KV binding, Upstash Redis environment variables, or RESEND_API_KEY.');
   }
 
-  try {
-    const rawValue = await readFile(getStoragePath(), 'utf8');
+  return env.EVENT_ALERTS;
+}
+
+function getRedis(env: EventAlertsEnv) {
+  if (!env.UPSTASH_REDIS_REST_URL || !env.UPSTASH_REDIS_REST_TOKEN) {
+    throw new Error('Event alert storage is not configured on this deployment. Configure the EVENT_ALERTS KV binding, Upstash Redis environment variables, or RESEND_API_KEY.');
+  }
+
+  return new Redis({
+    url: env.UPSTASH_REDIS_REST_URL,
+    token: env.UPSTASH_REDIS_REST_TOKEN
+  });
+}
+
+export async function readStoreData(env: EventAlertsEnv) {
+  const storageDriver = getStorageDriver(env);
+
+  if (storageDriver === 'resend-segment') {
+    return readResendStoreData(env);
+  }
+
+  if (storageDriver === 'cloudflare-kv') {
+    const rawValue = await getKvNamespace(env).get(getStorageKey(env), 'json');
+    return rawValue ? normalizeStoreData(rawValue) : createEmptyStoreData();
+  }
+
+  const rawValue = await getRedis(env).get(getStorageKey(env));
+  if (!rawValue) {
+    return createEmptyStoreData();
+  }
+
+  if (typeof rawValue === 'string') {
     return normalizeStoreData(JSON.parse(rawValue) as unknown);
-  } catch (error) {
-    const message = error instanceof Error ? error.message.toLowerCase() : '';
-    if (message.includes('enoent')) {
-      return createEmptyStoreData();
-    }
-    throw error;
   }
+
+  return normalizeStoreData(rawValue);
 }
 
-async function writeStoreData(data: EventAlertsStoreData) {
+export async function writeStoreData(env: EventAlertsEnv, data: EventAlertsStoreData) {
+  const storageDriver = getStorageDriver(env);
+  if (storageDriver === 'resend-segment') {
+    return;
+  }
+
   const normalized = sortStoreData(normalizeStoreData(data));
+  const payload = JSON.stringify(normalized);
 
-  if (getStorageDriver() === 'resend-segment') {
+  if (storageDriver === 'cloudflare-kv') {
+    await getKvNamespace(env).put(getStorageKey(env), payload);
     return;
   }
 
-  if (getStorageDriver() === 'upstash') {
-    const redis = getRedisClient();
-    await redis.set(getStorageKey(), JSON.stringify(normalized));
-    return;
-  }
-
-  const storagePath = getStoragePath();
-  await mkdir(dirname(storagePath), { recursive: true });
-  await writeFile(storagePath, `${JSON.stringify(normalized, null, 2)}\n`, 'utf8');
+  await getRedis(env).set(getStorageKey(env), payload);
 }
 
 function getOrCreateDeliveryRecord(data: EventAlertsStoreData, eventId: string, subject: string, nowIso: string) {
@@ -494,15 +529,14 @@ function getOrCreateDeliveryRecord(data: EventAlertsStoreData, eventId: string, 
   return delivery;
 }
 
-export async function getEventAlertsSnapshot() {
-  const data = await readStoreData();
+export async function getEventAlertsSnapshot(env: EventAlertsEnv) {
+  const data = await readStoreData(env);
   const activeSubscribers = data.subscribers.filter((subscriber) => subscriber.status === 'subscribed');
-  const storageDriver = getStorageDriver();
+  const storageDriver = getStorageDriver(env);
 
   return {
     storageDriver,
-    storagePath: storageDriver === 'file' ? getStoragePath() : null,
-    storageKey: storageDriver === 'upstash' ? getStorageKey() : storageDriver === 'resend-segment' ? getResendSegmentName() : null,
+    storageKey: storageDriver === 'resend-segment' ? getResendSegmentName(env) : getStorageKey(env),
     subscribers: data.subscribers,
     deliveries: data.deliveries,
     activeSubscribers,
@@ -510,17 +544,18 @@ export async function getEventAlertsSnapshot() {
   };
 }
 
-export async function subscribeEventAlertSubscriber(email: string, source = 'events_panel') {
-  if (getStorageDriver() === 'resend-segment') {
+export async function subscribeEventAlertSubscriber(env: EventAlertsEnv, email: string, source = 'events_panel') {
+  if (getStorageDriver(env) === 'resend-segment') {
     const normalizedEmail = normalizeEmail(email);
     const nowIso = new Date().toISOString();
-    const topicId = await ensureResendTopic();
-    const segmentContacts = await listResendSegmentContacts();
+    const segmentId = await ensureResendSegment(env);
+    const topicId = await ensureResendTopic(env);
+    const segmentContacts = await listResendSegmentContacts(env);
     const isInSegment = segmentContacts.some((contact) => normalizeEmail(contact.email) === normalizedEmail);
-    const existing = await getResendContact(normalizedEmail);
+    const existing = await getResendContact(env, normalizedEmail);
 
     if (!existing) {
-      await resendRequest('/contacts', {
+      await resendRequest(env, '/contacts', {
         method: 'POST',
         body: JSON.stringify({
           email: normalizedEmail,
@@ -529,12 +564,12 @@ export async function subscribeEventAlertSubscriber(email: string, source = 'eve
             ...buildResendProperties(source, nowIso, 'subscribed'),
             event_alert_subscribed_at: nowIso
           },
-          segments: [{ id: await ensureResendSegment() }],
+          segments: [{ id: segmentId }],
           topics: [{ id: topicId, subscription: 'opt_in' }]
         })
       });
     } else {
-      await resendRequest(`/contacts/${encodeURIComponent(normalizedEmail)}`, {
+      await resendRequest(env, `/contacts/${encodeURIComponent(normalizedEmail)}`, {
         method: 'PATCH',
         body: JSON.stringify({
           unsubscribed: false,
@@ -543,12 +578,12 @@ export async function subscribeEventAlertSubscriber(email: string, source = 'eve
       });
 
       if (!isInSegment) {
-        await resendRequest(`/contacts/${encodeURIComponent(normalizedEmail)}/segments/${await ensureResendSegment()}`, {
+        await resendRequest(env, `/contacts/${encodeURIComponent(normalizedEmail)}/segments/${segmentId}`, {
           method: 'POST'
         });
       }
 
-      await resendRequest(`/contacts/${encodeURIComponent(normalizedEmail)}/topics`, {
+      await resendRequest(env, `/contacts/${encodeURIComponent(normalizedEmail)}/topics`, {
         method: 'PATCH',
         body: JSON.stringify([{ id: topicId, subscription: 'opt_in' }])
       });
@@ -557,11 +592,11 @@ export async function subscribeEventAlertSubscriber(email: string, source = 'eve
     return {
       email: normalizedEmail,
       activeSubscriberCount: isInSegment ? segmentContacts.length : segmentContacts.length + 1,
-      storageDriver: getStorageDriver()
+      storageDriver: getStorageDriver(env)
     };
   }
 
-  const data = await readStoreData();
+  const data = await readStoreData(env);
   const normalizedEmail = normalizeEmail(email);
   const nowIso = new Date().toISOString();
   const existing = data.subscribers.find((subscriber) => subscriber.email === normalizedEmail);
@@ -582,51 +617,51 @@ export async function subscribeEventAlertSubscriber(email: string, source = 'eve
     });
   }
 
-  await writeStoreData(data);
+  await writeStoreData(env, data);
 
   return {
     email: normalizedEmail,
     activeSubscriberCount: data.subscribers.filter((subscriber) => subscriber.status === 'subscribed').length,
-    storageDriver: getStorageDriver()
+    storageDriver: getStorageDriver(env)
   };
 }
 
-export async function unsubscribeEventAlertSubscriber(email: string) {
-  if (getStorageDriver() === 'resend-segment') {
+export async function unsubscribeEventAlertSubscriber(env: EventAlertsEnv, email: string) {
+  if (getStorageDriver(env) === 'resend-segment') {
     const normalizedEmail = normalizeEmail(email);
     const nowIso = new Date().toISOString();
-    const segmentContacts = await listResendSegmentContacts();
+    const segmentContacts = await listResendSegmentContacts(env);
     const isInSegment = segmentContacts.some((contact) => normalizeEmail(contact.email) === normalizedEmail);
-    const existing = await getResendContact(normalizedEmail);
+    const existing = await getResendContact(env, normalizedEmail);
 
     if (existing) {
       if (isInSegment) {
-        await resendRequest(`/contacts/${encodeURIComponent(normalizedEmail)}/segments/${await ensureResendSegment()}`, {
+        await resendRequest(env, `/contacts/${encodeURIComponent(normalizedEmail)}/segments/${await ensureResendSegment(env)}`, {
           method: 'DELETE'
         });
       }
 
-      await resendRequest(`/contacts/${encodeURIComponent(normalizedEmail)}`, {
+      await resendRequest(env, `/contacts/${encodeURIComponent(normalizedEmail)}`, {
         method: 'PATCH',
         body: JSON.stringify({
           properties: buildResendProperties('events_panel', nowIso, 'unsubscribed')
         })
       });
 
-      await resendRequest(`/contacts/${encodeURIComponent(normalizedEmail)}/topics`, {
+      await resendRequest(env, `/contacts/${encodeURIComponent(normalizedEmail)}/topics`, {
         method: 'PATCH',
-        body: JSON.stringify([{ id: await ensureResendTopic(), subscription: 'opt_out' }])
+        body: JSON.stringify([{ id: await ensureResendTopic(env), subscription: 'opt_out' }])
       });
     }
 
     return {
       email: normalizedEmail,
       activeSubscriberCount: isInSegment ? Math.max(0, segmentContacts.length - 1) : segmentContacts.length,
-      storageDriver: getStorageDriver()
+      storageDriver: getStorageDriver(env)
     };
   }
 
-  const data = await readStoreData();
+  const data = await readStoreData(env);
   const normalizedEmail = normalizeEmail(email);
   const nowIso = new Date().toISOString();
   const existing = data.subscribers.find((subscriber) => subscriber.email === normalizedEmail);
@@ -635,18 +670,18 @@ export async function unsubscribeEventAlertSubscriber(email: string) {
     existing.status = 'unsubscribed';
     existing.unsubscribedAt = nowIso;
     existing.updatedAt = nowIso;
-    await writeStoreData(data);
+    await writeStoreData(env, data);
   }
 
   return {
     email: normalizedEmail,
     activeSubscriberCount: data.subscribers.filter((subscriber) => subscriber.status === 'subscribed').length,
-    storageDriver: getStorageDriver()
+    storageDriver: getStorageDriver(env)
   };
 }
 
-export async function recordEventAlertDelivery(update: DeliveryUpdate) {
-  if (getStorageDriver() === 'resend-segment') {
+export async function recordEventAlertDelivery(env: EventAlertsEnv, update: DeliveryUpdate) {
+  if (getStorageDriver(env) === 'resend-segment') {
     const nowIso = new Date().toISOString();
     return {
       eventId: update.eventId,
@@ -664,7 +699,7 @@ export async function recordEventAlertDelivery(update: DeliveryUpdate) {
     } satisfies EventAlertDelivery;
   }
 
-  const data = await readStoreData();
+  const data = await readStoreData(env);
   const nowIso = new Date().toISOString();
   const delivery = getOrCreateDeliveryRecord(data, update.eventId, update.subject, nowIso);
 
@@ -678,7 +713,7 @@ export async function recordEventAlertDelivery(update: DeliveryUpdate) {
   delivery.lastFailedCount = update.failedEmails.length;
   delivery.updatedAt = nowIso;
 
-  await writeStoreData(data);
+  await writeStoreData(env, data);
 
   return delivery;
 }
@@ -691,20 +726,137 @@ export function buildEventAlertBroadcastName(eventId: string) {
   return `${RESEND_EVENT_BROADCAST_PREFIX}${eventId}`;
 }
 
-export async function ensureResendEventAlertTarget() {
+export async function ensureResendEventAlertTarget(env: EventAlertsEnv) {
   return {
-    segmentId: await ensureResendSegment(),
-    topicId: await ensureResendTopic()
+    segmentId: await ensureResendSegment(env),
+    topicId: await ensureResendTopic(env)
   };
 }
 
-export async function ensureEventAlertStorage() {
-  if (getStorageDriver() === 'resend-segment') {
-    await ensureResendSegment();
-    await ensureResendTopic();
-    return;
+export async function createResendEventAlertBroadcast(env: EventAlertsEnv, options: CreateResendEventAlertBroadcastOptions) {
+  return resendRequest<{ id: string }>(env, '/broadcasts', {
+    method: 'POST',
+    body: JSON.stringify({
+      name: buildEventAlertBroadcastName(options.eventId),
+      segment_id: options.segmentId,
+      topic_id: options.topicId ?? null,
+      from: options.from,
+      subject: options.subject,
+      preview_text: options.previewText,
+      html: options.html,
+      text: options.text,
+      send: true
+    })
+  });
+}
+
+export function readHeader(request: Request, key: string) {
+  return request.headers.get(key) ?? request.headers.get(key.toLowerCase());
+}
+
+export function isAdminAuthorized(request: Request, env: EventAlertsEnv) {
+  const secret = env.EVENT_ALERTS_ADMIN_SECRET ?? env.EVENT_ALERTS_CRON_SECRET;
+  if (!secret) {
+    return false;
   }
 
-  const data = await readStoreData();
-  await writeStoreData(data);
+  const url = new URL(request.url);
+  const authorization = readHeader(request, 'authorization');
+  const bearerToken = authorization?.startsWith('Bearer ') ? authorization.slice(7) : null;
+  const querySecret = url.searchParams.get('secret');
+  return bearerToken === secret || querySecret === secret;
+}
+
+export function jsonResponse(payload: unknown, status = 200, extraHeaders?: HeadersInit) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: {
+      'Cache-Control': 'no-store',
+      'Content-Type': 'application/json; charset=utf-8',
+      ...extraHeaders
+    }
+  });
+}
+
+export function htmlResponse(html: string, status = 200, extraHeaders?: HeadersInit) {
+  return new Response(html, {
+    status,
+    headers: {
+      'Cache-Control': 'no-store',
+      'Content-Type': 'text/html; charset=utf-8',
+      ...extraHeaders
+    }
+  });
+}
+
+export function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function getUnsubscribeSecret(env: EventAlertsEnv) {
+  const secret = env.EVENT_ALERTS_UNSUBSCRIBE_SECRET ?? env.EVENT_ALERTS_CRON_SECRET ?? env.RESEND_API_KEY;
+  if (!secret) {
+    throw new Error('Unsubscribe links are not configured on this deployment.');
+  }
+
+  return secret;
+}
+
+export async function buildUnsubscribeToken(env: EventAlertsEnv, email: string) {
+  const secret = getUnsubscribeSecret(env);
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(normalizeEmail(email)));
+  return Array.from(new Uint8Array(signature), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function timingSafeCompare(left: string, right: string) {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  let mismatch = 0;
+  for (let index = 0; index < left.length; index += 1) {
+    mismatch |= left.charCodeAt(index) ^ right.charCodeAt(index);
+  }
+
+  return mismatch === 0;
+}
+
+export async function verifyEventAlertUnsubscribeToken(env: EventAlertsEnv, email: string, token: string) {
+  const expected = await buildUnsubscribeToken(env, email);
+  return timingSafeCompare(expected, token);
+}
+
+export async function parseJsonBody(request: Request) {
+  const rawBody = await request.text();
+  if (!rawBody) {
+    return {} as Record<string, unknown>;
+  }
+
+  try {
+    return JSON.parse(rawBody) as Record<string, unknown>;
+  } catch {
+    return {} as Record<string, unknown>;
+  }
+}
+
+export function getAlertApiBaseUrl(request: Request, env: EventAlertsEnv) {
+  return getBaseUrl(request, env);
+}
+
+export function buildEventAlertApiUrl(request: Request, env: EventAlertsEnv, path: string) {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${getBaseUrl(request, env)}${normalizedPath}`;
 }

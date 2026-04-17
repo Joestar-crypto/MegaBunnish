@@ -653,6 +653,26 @@ export const EthosTrustScores = ({ isInteracting = false }: { isInteracting?: bo
 const EMAIL_STORAGE_KEY = 'constellation-events-email';
 const EVENT_ALERTS_API_URL = (import.meta.env.VITE_EVENT_ALERTS_API_URL?.trim() || '/api/event-alert-subscriptions');
 
+const getEventAlertsFeedbackMessage = (message: string | undefined, status: number) => {
+  if (status === 404 && !message) {
+    return 'Event alerts API is not available in this environment.';
+  }
+
+  if (!message) {
+    return 'Unable to update event alerts right now.';
+  }
+
+  if (message.includes('Event alert storage is not configured on this deployment.')) {
+    return 'Event alerts are not configured on this deployment yet. Add event alert storage and redeploy.';
+  }
+
+  if (message.includes('Unsubscribe links are not configured on this deployment.')) {
+    return 'Event alerts are not fully configured on this deployment yet.';
+  }
+
+  return message;
+};
+
 const persistSavedEmail = (email: string | null) => {
   try {
     if (email) {
@@ -684,10 +704,7 @@ const updateEventAlertSubscription = async (email: string, method: 'POST' | 'DEL
     ? (await response.json().catch(() => null)) as { error?: string } | null
     : null;
   if (!response.ok) {
-    if (response.status === 404 && !payload?.error) {
-      throw new Error('Event alerts API is not available in this environment.');
-    }
-    throw new Error(payload?.error ?? 'Unable to update event alerts right now.');
+    throw new Error(getEventAlertsFeedbackMessage(payload?.error, response.status));
   }
 };
 

@@ -67,9 +67,11 @@ The app works without a key, but adding one helps avoid shared rate limits when 
 
 The Events panel can subscribe an email address to event notifications. The frontend posts subscriptions to `VITE_EVENT_ALERTS_API_URL` when defined, otherwise it uses `/api/event-alert-subscriptions`.
 
-The included backend stores subscriber emails itself and tracks which recipients already received each event. Automatic sends use `resend.emails.send`, so a send-only Resend API key is enough.
+The included backend stores subscriber emails itself and tracks which recipients already received each event. Automatic sends use Resend, so a send-only Resend API key is enough.
 
-For local development, subscriber data is written to `.data/event-alerts.json` by default. For production or serverless deployments, configure Upstash Redis so the subscriber list and delivery history survive deployments and can be shared by the subscription API and the scheduled sender.
+For local development, subscriber data is written to `.data/event-alerts.json` by default. If no KV or Upstash storage is configured but `RESEND_API_KEY` is available, the app now falls back automatically to a Resend segment and topic for subscriptions plus Resend broadcast history for duplicate prevention. That means Cloudflare Pages and similar serverless deployments can work with just the Resend and base URL secrets after redeploying.
+
+Optional alternate storage backends remain available if you prefer to keep the subscriber list outside Resend.
 
 ### Required environment variables
 
@@ -81,7 +83,13 @@ RESEND_FROM_ADDRESS="Megabunnish <alerts@your-domain.com>"
 EVENT_ALERTS_BASE_URL=https://your-public-app-url
 ```
 
-Recommended for durable production storage:
+For Cloudflare Pages native storage:
+
+```bash
+EVENT_ALERTS=<KV namespace binding>
+```
+
+Recommended for durable production storage when you want the same store available outside Cloudflare too:
 
 ```bash
 EVENT_ALERTS_STORAGE_DRIVER=upstash
@@ -106,18 +114,36 @@ EVENT_ALERTS_ADMIN_SECRET=choose-a-secret
 EVENT_ALERTS_UNSUBSCRIBE_SECRET=choose-a-secret
 ```
 
+### Troubleshooting subscriptions
+
+If the UI shows Event alert storage is not configured on this deployment, the public subscription endpoint is still running an older deployment or is missing `RESEND_API_KEY` entirely.
+
+After this change, the minimal production setup is:
+
+- `RESEND_API_KEY`
+- `EVENT_ALERTS_BASE_URL`
+
+Optional alternatives if you do not want Resend to hold the subscriber list:
+
+- A KV binding named EVENT_ALERTS
+- Or the Upstash variables UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
+
+The GitHub send-alerts workflow does not create deployment secrets for the public subscription API. It only sends pending alerts. If the deployed sender fails and the workflow falls back to Node, the Node sender now also works with the same minimal Resend setup.
+
 ### Automatic dispatch
 
-The repo includes `.github/workflows/send-event-alerts.yml`, scheduled hourly. Configure the matching GitHub Actions secrets before enabling it:
+The repo includes `.github/workflows/send-event-alerts.yml`, scheduled hourly. It first tries the deployed `/api/send-event-alerts` route so Cloudflare Pages can send alerts from the same storage used by the subscription UI. If that route is unavailable, it falls back to the existing Node sender.
+
+Configure the matching GitHub Actions secrets before enabling it:
 
 - `RESEND_API_KEY`
 - `RESEND_FROM_ADDRESS`
 - `EVENT_ALERTS_BASE_URL`
-- `UPSTASH_REDIS_REST_URL`
-- `UPSTASH_REDIS_REST_TOKEN`
-- `EVENT_ALERTS_STORAGE_KEY` (optional)
+- `EVENT_ALERTS_CRON_SECRET` (recommended)
 
-If you deploy the frontend on a platform with serverless routes, the included `api/event-alert-subscriptions.ts` and `api/send-event-alerts.ts` files can be used directly.
+Only add `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, and `EVENT_ALERTS_STORAGE_KEY` if you explicitly want to use the Upstash storage driver.
+
+If you deploy the frontend on a platform with serverless routes, the included `api/event-alert-subscriptions.ts` and `api/send-event-alerts.ts` files can be used directly. For Cloudflare Pages, the repo now also includes `functions/api/event-alert-subscriptions.ts` and `functions/api/send-event-alerts.ts`.
 
 ### Inspecting subscribers
 

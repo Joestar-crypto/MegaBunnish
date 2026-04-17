@@ -1,4 +1,4 @@
-export type EventAlertsStorageDriver = 'file' | 'upstash';
+export type EventAlertsStorageDriver = 'file' | 'upstash' | 'resend-segment';
 export type EventAlertSubscriber = {
     email: string;
     status: 'subscribed' | 'unsubscribed';
@@ -50,5 +50,10 @@ export declare function unsubscribeEventAlertSubscriber(email: string): Promise<
 }>;
 export declare function recordEventAlertDelivery(update: DeliveryUpdate): Promise<EventAlertDelivery>;
 export declare function getDeliveredEmailsForEvent(deliveries: EventAlertDelivery[], eventId: string): string[];
+export declare function buildEventAlertBroadcastName(eventId: string): string;
+export declare function ensureResendEventAlertTarget(): Promise<{
+    segmentId: string;
+    topicId: string;
+}>;
 export declare function ensureEventAlertStorage(): Promise<void>;
 export {};

@@ -5,7 +5,9 @@ import rawProjects from '../../src/data/projects.json';
 import { APP_EVENTS, type AppEvent } from '../../src/data/appEvents';
 import { Resend } from 'resend';
 import {
+  buildEventAlertBroadcastName,
   ensureEventAlertStorage,
+  ensureResendEventAlertTarget,
   getDeliveredEmailsForEvent,
   getEventAlertsSnapshot,
   recordEventAlertDelivery,
@@ -287,9 +289,8 @@ export function verifyEventAlertUnsubscribeToken(email: string, token: string) {
   return timingSafeEqual(expectedBuffer, actualBuffer);
 }
 
-function buildBroadcastText(event: AppEvent, project: Project, recipientEmail: string) {
+function buildBroadcastText(event: AppEvent, project: Project, recipientEmail: string | null) {
   const detailsUrl = event.detailsUrl ?? event.tweetUrl;
-  const unsubscribeUrl = buildEventAlertUnsubscribeConfirmationUrl(recipientEmail);
   const lines = [
     'NEW EVENT ON MEGAETH',
     '',
@@ -311,13 +312,23 @@ function buildBroadcastText(event: AppEvent, project: Project, recipientEmail: s
     lines.push('', `Project: ${project.links.site}`);
   }
 
-  lines.push('', `Unsubscribe: ${unsubscribeUrl}`);
+  if (recipientEmail) {
+    lines.push('', `Unsubscribe: ${buildEventAlertUnsubscribeConfirmationUrl(recipientEmail)}`);
+  } else {
+    lines.push('', `Manage alerts: ${getAbsoluteUrl('/')}`);
+  }
 
   return lines.join('\n');
 }
 
-function renderBroadcastHtml(event: AppEvent, project: Project, recipientEmail: string) {
+function renderBroadcastHtml(event: AppEvent, project: Project, recipientEmail: string | null) {
   const detailsUrl = event.detailsUrl ?? event.tweetUrl;
+  const actionUrl = recipientEmail ? buildEventAlertUnsubscribeConfirmationUrl(recipientEmail) : getAbsoluteUrl('/');
+  const footerNote = recipientEmail
+    ? isAllDayEvent(event)
+      ? 'This event is scheduled as an all-day window.'
+      : 'Watch the schedule closely in case additional phases get announced.'
+    : 'Manage your event alerts from the Megabunnish Events panel.';
   const variables: Record<string, string> = {
     ECOSYSTEM_MAP_URL: getAbsoluteUrl('/Twittercard.png'),
     MEGABUNNISH_SYMBOL_URL: getAbsoluteUrl('/logos/Megabunnish.webp'),
@@ -340,10 +351,9 @@ function renderBroadcastHtml(event: AppEvent, project: Project, recipientEmail: 
     PRIMARY_CTA_URL: escapeHtml(detailsUrl),
     SECONDARY_CTA_HTML: buildSecondaryCtaHtml(buildGoogleCalendarUrl(event, project.name)),
     PROJECT_LINK_HTML: buildProjectLinkHtml(project),
-    FOOTER_NOTE: isAllDayEvent(event)
-      ? 'This event is scheduled as an all-day window.'
-      : 'Watch the schedule closely in case additional phases get announced.',
-    UNSUBSCRIBE_URL: escapeHtml(buildEventAlertUnsubscribeConfirmationUrl(recipientEmail))
+    FOOTER_NOTE: footerNote,
+    FOOTER_ACTION_LABEL: recipientEmail ? 'Unsubscribe' : 'Manage alerts',
+    UNSUBSCRIBE_URL: escapeHtml(actionUrl)
   };
 
   return fillTemplate(TEMPLATE_HTML, variables);
@@ -473,6 +483,63 @@ export async function sendNewEventAlerts(options: DispatchOptions = {}) {
   const sentEvents: Array<{ eventId: string; attemptedCount: number; sentCount: number; failedCount: number }> = [];
   const failures: FailedDelivery[] = [];
   const resend = options.dryRun ? null : getResendClient();
+
+  if (snapshot.storageDriver === 'resend-segment') {
+    const target = options.dryRun ? null : await ensureResendEventAlertTarget();
+
+    for (const pendingEvent of pendingEvents) {
+      const { event, recipientEmails } = pendingEvent;
+      const project = projectById.get(event.projectId);
+      if (!project) {
+        continue;
+      }
+
+      if (options.dryRun) {
+        sentEvents.push({
+          eventId: event.id,
+          attemptedCount: recipientEmails.length,
+          sentCount: 0,
+          failedCount: 0
+        });
+        continue;
+      }
+
+      const response = await resend!.broadcasts.create({
+        name: buildEventAlertBroadcastName(event.id),
+        segmentId: target!.segmentId,
+        topicId: target!.topicId,
+        from: DEFAULT_FROM_ADDRESS,
+        subject: buildBroadcastSubject(event, project),
+        previewText: buildBroadcastPreviewText(event, project),
+        html: renderBroadcastHtml(event, project, null),
+        text: buildBroadcastText(event, project, null),
+        send: true
+      });
+
+      if (response.error) {
+        throw new Error(readResendErrorMessage(response.error));
+      }
+
+      sentEvents.push({
+        eventId: event.id,
+        attemptedCount: recipientEmails.length,
+        sentCount: recipientEmails.length,
+        failedCount: 0
+      });
+    }
+
+    return {
+      dryRun: Boolean(options.dryRun),
+      storageDriver: snapshot.storageDriver,
+      subscriberCount: activeSubscribers.length,
+      pendingEvents: pendingEvents.map((entry) => ({
+        eventId: entry.event.id,
+        recipientCount: entry.recipientEmails.length
+      })),
+      sentEvents,
+      failures
+    };
+  }
 
   for (const pendingEvent of pendingEvents) {
     const { event, recipientEmails } = pendingEvent;

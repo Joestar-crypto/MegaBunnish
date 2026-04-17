@@ -43,7 +43,23 @@ export declare function sendNewEventAlerts(options?: DispatchOptions): Promise<{
     skippedReason: string;
 } | {
     dryRun: boolean;
-    storageDriver: import("./store").EventAlertsStorageDriver;
+    storageDriver: "resend-segment";
+    subscriberCount: number;
+    pendingEvents: {
+        eventId: string;
+        recipientCount: number;
+    }[];
+    sentEvents: {
+        eventId: string;
+        attemptedCount: number;
+        sentCount: number;
+        failedCount: number;
+    }[];
+    failures: FailedDelivery[];
+    skippedReason?: undefined;
+} | {
+    dryRun: boolean;
+    storageDriver: "file" | "upstash";
     subscriberCount: number;
     pendingEvents: {
         eventId: string;

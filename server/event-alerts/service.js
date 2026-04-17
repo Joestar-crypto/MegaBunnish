@@ -56,7 +56,7 @@ import { fileURLToPath } from 'node:url';
 import rawProjects from '../../src/data/projects.json';
 import { APP_EVENTS } from '../../src/data/appEvents';
 import { Resend } from 'resend';
-import { ensureEventAlertStorage, getDeliveredEmailsForEvent, getEventAlertsSnapshot, recordEventAlertDelivery, subscribeEventAlertSubscriber, unsubscribeEventAlertSubscriber } from './store';
+import { buildEventAlertBroadcastName, ensureEventAlertStorage, ensureResendEventAlertTarget, getDeliveredEmailsForEvent, getEventAlertsSnapshot, recordEventAlertDelivery, subscribeEventAlertSubscriber, unsubscribeEventAlertSubscriber } from './store';
 var DEFAULT_FROM_ADDRESS = (_a = process.env.RESEND_FROM_ADDRESS) !== null && _a !== void 0 ? _a : 'Megabunnish <onboarding@resend.dev>';
 var EVENT_ALERTS_BASE_URL = ((_c = (_b = process.env.EVENT_ALERTS_BASE_URL) !== null && _b !== void 0 ? _b : process.env.EVENTS_BASE_URL) !== null && _c !== void 0 ? _c : '').replace(/\/$/, '');
 var TEMPLATE_PATH = fileURLToPath(new URL('../../emails/resend-news-template.html', import.meta.url));
@@ -255,7 +255,6 @@ export function verifyEventAlertUnsubscribeToken(email, token) {
 function buildBroadcastText(event, project, recipientEmail) {
     var _a, _b;
     var detailsUrl = (_a = event.detailsUrl) !== null && _a !== void 0 ? _a : event.tweetUrl;
-    var unsubscribeUrl = buildEventAlertUnsubscribeConfirmationUrl(recipientEmail);
     var lines = [
         'NEW EVENT ON MEGAETH',
         '',
@@ -274,12 +273,23 @@ function buildBroadcastText(event, project, recipientEmail) {
     if ((_b = project.links) === null || _b === void 0 ? void 0 : _b.site) {
         lines.push('', "Project: ".concat(project.links.site));
     }
-    lines.push('', "Unsubscribe: ".concat(unsubscribeUrl));
+    if (recipientEmail) {
+        lines.push('', "Unsubscribe: ".concat(buildEventAlertUnsubscribeConfirmationUrl(recipientEmail)));
+    }
+    else {
+        lines.push('', "Manage alerts: ".concat(getAbsoluteUrl('/')));
+    }
     return lines.join('\n');
 }
 function renderBroadcastHtml(event, project, recipientEmail) {
     var _a, _b, _c, _d, _e, _f, _g;
     var detailsUrl = (_a = event.detailsUrl) !== null && _a !== void 0 ? _a : event.tweetUrl;
+    var actionUrl = recipientEmail ? buildEventAlertUnsubscribeConfirmationUrl(recipientEmail) : getAbsoluteUrl('/');
+    var footerNote = recipientEmail
+        ? isAllDayEvent(event)
+            ? 'This event is scheduled as an all-day window.'
+            : 'Watch the schedule closely in case additional phases get announced.'
+        : 'Manage your event alerts from the Megabunnish Events panel.';
     var variables = {
         ECOSYSTEM_MAP_URL: getAbsoluteUrl('/Twittercard.png'),
         MEGABUNNISH_SYMBOL_URL: getAbsoluteUrl('/logos/Megabunnish.webp'),
@@ -302,10 +312,9 @@ function renderBroadcastHtml(event, project, recipientEmail) {
         PRIMARY_CTA_URL: escapeHtml(detailsUrl),
         SECONDARY_CTA_HTML: buildSecondaryCtaHtml(buildGoogleCalendarUrl(event, project.name)),
         PROJECT_LINK_HTML: buildProjectLinkHtml(project),
-        FOOTER_NOTE: isAllDayEvent(event)
-            ? 'This event is scheduled as an all-day window.'
-            : 'Watch the schedule closely in case additional phases get announced.',
-        UNSUBSCRIBE_URL: escapeHtml(buildEventAlertUnsubscribeConfirmationUrl(recipientEmail))
+        FOOTER_NOTE: footerNote,
+        FOOTER_ACTION_LABEL: recipientEmail ? 'Unsubscribe' : 'Manage alerts',
+        UNSUBSCRIBE_URL: escapeHtml(actionUrl)
     };
     return fillTemplate(TEMPLATE_HTML, variables);
 }
@@ -377,17 +386,17 @@ export function getEventAlertUnsubscribePage(email, shouldFinalize) {
 }
 export function sendNewEventAlerts() {
     return __awaiter(this, arguments, void 0, function (options) {
-        var snapshot, activeSubscribers, pendingEvents, sentEvents, failures, resend, _loop_1, _i, pendingEvents_1, pendingEvent;
+        var snapshot, activeSubscribers, pendingEvents, sentEvents, failures, resend, target, _a, _i, pendingEvents_1, pendingEvent, event, recipientEmails, project, response, _loop_1, _b, pendingEvents_2, pendingEvent;
         var _this = this;
         if (options === void 0) { options = {}; }
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        return __generator(this, function (_c) {
+            switch (_c.label) {
                 case 0: return [4 /*yield*/, ensureEventAlertStorage()];
                 case 1:
-                    _a.sent();
+                    _c.sent();
                     return [4 /*yield*/, getEventAlertsSnapshot()];
                 case 2:
-                    snapshot = _a.sent();
+                    snapshot = _c.sent();
                     activeSubscribers = snapshot.activeSubscriberEmails;
                     if (!activeSubscribers.length) {
                         return [2 /*return*/, {
@@ -414,10 +423,77 @@ export function sendNewEventAlerts() {
                     sentEvents = [];
                     failures = [];
                     resend = options.dryRun ? null : getResendClient();
+                    if (!(snapshot.storageDriver === 'resend-segment')) return [3 /*break*/, 10];
+                    if (!options.dryRun) return [3 /*break*/, 3];
+                    _a = null;
+                    return [3 /*break*/, 5];
+                case 3: return [4 /*yield*/, ensureResendEventAlertTarget()];
+                case 4:
+                    _a = _c.sent();
+                    _c.label = 5;
+                case 5:
+                    target = _a;
+                    _i = 0, pendingEvents_1 = pendingEvents;
+                    _c.label = 6;
+                case 6:
+                    if (!(_i < pendingEvents_1.length)) return [3 /*break*/, 9];
+                    pendingEvent = pendingEvents_1[_i];
+                    event = pendingEvent.event, recipientEmails = pendingEvent.recipientEmails;
+                    project = projectById.get(event.projectId);
+                    if (!project) {
+                        return [3 /*break*/, 8];
+                    }
+                    if (options.dryRun) {
+                        sentEvents.push({
+                            eventId: event.id,
+                            attemptedCount: recipientEmails.length,
+                            sentCount: 0,
+                            failedCount: 0
+                        });
+                        return [3 /*break*/, 8];
+                    }
+                    return [4 /*yield*/, resend.broadcasts.create({
+                            name: buildEventAlertBroadcastName(event.id),
+                            segmentId: target.segmentId,
+                            topicId: target.topicId,
+                            from: DEFAULT_FROM_ADDRESS,
+                            subject: buildBroadcastSubject(event, project),
+                            previewText: buildBroadcastPreviewText(event, project),
+                            html: renderBroadcastHtml(event, project, null),
+                            text: buildBroadcastText(event, project, null),
+                            send: true
+                        })];
+                case 7:
+                    response = _c.sent();
+                    if (response.error) {
+                        throw new Error(readResendErrorMessage(response.error));
+                    }
+                    sentEvents.push({
+                        eventId: event.id,
+                        attemptedCount: recipientEmails.length,
+                        sentCount: recipientEmails.length,
+                        failedCount: 0
+                    });
+                    _c.label = 8;
+                case 8:
+                    _i++;
+                    return [3 /*break*/, 6];
+                case 9: return [2 /*return*/, {
+                        dryRun: Boolean(options.dryRun),
+                        storageDriver: snapshot.storageDriver,
+                        subscriberCount: activeSubscribers.length,
+                        pendingEvents: pendingEvents.map(function (entry) { return ({
+                            eventId: entry.event.id,
+                            recipientCount: entry.recipientEmails.length
+                        }); }),
+                        sentEvents: sentEvents,
+                        failures: failures
+                    }];
+                case 10:
                     _loop_1 = function (pendingEvent) {
-                        var event, recipientEmails, project, subject, deliveredEmails, resendEmailIds, failedEmails, _b, _c, recipientBatch, batchResults;
-                        return __generator(this, function (_d) {
-                            switch (_d.label) {
+                        var event, recipientEmails, project, subject, deliveredEmails, resendEmailIds, failedEmails, _d, _e, recipientBatch, batchResults;
+                        return __generator(this, function (_f) {
+                            switch (_f.label) {
                                 case 0:
                                     event = pendingEvent.event, recipientEmails = pendingEvent.recipientEmails;
                                     project = projectById.get(event.projectId);
@@ -437,11 +513,11 @@ export function sendNewEventAlerts() {
                                     deliveredEmails = [];
                                     resendEmailIds = [];
                                     failedEmails = [];
-                                    _b = 0, _c = chunkValues(recipientEmails, SEND_BATCH_SIZE);
-                                    _d.label = 1;
+                                    _d = 0, _e = chunkValues(recipientEmails, SEND_BATCH_SIZE);
+                                    _f.label = 1;
                                 case 1:
-                                    if (!(_b < _c.length)) return [3 /*break*/, 4];
-                                    recipientBatch = _c[_b];
+                                    if (!(_d < _e.length)) return [3 /*break*/, 4];
+                                    recipientBatch = _e[_d];
                                     return [4 /*yield*/, Promise.all(recipientBatch.map(function (recipientEmail) { return __awaiter(_this, void 0, void 0, function () {
                                             var response;
                                             var _a, _b;
@@ -476,7 +552,7 @@ export function sendNewEventAlerts() {
                                             });
                                         }); }))];
                                 case 2:
-                                    batchResults = _d.sent();
+                                    batchResults = _f.sent();
                                     batchResults.forEach(function (result) {
                                         if (result.ok) {
                                             deliveredEmails.push(result.email);
@@ -490,9 +566,9 @@ export function sendNewEventAlerts() {
                                             error: result.error
                                         });
                                     });
-                                    _d.label = 3;
+                                    _f.label = 3;
                                 case 3:
-                                    _b++;
+                                    _d++;
                                     return [3 /*break*/, 1];
                                 case 4: return [4 /*yield*/, recordEventAlertDelivery({
                                         eventId: event.id,
@@ -503,7 +579,7 @@ export function sendNewEventAlerts() {
                                         attemptedCount: recipientEmails.length
                                     })];
                                 case 5:
-                                    _d.sent();
+                                    _f.sent();
                                     failures.push.apply(failures, failedEmails.map(function (entry) { return ({
                                         eventId: event.id,
                                         email: entry.email,
@@ -522,19 +598,19 @@ export function sendNewEventAlerts() {
                             }
                         });
                     };
-                    _i = 0, pendingEvents_1 = pendingEvents;
-                    _a.label = 3;
-                case 3:
-                    if (!(_i < pendingEvents_1.length)) return [3 /*break*/, 6];
-                    pendingEvent = pendingEvents_1[_i];
+                    _b = 0, pendingEvents_2 = pendingEvents;
+                    _c.label = 11;
+                case 11:
+                    if (!(_b < pendingEvents_2.length)) return [3 /*break*/, 14];
+                    pendingEvent = pendingEvents_2[_b];
                     return [5 /*yield**/, _loop_1(pendingEvent)];
-                case 4:
-                    _a.sent();
-                    _a.label = 5;
-                case 5:
-                    _i++;
-                    return [3 /*break*/, 3];
-                case 6: return [2 /*return*/, {
+                case 12:
+                    _c.sent();
+                    _c.label = 13;
+                case 13:
+                    _b++;
+                    return [3 /*break*/, 11];
+                case 14: return [2 /*return*/, {
                         dryRun: Boolean(options.dryRun),
                         storageDriver: snapshot.storageDriver,
                         subscriberCount: activeSubscribers.length,
