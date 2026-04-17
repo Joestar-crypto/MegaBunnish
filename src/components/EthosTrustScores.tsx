@@ -797,6 +797,14 @@ export const EventsBell = () => {
     }
   };
 
+  const handleForgetLocalSubscription = () => {
+    persistSavedEmail(null);
+    setSavedEmail(null);
+    setEmailInput('');
+    setEmailStatus('saved');
+    setEmailFeedback('Removed the saved email on this device. Remote unsubscribe was not confirmed.');
+  };
+
   const eventsPanel = areEventsVisible ? (
     <div className="ethos-events-panel ethos-events-panel--portal" role="dialog" aria-label="Upcoming events">
       <div className="ethos-events-panel__header">
@@ -907,6 +915,15 @@ export const EventsBell = () => {
               <span className={emailStatus === 'error' ? 'ethos-events-panel__email-error' : 'ethos-events-panel__email-success'}>
                 {emailFeedback}
               </span>
+            )}
+            {emailStatus === 'error' && (
+              <button
+                type="button"
+                className="ethos-events-panel__local-reset"
+                onClick={handleForgetLocalSubscription}
+              >
+                Forget on this device
+              </button>
             )}
           </div>
         ) : (

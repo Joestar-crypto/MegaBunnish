@@ -887,6 +887,23 @@ select {
   background: rgba(255, 100, 100, 0.2);
 }
 
+.ethos-events-panel__local-reset {
+  align-self: flex-start;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f7f1ef;
+  border-radius: 999px;
+  padding: 0.28rem 0.72rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.ethos-events-panel__local-reset:hover {
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.16);
+}
+
 .ethos-trust-panel__header {
   display: flex;
   justify-content: space-between;
