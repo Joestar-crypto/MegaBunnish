@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext ts,tsx",
+    "alerts:list": "tsx scripts/list-event-alert-subscribers.ts",
     "alerts:send": "tsx scripts/send-new-event-alerts.ts",
     "alerts:dry-run": "tsx scripts/send-new-event-alerts.ts --dry-run",
     "update:scores": "node scripts/fetch-ethos-scores.mjs",
@@ -15,6 +16,7 @@
   },
   "dependencies": {
     "@privy-io/react-auth": "^3.18.0",
+    "@upstash/redis": "^1.37.0",
     "axios": "^1.13.5",
     "dotenv": "^16.6.1",
     "ethers": "^6.16.0",

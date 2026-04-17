@@ -22,6 +22,7 @@ The dev server defaults to http://localhost:5173.
 - `npm run build` – type-check and build the production bundle.
 - `npm run preview` – preview the production build locally.
 - `npm run lint` – run ESLint on the `src` directory.
+- `npm run alerts:list` – inspect the backend subscriber list used for event alerts.
 - `npm run alerts:send` – send pending event alerts to subscribed contacts.
 - `npm run alerts:dry-run` – preview which pending event alerts would be sent.
 
@@ -66,7 +67,9 @@ The app works without a key, but adding one helps avoid shared rate limits when 
 
 The Events panel can subscribe an email address to event notifications. The frontend posts subscriptions to `VITE_EVENT_ALERTS_API_URL` when defined, otherwise it uses `/api/event-alert-subscriptions`.
 
-The included API route stores subscribers in a Resend segment named `Megabunnish Event Alerts` by default. Automatic sends use Resend Broadcasts so each event is only mailed once per segment.
+The included backend stores subscriber emails itself and tracks which recipients already received each event. Automatic sends use `resend.emails.send`, so a send-only Resend API key is enough.
+
+For local development, subscriber data is written to `.data/event-alerts.json` by default. For production or serverless deployments, configure Upstash Redis so the subscriber list and delivery history survive deployments and can be shared by the subscription API and the scheduled sender.
 
 ### Required environment variables
 
@@ -76,14 +79,31 @@ For the subscription API and alert sender:
 RESEND_API_KEY=your-resend-key
 RESEND_FROM_ADDRESS="Megabunnish <alerts@your-domain.com>"
 EVENT_ALERTS_BASE_URL=https://your-public-app-url
-EVENT_ALERTS_SEGMENT_NAME="Megabunnish Event Alerts"
 ```
 
-Optional for a custom frontend endpoint or protected dispatch endpoint:
+Recommended for durable production storage:
+
+```bash
+EVENT_ALERTS_STORAGE_DRIVER=upstash
+UPSTASH_REDIS_REST_URL=https://your-upstash-instance.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-upstash-token
+EVENT_ALERTS_STORAGE_KEY=megabunnish:event-alerts
+```
+
+Optional if you run on a persistent Node server and want file storage elsewhere:
+
+```bash
+EVENT_ALERTS_STORAGE_DRIVER=file
+EVENT_ALERTS_STORAGE_PATH=/absolute/path/to/event-alerts.json
+```
+
+Optional for a custom frontend endpoint, protected admin access, or unsubscribe signing:
 
 ```bash
 VITE_EVENT_ALERTS_API_URL=https://your-api-host/api/event-alert-subscriptions
 EVENT_ALERTS_CRON_SECRET=choose-a-secret
+EVENT_ALERTS_ADMIN_SECRET=choose-a-secret
+EVENT_ALERTS_UNSUBSCRIBE_SECRET=choose-a-secret
 ```
 
 ### Automatic dispatch
@@ -93,9 +113,21 @@ The repo includes `.github/workflows/send-event-alerts.yml`, scheduled hourly. C
 - `RESEND_API_KEY`
 - `RESEND_FROM_ADDRESS`
 - `EVENT_ALERTS_BASE_URL`
-- `EVENT_ALERTS_SEGMENT_NAME`
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
+- `EVENT_ALERTS_STORAGE_KEY` (optional)
 
 If you deploy the frontend on a platform with serverless routes, the included `api/event-alert-subscriptions.ts` and `api/send-event-alerts.ts` files can be used directly.
+
+### Inspecting subscribers
+
+To inspect the current stored list locally:
+
+```bash
+npm run alerts:list
+```
+
+To inspect it through the deployed API, call `GET /api/event-alert-subscriptions` with `Authorization: Bearer <EVENT_ALERTS_ADMIN_SECRET>` or `?secret=<EVENT_ALERTS_ADMIN_SECRET>`.
 
 ## MegaETH Wallet Checker (Node CLI)
 

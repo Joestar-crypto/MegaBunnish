@@ -1,16 +1,25 @@
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import rawProjects from '../../src/data/projects.json';
 import { APP_EVENTS, type AppEvent } from '../../src/data/appEvents';
 import { Resend } from 'resend';
+import {
+  ensureEventAlertStorage,
+  getDeliveredEmailsForEvent,
+  getEventAlertsSnapshot,
+  recordEventAlertDelivery,
+  subscribeEventAlertSubscriber,
+  unsubscribeEventAlertSubscriber
+} from './store';
 
-const EVENT_ALERTS_SEGMENT_NAME = process.env.EVENT_ALERTS_SEGMENT_NAME ?? 'Megabunnish Event Alerts';
 const DEFAULT_FROM_ADDRESS = process.env.RESEND_FROM_ADDRESS ?? 'Megabunnish <onboarding@resend.dev>';
 const EVENT_ALERTS_BASE_URL = (process.env.EVENT_ALERTS_BASE_URL ?? process.env.EVENTS_BASE_URL ?? '').replace(/\/$/, '');
 const TEMPLATE_PATH = fileURLToPath(new URL('../../emails/resend-news-template.html', import.meta.url));
 const TEMPLATE_HTML = readFileSync(TEMPLATE_PATH, 'utf8');
 const EVENT_TIMEZONE = 'America/New_York';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
+const SEND_BATCH_SIZE = 10;
 
 type Project = {
   id: string;
@@ -22,7 +31,7 @@ type Project = {
   };
 };
 
-type ContactErrorLike = {
+type ResendErrorLike = {
   message?: string;
   statusCode?: number;
   name?: string;
@@ -30,6 +39,12 @@ type ContactErrorLike = {
 
 type DispatchOptions = {
   dryRun?: boolean;
+};
+
+type FailedDelivery = {
+  eventId: string;
+  email: string;
+  error: string;
 };
 
 export class EventAlertsConfigError extends Error {
@@ -88,52 +103,8 @@ export function isValidEventAlertEmail(email: string) {
 }
 
 function readResendErrorMessage(error: unknown) {
-  const resendError = error as ContactErrorLike | undefined;
+  const resendError = error as ResendErrorLike | undefined;
   return resendError?.message ?? 'Unexpected Resend error.';
-}
-
-function isNotFoundError(error: unknown) {
-  const resendError = error as ContactErrorLike | undefined;
-  const message = resendError?.message?.toLowerCase() ?? '';
-  return resendError?.statusCode === 404 || message.includes('not found');
-}
-
-function isConflictError(error: unknown) {
-  const resendError = error as ContactErrorLike | undefined;
-  const message = resendError?.message?.toLowerCase() ?? '';
-  return resendError?.statusCode === 409 || message.includes('already exists') || message.includes('already in');
-}
-
-async function getOrCreateEventAlertsSegment(resend: Resend) {
-  const listResponse = await resend.segments.list({ limit: 100 });
-  if (listResponse.error) {
-    throw new Error(readResendErrorMessage(listResponse.error));
-  }
-
-  const existing = listResponse.data?.data.find((segment) => segment.name === EVENT_ALERTS_SEGMENT_NAME);
-  if (existing) {
-    return existing;
-  }
-
-  const createResponse = await resend.segments.create({ name: EVENT_ALERTS_SEGMENT_NAME });
-  if (createResponse.error || !createResponse.data) {
-    throw new Error(readResendErrorMessage(createResponse.error));
-  }
-
-  return createResponse.data;
-}
-
-async function getExistingContactId(resend: Resend, email: string) {
-  const response = await resend.contacts.get({ email });
-  if (response.data?.id) {
-    return response.data.id;
-  }
-
-  if (response.error && !isNotFoundError(response.error)) {
-    throw new Error(readResendErrorMessage(response.error));
-  }
-
-  return null;
 }
 
 function getAbsoluteUrl(pathOrUrl: string) {
@@ -149,10 +120,6 @@ function getAbsoluteUrl(pathOrUrl: string) {
 
 function toCalendarDateString(value: string) {
   return new Date(value).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-}
-
-function formatDateLabel(value: string) {
-  return DATE_FORMATTER.format(new Date(value));
 }
 
 function formatTimeLabel(value: string) {
@@ -264,10 +231,6 @@ function buildProjectLinkHtml(project: Project) {
   return `<tr><td style="padding:16px 18px 0;background:linear-gradient(180deg,#16110e 0%,#0f0c0a 100%);"><a href="${escapeHtml(project.links.site)}" style="font-size:13px;color:#d9ccff;text-decoration:none;font-weight:700;">Visit ${escapeHtml(project.name)} &#8594;</a></td></tr>`;
 }
 
-function buildBroadcastName(eventId: string) {
-  return `event-alert:${eventId}`;
-}
-
 function buildBroadcastSubject(event: AppEvent, project: Project) {
   return `NEW EVENT ON MEGAETH | ${project.name} | ${event.title}`;
 }
@@ -276,8 +239,57 @@ function buildBroadcastPreviewText(event: AppEvent, project: Project) {
   return `${project.name} just announced ${event.title} on MegaETH.`;
 }
 
-function buildBroadcastText(event: AppEvent, project: Project) {
+function getUnsubscribeSecret() {
+  const secret = process.env.EVENT_ALERTS_UNSUBSCRIBE_SECRET ?? process.env.EVENT_ALERTS_CRON_SECRET ?? process.env.RESEND_API_KEY;
+  if (!secret) {
+    throw new EventAlertsConfigError('Missing EVENT_ALERTS_UNSUBSCRIBE_SECRET, EVENT_ALERTS_CRON_SECRET, or RESEND_API_KEY for unsubscribe links.');
+  }
+
+  return secret;
+}
+
+function buildUnsubscribeToken(email: string) {
+  return createHmac('sha256', getUnsubscribeSecret())
+    .update(normalizeEmail(email))
+    .digest('hex');
+}
+
+function buildEventAlertUnsubscribeUrl(email: string) {
+  const params = new URLSearchParams({
+    email: normalizeEmail(email),
+    token: buildUnsubscribeToken(email),
+    action: 'unsubscribe'
+  });
+
+  return `${getAbsoluteUrl('/api/event-alert-subscriptions')}?${params.toString()}`;
+}
+
+function buildEventAlertUnsubscribeConfirmationUrl(email: string) {
+  const params = new URLSearchParams({
+    email: normalizeEmail(email),
+    token: buildUnsubscribeToken(email),
+    action: 'confirm'
+  });
+
+  return `${getAbsoluteUrl('/api/event-alert-subscriptions')}?${params.toString()}`;
+}
+
+export function verifyEventAlertUnsubscribeToken(email: string, token: string) {
+  const normalizedEmail = normalizeEmail(email);
+  const expected = buildUnsubscribeToken(normalizedEmail);
+  const expectedBuffer = Buffer.from(expected, 'utf8');
+  const actualBuffer = Buffer.from(token, 'utf8');
+
+  if (expectedBuffer.length !== actualBuffer.length) {
+    return false;
+  }
+
+  return timingSafeEqual(expectedBuffer, actualBuffer);
+}
+
+function buildBroadcastText(event: AppEvent, project: Project, recipientEmail: string) {
   const detailsUrl = event.detailsUrl ?? event.tweetUrl;
+  const unsubscribeUrl = buildEventAlertUnsubscribeConfirmationUrl(recipientEmail);
   const lines = [
     'NEW EVENT ON MEGAETH',
     '',
@@ -299,10 +311,12 @@ function buildBroadcastText(event: AppEvent, project: Project) {
     lines.push('', `Project: ${project.links.site}`);
   }
 
+  lines.push('', `Unsubscribe: ${unsubscribeUrl}`);
+
   return lines.join('\n');
 }
 
-function renderBroadcastHtml(event: AppEvent, project: Project) {
+function renderBroadcastHtml(event: AppEvent, project: Project, recipientEmail: string) {
   const detailsUrl = event.detailsUrl ?? event.tweetUrl;
   const variables: Record<string, string> = {
     ECOSYSTEM_MAP_URL: getAbsoluteUrl('/Twittercard.png'),
@@ -329,7 +343,7 @@ function renderBroadcastHtml(event: AppEvent, project: Project) {
     FOOTER_NOTE: isAllDayEvent(event)
       ? 'This event is scheduled as an all-day window.'
       : 'Watch the schedule closely in case additional phases get announced.',
-    UNSUBSCRIBE_URL: '{{{RESEND_UNSUBSCRIBE_URL}}}'
+    UNSUBSCRIBE_URL: escapeHtml(buildEventAlertUnsubscribeConfirmationUrl(recipientEmail))
   };
 
   return fillTemplate(TEMPLATE_HTML, variables);
@@ -340,36 +354,12 @@ function isUpcomingEvent(event: AppEvent) {
   return new Date(endValue).getTime() > Date.now();
 }
 
-async function listAllBroadcasts(resend: Resend) {
-  const items: { id: string; name: string | null }[] = [];
-  let after: string | undefined;
-
-  while (true) {
-    const response = await resend.broadcasts.list(after ? { after, limit: 100 } : { limit: 100 });
-    if (response.error) {
-      throw new Error(readResendErrorMessage(response.error));
-    }
-
-    const page = response.data?.data ?? [];
-    items.push(...page.map((broadcast) => ({ id: broadcast.id, name: broadcast.name })));
-
-    if (!response.data?.has_more || page.length === 0) {
-      break;
-    }
-
-    after = page[page.length - 1]?.id;
+function chunkValues<T>(values: T[], size: number) {
+  const batches: T[][] = [];
+  for (let index = 0; index < values.length; index += size) {
+    batches.push(values.slice(index, index + size));
   }
-
-  return items;
-}
-
-async function segmentHasSubscribers(resend: Resend, segmentId: string) {
-  const response = await resend.contacts.list({ segmentId, limit: 1 });
-  if (response.error) {
-    throw new Error(readResendErrorMessage(response.error));
-  }
-
-  return (response.data?.data.length ?? 0) > 0 || Boolean(response.data?.has_more);
+  return batches;
 }
 
 export async function subscribeToEventAlerts(email: string) {
@@ -378,49 +368,7 @@ export async function subscribeToEventAlerts(email: string) {
     throw new EventAlertsConfigError('Please enter a valid email address.');
   }
 
-  const resend = getResendClient();
-  const segment = await getOrCreateEventAlertsSegment(resend);
-  const existingContactId = await getExistingContactId(resend, normalizedEmail);
-
-  if (!existingContactId) {
-    const createResponse = await resend.contacts.create({
-      email: normalizedEmail,
-      unsubscribed: false,
-      segments: [{ id: segment.id }],
-      properties: {
-        event_alerts_status: 'subscribed',
-        event_alerts_source: 'events_panel'
-      }
-    });
-
-    if (createResponse.error) {
-      throw new Error(readResendErrorMessage(createResponse.error));
-    }
-  } else {
-    const updateResponse = await resend.contacts.update({
-      email: normalizedEmail,
-      unsubscribed: false,
-      properties: {
-        event_alerts_status: 'subscribed',
-        event_alerts_source: 'events_panel'
-      }
-    });
-
-    if (updateResponse.error && !isNotFoundError(updateResponse.error)) {
-      throw new Error(readResendErrorMessage(updateResponse.error));
-    }
-
-    const addResponse = await resend.contacts.segments.add({ email: normalizedEmail, segmentId: segment.id });
-    if (addResponse.error && !isConflictError(addResponse.error)) {
-      throw new Error(readResendErrorMessage(addResponse.error));
-    }
-  }
-
-  return {
-    email: normalizedEmail,
-    segmentId: segment.id,
-    segmentName: segment.name
-  };
+  return subscribeEventAlertSubscriber(normalizedEmail, 'events_panel');
 }
 
 export async function unsubscribeFromEventAlerts(email: string) {
@@ -429,81 +377,207 @@ export async function unsubscribeFromEventAlerts(email: string) {
     throw new EventAlertsConfigError('Please enter a valid email address.');
   }
 
-  const resend = getResendClient();
-  const segment = await getOrCreateEventAlertsSegment(resend);
-  const removeResponse = await resend.contacts.segments.remove({ email: normalizedEmail, segmentId: segment.id });
+  return unsubscribeEventAlertSubscriber(normalizedEmail);
+}
 
-  if (removeResponse.error && !isNotFoundError(removeResponse.error)) {
-    throw new Error(readResendErrorMessage(removeResponse.error));
-  }
+export async function getEventAlertsStatus() {
+  const snapshot = await getEventAlertsSnapshot();
 
   return {
-    email: normalizedEmail,
-    segmentId: segment.id,
-    segmentName: segment.name
+    storageDriver: snapshot.storageDriver,
+    activeSubscriberCount: snapshot.activeSubscribers.length,
+    subscribers: snapshot.subscribers,
+    deliveries: snapshot.deliveries
   };
 }
 
-export async function sendNewEventAlerts(options: DispatchOptions = {}) {
-  const resend = getResendClient();
-  const segment = await getOrCreateEventAlertsSegment(resend);
-  const hasSubscribers = await segmentHasSubscribers(resend, segment.id);
+function createConfirmationHtml(email: string) {
+  const unsubscribeUrl = buildEventAlertUnsubscribeUrl(email);
+  const escapedEmail = escapeHtml(email);
 
-  if (!hasSubscribers) {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Manage event alerts</title>
+  </head>
+  <body style="margin:0;background:#0d0a08;color:#fff7df;font-family:Arial,Helvetica,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;padding:48px 24px;">
+      <div style="background:#17110d;border:1px solid rgba(255,216,77,0.16);border-radius:24px;padding:28px;">
+        <div style="font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:#d2bb77;font-weight:700;">Megabunnish Event Alerts</div>
+        <h1 style="margin:14px 0 12px;font-size:28px;line-height:1.1;">Unsubscribe ${escapedEmail}?</h1>
+        <p style="margin:0 0 20px;color:rgba(255,244,214,0.78);line-height:1.6;">If you confirm, this email address will stop receiving new MegaETH ecosystem event announcements.</p>
+        <a href="${escapeHtml(unsubscribeUrl)}" style="display:inline-block;background:#f5c84c;color:#1b1206;font-weight:700;text-decoration:none;padding:14px 22px;border-radius:999px;">Confirm unsubscribe</a>
+      </div>
+    </div>
+  </body>
+</html>`;
+}
+
+function createUnsubscribedHtml(email: string) {
+  const escapedEmail = escapeHtml(email);
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Unsubscribed</title>
+  </head>
+  <body style="margin:0;background:#0d0a08;color:#fff7df;font-family:Arial,Helvetica,sans-serif;">
+    <div style="max-width:560px;margin:0 auto;padding:48px 24px;">
+      <div style="background:#17110d;border:1px solid rgba(255,216,77,0.16);border-radius:24px;padding:28px;">
+        <div style="font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:#d2bb77;font-weight:700;">Megabunnish Event Alerts</div>
+        <h1 style="margin:14px 0 12px;font-size:28px;line-height:1.1;">${escapedEmail} has been unsubscribed.</h1>
+        <p style="margin:0;color:rgba(255,244,214,0.78);line-height:1.6;">You will no longer receive new event announcements unless you subscribe again from the Events panel.</p>
+      </div>
+    </div>
+  </body>
+</html>`;
+}
+
+export function getEventAlertUnsubscribePage(email: string, shouldFinalize: boolean) {
+  return shouldFinalize ? createUnsubscribedHtml(email) : createConfirmationHtml(email);
+}
+
+export async function sendNewEventAlerts(options: DispatchOptions = {}) {
+  await ensureEventAlertStorage();
+  const snapshot = await getEventAlertsSnapshot();
+  const activeSubscribers = snapshot.activeSubscriberEmails;
+
+  if (!activeSubscribers.length) {
     return {
       dryRun: Boolean(options.dryRun),
-      segmentId: segment.id,
+      storageDriver: snapshot.storageDriver,
+      subscriberCount: 0,
       pendingEvents: [],
-      sentEvents: [] as Array<{ eventId: string; broadcastId: string | null }>,
-      skippedReason: 'No subscribers in event alerts segment.'
+      sentEvents: [] as Array<{ eventId: string; attemptedCount: number; sentCount: number; failedCount: number }>,
+      failures: [] as FailedDelivery[],
+      skippedReason: 'No subscribers in event alerts storage.'
     };
   }
 
-  const broadcasts = await listAllBroadcasts(resend);
-  const existingBroadcastNames = new Set(broadcasts.map((broadcast) => broadcast.name).filter(Boolean));
-
   const pendingEvents = APP_EVENTS
     .filter(isUpcomingEvent)
-    .filter((event) => !existingBroadcastNames.has(buildBroadcastName(event.id)));
+    .map((event) => {
+      const deliveredEmails = new Set(getDeliveredEmailsForEvent(snapshot.deliveries, event.id));
+      const recipientEmails = activeSubscribers.filter((email) => !deliveredEmails.has(email));
+      return {
+        event,
+        recipientEmails
+      };
+    })
+    .filter((entry) => entry.recipientEmails.length > 0);
 
-  const sentEvents: Array<{ eventId: string; broadcastId: string | null }> = [];
+  const sentEvents: Array<{ eventId: string; attemptedCount: number; sentCount: number; failedCount: number }> = [];
+  const failures: FailedDelivery[] = [];
+  const resend = options.dryRun ? null : getResendClient();
 
-  for (const event of pendingEvents) {
+  for (const pendingEvent of pendingEvents) {
+    const { event, recipientEmails } = pendingEvent;
     const project = projectById.get(event.projectId);
     if (!project) {
       continue;
     }
 
     if (options.dryRun) {
-      sentEvents.push({ eventId: event.id, broadcastId: null });
+      sentEvents.push({
+        eventId: event.id,
+        attemptedCount: recipientEmails.length,
+        sentCount: 0,
+        failedCount: 0
+      });
       continue;
     }
 
-    const response = await resend.broadcasts.create({
-      segmentId: segment.id,
-      from: DEFAULT_FROM_ADDRESS,
-      subject: buildBroadcastSubject(event, project),
-      previewText: buildBroadcastPreviewText(event, project),
-      html: renderBroadcastHtml(event, project),
-      text: buildBroadcastText(event, project),
-      name: buildBroadcastName(event.id),
-      send: true
+    const subject = buildBroadcastSubject(event, project);
+    const deliveredEmails: string[] = [];
+    const resendEmailIds: string[] = [];
+    const failedEmails: Array<{ email: string; error: string }> = [];
+
+    for (const recipientBatch of chunkValues(recipientEmails, SEND_BATCH_SIZE)) {
+      const batchResults = await Promise.all(recipientBatch.map(async (recipientEmail) => {
+        const response = await resend!.emails.send({
+          from: DEFAULT_FROM_ADDRESS,
+          to: [recipientEmail],
+          subject,
+          previewText: buildBroadcastPreviewText(event, project),
+          html: renderBroadcastHtml(event, project, recipientEmail),
+          text: buildBroadcastText(event, project, recipientEmail),
+          headers: {
+            'List-Unsubscribe': `<${buildEventAlertUnsubscribeConfirmationUrl(recipientEmail)}>`,
+            'X-Megabunnish-Event-Id': event.id
+          }
+        });
+
+        if (response.error) {
+          return {
+            ok: false as const,
+            email: recipientEmail,
+            error: readResendErrorMessage(response.error)
+          };
+        }
+
+        return {
+          ok: true as const,
+          email: recipientEmail,
+          emailId: response.data?.id ?? null
+        };
+      }));
+
+      batchResults.forEach((result) => {
+        if (result.ok) {
+          deliveredEmails.push(result.email);
+          if (result.emailId) {
+            resendEmailIds.push(result.emailId);
+          }
+          return;
+        }
+
+        failedEmails.push({
+          email: result.email,
+          error: result.error
+        });
+      });
+    }
+
+    await recordEventAlertDelivery({
+      eventId: event.id,
+      subject,
+      deliveredEmails,
+      resendEmailIds,
+      failedEmails: failedEmails.map((entry) => entry.email),
+      attemptedCount: recipientEmails.length
     });
 
-    if (response.error) {
-      throw new Error(readResendErrorMessage(response.error));
+    failures.push(...failedEmails.map((entry) => ({
+      eventId: event.id,
+      email: entry.email,
+      error: entry.error
+    })));
+
+    if (!deliveredEmails.length && failedEmails.length) {
+      throw new Error(`Unable to send event alert for ${event.id}: ${failedEmails[0].error}`);
     }
 
     sentEvents.push({
       eventId: event.id,
-      broadcastId: response.data?.id ?? null
+      attemptedCount: recipientEmails.length,
+      sentCount: deliveredEmails.length,
+      failedCount: failedEmails.length
     });
   }
 
   return {
     dryRun: Boolean(options.dryRun),
-    segmentId: segment.id,
-    pendingEvents: pendingEvents.map((event) => event.id),
-    sentEvents
+    storageDriver: snapshot.storageDriver,
+    subscriberCount: activeSubscribers.length,
+    pendingEvents: pendingEvents.map((entry) => ({
+      eventId: entry.event.id,
+      recipientCount: entry.recipientEmails.length
+    })),
+    sentEvents,
+    failures
   };
 }

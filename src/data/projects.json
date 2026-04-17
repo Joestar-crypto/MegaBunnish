@@ -1562,7 +1562,7 @@
   },
   {
     "id": "strip",
-    "name": "Strip",
+    "name": "Strip Yield",
     "categories": [
       "Jojo",
       "DeFi",
@@ -1577,7 +1577,7 @@
       "discord": "https://discord.com/invite/KshwWDZGV6",
       "telegram": "https://t.me/stripyield"
     },
-    "logo": "/logos/Strip.webp"
+    "logo": "/logos/StripYield.webp"
   },
   {
     "id": "cryptsai",
@@ -1890,6 +1890,127 @@
     },
     "logo": "/logos/evently.webp",
     "jojoInsight": "Evently is a prediction market platform that rewards market creators with 1% of trading volume to incentivize faster and more dynamic market creation."
+  },
+  {
+    "id": "betman-genesis",
+    "name": "Betman Genesis",
+    "categories": [
+      "NFT",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "twitter": "https://x.com/betmangenesis69",
+      "nft": "https://opensea.io/collection/betman-genesis"
+    },
+    "logo": "/logos/BetmanGenesis.webp",
+    "jojoInsight": "The first BetmanJoe collection on MegaETH, very low supply and kind of the VIP collection on Mega."
+  },
+  {
+    "id": "duon",
+    "name": "Duon",
+    "categories": [
+      "AI",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://www.duonlabs.com/",
+      "twitter": "https://x.com/DuonLabsHQ"
+    },
+    "logo": "/logos/Duon.webp",
+    "jojoInsight": "Duon is building the simulation infrastructure for funds platforms and autonomous agents. Ngl that's pretty cool, it learns from raw market data and gives your agent simulations. Impressive."
+  },
+  {
+    "id": "nx-terminal",
+    "name": "NX Terminal",
+    "categories": [
+      "AI",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://www.nxterminal.xyz/",
+      "twitter": "https://x.com/NxTerminal"
+    },
+    "logo": "/logos/NXTerminal.webp",
+    "jojoInsight": "Pretty cool game where you mint an autonomous agent with random traits that earns $NXT. $NXT is used to maintain agents and keep developing. Very cool experience, I recommend."
+  },
+  {
+    "id": "chisino",
+    "name": "Chisino",
+    "categories": [
+      "Gambling",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://chisino.io/",
+      "twitter": "https://x.com/trychisino"
+    },
+    "logo": "/logos/Chisino.webp",
+    "jojoInsight": "Branded as the no-loss gaming app on MegaETH, the focus is to be the most rewarding casino. Very interesting."
+  },
+  {
+    "id": "aori",
+    "name": "Aori",
+    "categories": [
+      "Bridge"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://www.aori.io/",
+      "twitter": "https://x.com/aori_io",
+      "discord": "https://discord.com/invite/ZaqwZZ2wSX"
+    },
+    "logo": "/logos/Aori.webp",
+    "jojoInsight": "Aori has been the best bridge for MegaETH and is now handling the 1 to 1 bridge for USDm. Give them some love!"
+  },
+  {
+    "id": "nextrare",
+    "name": "NextRare",
+    "categories": [
+      "Gambling",
+      "Mobile",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://nextrare.cards/download",
+      "twitter": "https://x.com/NextRare_cards",
+      "discord": "https://discord.com/invite/nextrare"
+    },
+    "logo": "/logos/NextRare.webp",
+    "jojoInsight": "A gacha app already live on mobile and desktop that looks pretty cool. Haven't tried it yet but it looks sick. Imo TCG is one of the most interesting narratives and we haven't seen much innovation or competition there, so love to see NextRare iterate!"
+  },
+  {
+    "id": "purrlend",
+    "name": "Purrlend",
+    "categories": [
+      "DeFi"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://www.purrlend.io/",
+      "twitter": "https://x.com/purrlend",
+      "discord": "https://discord.com/invite/8WD2AH3Cbj"
+    },
+    "logo": "/logos/Purrlend.webp",
+    "jojoInsight": "Purrlend is a lending and borrowing protocol that started on HyperEVM and is expanding to MegaETH. We love every app here, give them some love."
   }
 ]
 

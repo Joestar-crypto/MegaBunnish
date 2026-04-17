@@ -30,3 +30,6 @@ Thumbs.db
 # Tooling caches
 .vite/
 coverage/
+
+# Local event alert storage
+.data/

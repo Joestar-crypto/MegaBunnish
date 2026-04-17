@@ -28,10 +28,13 @@ jobs:
 
       - name: Send event alerts
         env:
+          EVENT_ALERTS_STORAGE_DRIVER: upstash
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM_ADDRESS: ${{ secrets.RESEND_FROM_ADDRESS }}
           EVENT_ALERTS_BASE_URL: ${{ secrets.EVENT_ALERTS_BASE_URL }}
-          EVENT_ALERTS_SEGMENT_NAME: ${{ secrets.EVENT_ALERTS_SEGMENT_NAME }}
+          EVENT_ALERTS_STORAGE_KEY: ${{ secrets.EVENT_ALERTS_STORAGE_KEY }}
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
         run: |
           EXTRA_ARGS=""
           if [ "${{ github.event.inputs.dry_run || 'false' }}" = "true" ]; then

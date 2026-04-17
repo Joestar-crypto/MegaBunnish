@@ -5,23 +5,29 @@ async function main() {
   const dryRun = args.includes('--dry-run');
   const result = await sendNewEventAlerts({ dryRun });
 
+  console.log(`Storage: ${result.storageDriver}`);
+  console.log(`Subscribers: ${result.subscriberCount}`);
+
   if (result.skippedReason) {
     console.log(result.skippedReason);
     return;
   }
 
-  console.log(`Segment: ${result.segmentId}`);
   console.log(`Pending events: ${result.pendingEvents.length}`);
 
   if (dryRun) {
-    result.sentEvents.forEach((entry) => {
-      console.log(`Would send: ${entry.eventId}`);
+    result.pendingEvents.forEach((entry) => {
+      console.log(`Would send: ${entry.eventId} -> ${entry.recipientCount} recipients`);
     });
     return;
   }
 
   result.sentEvents.forEach((entry) => {
-    console.log(`Sent: ${entry.eventId} -> ${entry.broadcastId}`);
+    console.log(`Sent: ${entry.eventId} -> ${entry.sentCount}/${entry.attemptedCount} recipients`);
+  });
+
+  result.failures.forEach((entry) => {
+    console.log(`Failed: ${entry.eventId} -> ${entry.email} (${entry.error})`);
   });
 }
 

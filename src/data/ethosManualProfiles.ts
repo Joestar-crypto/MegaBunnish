@@ -829,7 +829,7 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     "handle": "stripyield",
     "score": 950,
     "tier": "Questionable",
-    "displayName": "Strip",
+    "displayName": "Strip Yield",
     "url": "https://app.ethos.network/profile/x/stripyield"
   },
   {
@@ -863,5 +863,61 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     "tier": "Neutral",
     "displayName": "Evently",
     "url": "https://app.ethos.network/profile/x/eventlymarket"
+  },
+  {
+    "projectId": "betman-genesis",
+    "handle": "betmangenesis69",
+    "score": 1200,
+    "tier": "Neutral",
+    "displayName": "Betman Genesis",
+    "url": "https://app.ethos.network/profile/x/betmangenesis69"
+  },
+  {
+    "projectId": "duon",
+    "handle": "DuonLabsHQ",
+    "score": 1150,
+    "tier": "Questionable",
+    "displayName": "Duon",
+    "url": "https://app.ethos.network/profile/x/DuonLabsHQ"
+  },
+  {
+    "projectId": "nx-terminal",
+    "handle": "NxTerminal",
+    "score": 1200,
+    "tier": "Neutral",
+    "displayName": "NX Terminal",
+    "url": "https://app.ethos.network/profile/x/NxTerminal"
+  },
+  {
+    "projectId": "chisino",
+    "handle": "trychisino",
+    "score": 1200,
+    "tier": "Neutral",
+    "displayName": "Chisino",
+    "url": "https://app.ethos.network/profile/x/trychisino"
+  },
+  {
+    "projectId": "aori",
+    "handle": "aori_io",
+    "score": 1226,
+    "tier": "Neutral",
+    "displayName": "Aori",
+    "url": "https://app.ethos.network/profile/x/aori_io"
+  },
+  {
+    "projectId": "nextrare",
+    "handle": "NextRare_cards",
+    "score": 950,
+    "tier": "Questionable",
+    "displayName": "NextRare",
+    "url": "https://app.ethos.network/profile/x/NextRare_cards"
+  },
+  {
+    "projectId": "purrlend",
+    "handle": "purrlend",
+    "score": 1216,
+    "tier": "Neutral",
+    "displayName": "Purrlend",
+    "url": "https://app.ethos.network/profile/x/purrlend"
   }
 ];

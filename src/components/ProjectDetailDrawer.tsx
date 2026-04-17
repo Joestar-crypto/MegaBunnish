@@ -103,12 +103,14 @@ const buildEthosProfileUrlFromTwitter = (link?: string | null) => {
 
 type DialogueSegment =
   | { kind: 'text'; content: string }
-  | { kind: 'link'; label: string; targetId: string };
+  | { kind: 'link'; label: string; targetId: string }
+  | { kind: 'external'; label: string; href: string };
 
 type DialogueBlock = DialogueSegment[];
 
 const textSegment = (content: string): DialogueSegment => ({ kind: 'text', content });
 const linkSegment = (label: string, targetId: string): DialogueSegment => ({ kind: 'link', label, targetId });
+const externalLinkSegment = (label: string, href: string): DialogueSegment => ({ kind: 'external', label, href });
 
 const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
   'cap-money': [
@@ -170,6 +172,13 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
       textSegment('.')
     ],
     [textSegment('Not holding a BadBunnz should be considered a crime in MegaETH territory.')]
+  ],
+  'betman-genesis': [
+    [
+      textSegment('The first Betman ('),
+      externalLinkSegment('BetmanJoe', 'https://x.com/BetmanJoe'),
+      textSegment(') collection on MegaETH. Very low supply, kind of the VIP collection on Mega.')
+    ]
   ],
   blitzo: [
     [
@@ -279,7 +288,7 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
   strip: [
     [
       textSegment(
-        'DeFi loop that kind of looks like a Ponzi or a 2020 experiment. I like those, but always approach with caution.'
+        'Ponzi-like experimentation in DeFi with buyback-and-burn mechanics and STRIP minting. Gonna keep an eye on this one.'
       )
     ]
   ],
@@ -791,7 +800,7 @@ const JojoOracle = ({
                   {block.map((segment, segmentIndex) =>
                     segment.kind === 'text' ? (
                       <span key={`text-${segmentIndex}`}>{segment.content}</span>
-                    ) : (
+                    ) : segment.kind === 'link' ? (
                       <button
                         key={`link-${segmentIndex}-${segment.label}`}
                         type="button"
@@ -800,6 +809,16 @@ const JojoOracle = ({
                       >
                         {segment.label}
                       </button>
+                    ) : (
+                      <a
+                        key={`external-${segmentIndex}-${segment.label}`}
+                        href={segment.href}
+                        className="jojo-link"
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        {segment.label}
+                      </a>
                     )
                   )}
                 </p>
