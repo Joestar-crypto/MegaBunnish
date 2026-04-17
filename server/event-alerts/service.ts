@@ -502,7 +502,6 @@ export async function sendNewEventAlerts(options: DispatchOptions = {}) {
           from: DEFAULT_FROM_ADDRESS,
           to: [recipientEmail],
           subject,
-          previewText: buildBroadcastPreviewText(event, project),
           html: renderBroadcastHtml(event, project, recipientEmail),
           text: buildBroadcastText(event, project, recipientEmail),
           headers: {

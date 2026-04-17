@@ -679,8 +679,14 @@ const updateEventAlertSubscription = async (email: string, method: 'POST' | 'DEL
     body: JSON.stringify({ email })
   });
 
-  const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+  const contentType = response.headers.get('content-type') ?? '';
+  const payload = contentType.includes('application/json')
+    ? (await response.json().catch(() => null)) as { error?: string } | null
+    : null;
   if (!response.ok) {
+    if (response.status === 404 && !payload?.error) {
+      throw new Error('Event alerts API is not available in this environment.');
+    }
     throw new Error(payload?.error ?? 'Unable to update event alerts right now.');
   }
 };

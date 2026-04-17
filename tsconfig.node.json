@@ -6,8 +6,15 @@
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
+    "ignoreDeprecations": "6.0",
     "lib": ["ES2022"],
     "types": ["node"]
   },
-  "include": ["vite.config.ts"]
+  "include": [
+    "vite.config.ts",
+    "api/**/*.ts",
+    "server/**/*.ts",
+    "src/data/appEvents.ts",
+    "src/data/projects.json"
+  ]
 }
