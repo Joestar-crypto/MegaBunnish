@@ -98,7 +98,8 @@ export default function handler(request, response) {
                     _a.trys.push([1, 3, , 4]);
                     return [4 /*yield*/, sendNewEventAlerts({
                             dryRun: readQueryBoolean(request.query, 'dry_run'),
-                            eventIds: readQueryValues(request.query, 'eventId')
+                            eventIds: readQueryValues(request.query, 'eventId'),
+                            force: readQueryBoolean(request.query, 'force')
                         })];
                 case 2:
                     result = _a.sent();

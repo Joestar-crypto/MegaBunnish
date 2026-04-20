@@ -399,7 +399,7 @@ export function getEventAlertUnsubscribePage(email, shouldFinalize) {
 }
 export function sendNewEventAlerts() {
     return __awaiter(this, arguments, void 0, function (options) {
-        var snapshot, activeSubscribers, requestedEventIds, requestedEventIdSet, pendingEvents, sentEvents, failures, resend, target, _a, _i, pendingEvents_1, pendingEvent, event, recipientEmails, project, response, _loop_1, _b, pendingEvents_2, pendingEvent;
+        var snapshot, activeSubscribers, requestedEventIds, requestedEventIdSet, forceRequestedEvents, pendingEvents, sentEvents, failures, resend, target, _a, _i, pendingEvents_1, pendingEvent, event, recipientEmails, project, response, _loop_1, _b, pendingEvents_2, pendingEvent;
         var _this = this;
         if (options === void 0) { options = {}; }
         return __generator(this, function (_c) {
@@ -413,6 +413,7 @@ export function sendNewEventAlerts() {
                     activeSubscribers = snapshot.activeSubscriberEmails;
                     requestedEventIds = normalizeRequestedEventIds(options.eventIds);
                     requestedEventIdSet = new Set(requestedEventIds);
+                    forceRequestedEvents = Boolean(options.force) && requestedEventIdSet.size > 0;
                     if (!activeSubscribers.length) {
                         return [2 /*return*/, {
                                 dryRun: Boolean(options.dryRun),
@@ -428,7 +429,9 @@ export function sendNewEventAlerts() {
                         .filter(isUpcomingEvent)
                         .filter(function (event) { return !requestedEventIdSet.size || requestedEventIdSet.has(event.id); })
                         .map(function (event) {
-                        var deliveredEmails = new Set(getDeliveredEmailsForEvent(snapshot.deliveries, event.id));
+                        var deliveredEmails = forceRequestedEvents && requestedEventIdSet.has(event.id)
+                            ? new Set()
+                            : new Set(getDeliveredEmailsForEvent(snapshot.deliveries, event.id));
                         var recipientEmails = activeSubscribers.filter(function (email) { return !deliveredEmails.has(email); });
                         return {
                             event: event,

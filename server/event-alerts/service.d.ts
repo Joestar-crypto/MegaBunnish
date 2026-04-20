@@ -1,6 +1,7 @@
 type DispatchOptions = {
     dryRun?: boolean;
     eventIds?: string[];
+    force?: boolean;
 };
 type FailedDelivery = {
     eventId: string;

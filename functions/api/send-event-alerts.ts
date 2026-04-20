@@ -268,7 +268,11 @@ function normalizeRequestedEventIds(eventIds: string[] | undefined) {
   return Array.from(new Set((eventIds ?? []).map((eventId) => eventId.trim()).filter(Boolean)));
 }
 
-async function dispatchEventAlerts(context: FunctionContext, dryRun: boolean, requestedEventIds: string[]) {
+function readBodyBoolean(value: unknown) {
+  return value === true;
+}
+
+async function dispatchEventAlerts(context: FunctionContext, dryRun: boolean, requestedEventIds: string[], forceRequestedEvents: boolean) {
   const { request, env } = context;
   const snapshot = await getEventAlertsSnapshot(env);
   const activeSubscribers = snapshot.activeSubscriberEmails;
@@ -291,7 +295,9 @@ async function dispatchEventAlerts(context: FunctionContext, dryRun: boolean, re
     .filter(isUpcomingEvent)
     .filter((event) => !requestedEventIdSet.size || requestedEventIdSet.has(event.id))
     .map((event) => {
-      const deliveredEmails = new Set(getDeliveredEmailsForEvent(snapshot.deliveries, event.id));
+      const deliveredEmails = forceRequestedEvents && requestedEventIdSet.has(event.id)
+        ? new Set<string>()
+        : new Set(getDeliveredEmailsForEvent(snapshot.deliveries, event.id));
       const recipientEmails = activeSubscribers.filter((email) => !deliveredEmails.has(email));
       return { event, recipientEmails };
     })
@@ -481,8 +487,9 @@ async function handleRequest(context: FunctionContext) {
     ...(typeof body.eventId === 'string' ? [body.eventId] : []),
     ...(Array.isArray(body.eventIds) ? body.eventIds.filter((value): value is string => typeof value === 'string') : [])
   ]);
+  const force = url.searchParams.get('force') === 'true' || readBodyBoolean(body.force);
 
-  const result = await dispatchEventAlerts(context, dryRun, requestedEventIds);
+  const result = await dispatchEventAlerts(context, dryRun, requestedEventIds, force && requestedEventIds.length > 0);
   return jsonResponse(result, 200, { Allow: 'GET,POST,OPTIONS' });
 }
 

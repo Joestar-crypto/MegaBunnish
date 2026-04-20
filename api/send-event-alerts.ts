@@ -64,7 +64,8 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   try {
     const result = await sendNewEventAlerts({
       dryRun: readQueryBoolean(request.query, 'dry_run'),
-      eventIds: readQueryValues(request.query, 'eventId')
+      eventIds: readQueryValues(request.query, 'eventId'),
+      force: readQueryBoolean(request.query, 'force')
     });
     response.status(200).json({ ok: true, ...result });
   } catch (error) {

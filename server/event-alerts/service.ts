@@ -43,6 +43,7 @@ type ResendErrorLike = {
 type DispatchOptions = {
   dryRun?: boolean;
   eventIds?: string[];
+  force?: boolean;
 };
 
 type FailedDelivery = {
@@ -474,6 +475,7 @@ export async function sendNewEventAlerts(options: DispatchOptions = {}) {
   const activeSubscribers = snapshot.activeSubscriberEmails;
   const requestedEventIds = normalizeRequestedEventIds(options.eventIds);
   const requestedEventIdSet = new Set(requestedEventIds);
+  const forceRequestedEvents = Boolean(options.force) && requestedEventIdSet.size > 0;
 
   if (!activeSubscribers.length) {
     return {
@@ -491,7 +493,9 @@ export async function sendNewEventAlerts(options: DispatchOptions = {}) {
     .filter(isUpcomingEvent)
     .filter((event) => !requestedEventIdSet.size || requestedEventIdSet.has(event.id))
     .map((event) => {
-      const deliveredEmails = new Set(getDeliveredEmailsForEvent(snapshot.deliveries, event.id));
+      const deliveredEmails = forceRequestedEvents && requestedEventIdSet.has(event.id)
+        ? new Set<string>()
+        : new Set(getDeliveredEmailsForEvent(snapshot.deliveries, event.id));
       const recipientEmails = activeSubscribers.filter((email) => !deliveredEmails.has(email));
       return {
         event,
