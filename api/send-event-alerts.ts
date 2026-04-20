@@ -26,6 +26,12 @@ function readQueryValues(query: ApiRequest['query'], key: string) {
     .filter(Boolean);
 }
 
+function readQueryBoolean(query: ApiRequest['query'], key: string) {
+  const value = query?.[key];
+  const normalized = Array.isArray(value) ? value[0] : value;
+  return normalized === 'true';
+}
+
 function isAuthorized(request: ApiRequest) {
   const secret = process.env.EVENT_ALERTS_CRON_SECRET;
   if (!secret) {
@@ -57,6 +63,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
 
   try {
     const result = await sendNewEventAlerts({
+      dryRun: readQueryBoolean(request.query, 'dry_run'),
       eventIds: readQueryValues(request.query, 'eventId')
     });
     response.status(200).json({ ok: true, ...result });

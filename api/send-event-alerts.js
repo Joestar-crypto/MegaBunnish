@@ -59,6 +59,11 @@ function readQueryValues(query, key) {
         .map(function (entry) { return entry.trim(); })
         .filter(Boolean);
 }
+function readQueryBoolean(query, key) {
+    var value = query === null || query === void 0 ? void 0 : query[key];
+    var normalized = Array.isArray(value) ? value[0] : value;
+    return normalized === 'true';
+}
 function isAuthorized(request) {
     var _a;
     var secret = process.env.EVENT_ALERTS_CRON_SECRET;
@@ -92,6 +97,7 @@ export default function handler(request, response) {
                 case 1:
                     _a.trys.push([1, 3, , 4]);
                     return [4 /*yield*/, sendNewEventAlerts({
+                            dryRun: readQueryBoolean(request.query, 'dry_run'),
                             eventIds: readQueryValues(request.query, 'eventId')
                         })];
                 case 2:
