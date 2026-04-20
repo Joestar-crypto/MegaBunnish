@@ -390,14 +390,6 @@ function getResendContact(email) {
         });
     });
 }
-function buildResendProperties(source, nowIso, status) {
-    return {
-        event_alert_source: source,
-        event_alert_status: status,
-        event_alert_updated_at: nowIso,
-        event_alert_unsubscribed_at: status === 'unsubscribed' ? nowIso : null
-    };
-}
 function readResendStoreData() {
     return __awaiter(this, void 0, void 0, function () {
         var contacts, subscribers, activeEmails, broadcasts, deliveries;
@@ -571,7 +563,7 @@ export function getEventAlertsSnapshot() {
 }
 export function subscribeEventAlertSubscriber(email_1) {
     return __awaiter(this, arguments, void 0, function (email, source) {
-        var normalizedEmail_1, nowIso_1, topicId, segmentContacts, isInSegment, existing_1, _a, _b, _c, _d, _e, _f, _g, data, normalizedEmail, nowIso, existing;
+        var normalizedEmail_1, topicId, segmentContacts, isInSegment, existing_1, _a, _b, _c, _d, _e, _f, _g, data, normalizedEmail, nowIso, existing;
         var _h, _j, _k;
         if (source === void 0) { source = 'events_panel'; }
         return __generator(this, function (_l) {
@@ -579,7 +571,6 @@ export function subscribeEventAlertSubscriber(email_1) {
                 case 0:
                     if (!(getStorageDriver() === 'resend-segment')) return [3 /*break*/, 13];
                     normalizedEmail_1 = normalizeEmail(email);
-                    nowIso_1 = new Date().toISOString();
                     return [4 /*yield*/, ensureResendTopic()];
                 case 1:
                     topicId = _l.sent();
@@ -599,8 +590,7 @@ export function subscribeEventAlertSubscriber(email_1) {
                     _d = (_c = JSON).stringify;
                     _j = {
                         email: normalizedEmail_1,
-                        unsubscribed: false,
-                        properties: __assign(__assign({}, buildResendProperties(source, nowIso_1, 'subscribed')), { event_alert_subscribed_at: nowIso_1 })
+                        unsubscribed: false
                     };
                     _k = {};
                     return [4 /*yield*/, ensureResendSegment()];
@@ -614,8 +604,7 @@ export function subscribeEventAlertSubscriber(email_1) {
                 case 6: return [4 /*yield*/, resendRequest("/contacts/".concat(encodeURIComponent(normalizedEmail_1)), {
                         method: 'PATCH',
                         body: JSON.stringify({
-                            unsubscribed: false,
-                            properties: buildResendProperties(source, nowIso_1, 'subscribed')
+                            unsubscribed: false
                         })
                     })];
                 case 7:
@@ -678,14 +667,13 @@ export function subscribeEventAlertSubscriber(email_1) {
 }
 export function unsubscribeEventAlertSubscriber(email) {
     return __awaiter(this, void 0, void 0, function () {
-        var normalizedEmail_2, nowIso_2, segmentContacts, isInSegment, existing_2, _a, _b, _c, _d, _e, _f, _g, data, normalizedEmail, nowIso, existing;
+        var normalizedEmail_2, segmentContacts, isInSegment, existing_2, _a, _b, _c, _d, _e, _f, _g, data, normalizedEmail, nowIso, existing;
         var _h, _j;
         return __generator(this, function (_k) {
             switch (_k.label) {
                 case 0:
-                    if (!(getStorageDriver() === 'resend-segment')) return [3 /*break*/, 10];
+                    if (!(getStorageDriver() === 'resend-segment')) return [3 /*break*/, 9];
                     normalizedEmail_2 = normalizeEmail(email);
-                    nowIso_2 = new Date().toISOString();
                     return [4 /*yield*/, listResendSegmentContacts()];
                 case 1:
                     segmentContacts = _k.sent();
@@ -693,7 +681,7 @@ export function unsubscribeEventAlertSubscriber(email) {
                     return [4 /*yield*/, getResendContact(normalizedEmail_2)];
                 case 2:
                     existing_2 = _k.sent();
-                    if (!existing_2) return [3 /*break*/, 9];
+                    if (!existing_2) return [3 /*break*/, 8];
                     if (!isInSegment) return [3 /*break*/, 5];
                     _a = resendRequest;
                     _c = (_b = "/contacts/".concat(encodeURIComponent(normalizedEmail_2), "/segments/")).concat;
@@ -704,14 +692,7 @@ export function unsubscribeEventAlertSubscriber(email) {
                 case 4:
                     _k.sent();
                     _k.label = 5;
-                case 5: return [4 /*yield*/, resendRequest("/contacts/".concat(encodeURIComponent(normalizedEmail_2)), {
-                        method: 'PATCH',
-                        body: JSON.stringify({
-                            properties: buildResendProperties('events_panel', nowIso_2, 'unsubscribed')
-                        })
-                    })];
-                case 6:
-                    _k.sent();
+                case 5:
                     _d = resendRequest;
                     _e = ["/contacts/".concat(encodeURIComponent(normalizedEmail_2), "/topics")];
                     _h = {
@@ -720,31 +701,31 @@ export function unsubscribeEventAlertSubscriber(email) {
                     _g = (_f = JSON).stringify;
                     _j = {};
                     return [4 /*yield*/, ensureResendTopic()];
-                case 7: return [4 /*yield*/, _d.apply(void 0, _e.concat([(_h.body = _g.apply(_f, [[(_j.id = _k.sent(), _j.subscription = 'opt_out', _j)]]),
+                case 6: return [4 /*yield*/, _d.apply(void 0, _e.concat([(_h.body = _g.apply(_f, [[(_j.id = _k.sent(), _j.subscription = 'opt_out', _j)]]),
                             _h)]))];
-                case 8:
+                case 7:
                     _k.sent();
-                    _k.label = 9;
-                case 9: return [2 /*return*/, {
+                    _k.label = 8;
+                case 8: return [2 /*return*/, {
                         email: normalizedEmail_2,
                         activeSubscriberCount: isInSegment ? Math.max(0, segmentContacts.length - 1) : segmentContacts.length,
                         storageDriver: getStorageDriver()
                     }];
-                case 10: return [4 /*yield*/, readStoreData()];
-                case 11:
+                case 9: return [4 /*yield*/, readStoreData()];
+                case 10:
                     data = _k.sent();
                     normalizedEmail = normalizeEmail(email);
                     nowIso = new Date().toISOString();
                     existing = data.subscribers.find(function (subscriber) { return subscriber.email === normalizedEmail; });
-                    if (!existing) return [3 /*break*/, 13];
+                    if (!existing) return [3 /*break*/, 12];
                     existing.status = 'unsubscribed';
                     existing.unsubscribedAt = nowIso;
                     existing.updatedAt = nowIso;
                     return [4 /*yield*/, writeStoreData(data)];
-                case 12:
+                case 11:
                     _k.sent();
-                    _k.label = 13;
-                case 13: return [2 /*return*/, {
+                    _k.label = 12;
+                case 12: return [2 /*return*/, {
                         email: normalizedEmail,
                         activeSubscriberCount: data.subscribers.filter(function (subscriber) { return subscriber.status === 'subscribed'; }).length,
                         storageDriver: getStorageDriver()
@@ -755,25 +736,25 @@ export function unsubscribeEventAlertSubscriber(email) {
 }
 export function recordEventAlertDelivery(update) {
     return __awaiter(this, void 0, void 0, function () {
-        var nowIso_3, data, nowIso, delivery;
+        var nowIso_1, data, nowIso, delivery;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     if (getStorageDriver() === 'resend-segment') {
-                        nowIso_3 = new Date().toISOString();
+                        nowIso_1 = new Date().toISOString();
                         return [2 /*return*/, {
                                 eventId: update.eventId,
                                 subject: update.subject,
                                 deliveredEmails: uniqueSorted(update.deliveredEmails.map(normalizeEmail)),
                                 resendEmailIds: uniqueSorted(update.resendEmailIds.filter(Boolean)),
-                                lastAttemptAt: nowIso_3,
-                                lastDeliveredAt: update.deliveredEmails.length ? nowIso_3 : null,
+                                lastAttemptAt: nowIso_1,
+                                lastDeliveredAt: update.deliveredEmails.length ? nowIso_1 : null,
                                 lastFailedEmails: uniqueSorted(update.failedEmails.map(normalizeEmail)),
                                 lastAttemptedCount: update.attemptedCount,
                                 lastSentCount: update.deliveredEmails.length,
                                 lastFailedCount: update.failedEmails.length,
-                                createdAt: nowIso_3,
-                                updatedAt: nowIso_3
+                                createdAt: nowIso_1,
+                                updatedAt: nowIso_1
                             }];
                     }
                     return [4 /*yield*/, readStoreData()];

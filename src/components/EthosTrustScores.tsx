@@ -678,6 +678,10 @@ const getEventAlertsFeedbackMessage = (message: string | undefined, status: numb
     return 'Your Railway RESEND_API_KEY is send-only. Replace it with a full-access Resend API key, or configure Upstash/KV storage instead.';
   }
 
+  if (message.includes('One or more properties do not exist')) {
+    return 'Your Railway deployment is still sending old Resend contact properties. Redeploy Railway and retry.';
+  }
+
   return message;
 };
 

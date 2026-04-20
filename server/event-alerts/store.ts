@@ -370,15 +370,6 @@ async function getResendContact(email: string) {
   return payload as ResendContact | null;
 }
 
-function buildResendProperties(source: string, nowIso: string, status: 'subscribed' | 'unsubscribed') {
-  return {
-    event_alert_source: source,
-    event_alert_status: status,
-    event_alert_updated_at: nowIso,
-    event_alert_unsubscribed_at: status === 'unsubscribed' ? nowIso : null
-  };
-}
-
 async function readResendStoreData(): Promise<EventAlertsStoreData> {
   const contacts = await listResendSegmentContacts();
   const subscribers = contacts.map((contact) => ({
@@ -521,7 +512,6 @@ export async function getEventAlertsSnapshot() {
 export async function subscribeEventAlertSubscriber(email: string, source = 'events_panel') {
   if (getStorageDriver() === 'resend-segment') {
     const normalizedEmail = normalizeEmail(email);
-    const nowIso = new Date().toISOString();
     const topicId = await ensureResendTopic();
     const segmentContacts = await listResendSegmentContacts();
     const isInSegment = segmentContacts.some((contact) => normalizeEmail(contact.email) === normalizedEmail);
@@ -533,10 +523,6 @@ export async function subscribeEventAlertSubscriber(email: string, source = 'eve
         body: JSON.stringify({
           email: normalizedEmail,
           unsubscribed: false,
-          properties: {
-            ...buildResendProperties(source, nowIso, 'subscribed'),
-            event_alert_subscribed_at: nowIso
-          },
           segments: [{ id: await ensureResendSegment() }],
           topics: [{ id: topicId, subscription: 'opt_in' }]
         })
@@ -545,8 +531,7 @@ export async function subscribeEventAlertSubscriber(email: string, source = 'eve
       await resendRequest(`/contacts/${encodeURIComponent(normalizedEmail)}`, {
         method: 'PATCH',
         body: JSON.stringify({
-          unsubscribed: false,
-          properties: buildResendProperties(source, nowIso, 'subscribed')
+          unsubscribed: false
         })
       });
 
@@ -602,7 +587,6 @@ export async function subscribeEventAlertSubscriber(email: string, source = 'eve
 export async function unsubscribeEventAlertSubscriber(email: string) {
   if (getStorageDriver() === 'resend-segment') {
     const normalizedEmail = normalizeEmail(email);
-    const nowIso = new Date().toISOString();
     const segmentContacts = await listResendSegmentContacts();
     const isInSegment = segmentContacts.some((contact) => normalizeEmail(contact.email) === normalizedEmail);
     const existing = await getResendContact(normalizedEmail);
@@ -613,13 +597,6 @@ export async function unsubscribeEventAlertSubscriber(email: string) {
           method: 'DELETE'
         });
       }
-
-      await resendRequest(`/contacts/${encodeURIComponent(normalizedEmail)}`, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          properties: buildResendProperties('events_panel', nowIso, 'unsubscribed')
-        })
-      });
 
       await resendRequest(`/contacts/${encodeURIComponent(normalizedEmail)}/topics`, {
         method: 'PATCH',
