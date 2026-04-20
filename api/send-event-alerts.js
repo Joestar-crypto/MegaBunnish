@@ -51,6 +51,14 @@ function readHeader(headers, key) {
     var value = (_a = headers === null || headers === void 0 ? void 0 : headers[key]) !== null && _a !== void 0 ? _a : headers === null || headers === void 0 ? void 0 : headers[key.toLowerCase()];
     return Array.isArray(value) ? value[0] : value;
 }
+function readQueryValues(query, key) {
+    var value = query === null || query === void 0 ? void 0 : query[key];
+    var values = Array.isArray(value) ? value : value ? [value] : [];
+    return values
+        .flatMap(function (entry) { return entry.split(','); })
+        .map(function (entry) { return entry.trim(); })
+        .filter(Boolean);
+}
 function isAuthorized(request) {
     var _a;
     var secret = process.env.EVENT_ALERTS_CRON_SECRET;
@@ -83,7 +91,9 @@ export default function handler(request, response) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    return [4 /*yield*/, sendNewEventAlerts()];
+                    return [4 /*yield*/, sendNewEventAlerts({
+                            eventIds: readQueryValues(request.query, 'eventId')
+                        })];
                 case 2:
                     result = _a.sent();
                     response.status(200).json(__assign({ ok: true }, result));

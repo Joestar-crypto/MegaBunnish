@@ -1,5 +1,6 @@
 type DispatchOptions = {
     dryRun?: boolean;
+    eventIds?: string[];
 };
 type FailedDelivery = {
     eventId: string;
@@ -32,7 +33,10 @@ export declare function sendNewEventAlerts(options?: DispatchOptions): Promise<{
     dryRun: boolean;
     storageDriver: import("./store").EventAlertsStorageDriver;
     subscriberCount: number;
-    pendingEvents: any[];
+    pendingEvents: {
+        eventId: string;
+        recipientCount: number;
+    }[];
     sentEvents: {
         eventId: string;
         attemptedCount: number;

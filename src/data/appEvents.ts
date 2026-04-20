@@ -15,6 +15,22 @@ export type AppEvent = {
 
 export const APP_EVENTS: AppEvent[] = [
   {
+    id: 'test-email-alert-2026-04-20',
+    title: '[TEST] Email alert pipeline check',
+    projectId: 'megacorp',
+    start: '2026-04-20T18:30:00-05:00',
+    end: '2026-04-20T23:59:00-05:00',
+    tweetUrl: 'https://megabunnish.com',
+    detailsUrl: 'https://megabunnish.com',
+    phases: [
+      {
+        label: 'Test window',
+        start: '2026-04-20T18:30:00-05:00',
+        end: '2026-04-20T23:59:00-05:00'
+      }
+    ]
+  },
+  {
     id: 'offshore-presale',
     title: 'Presale Open',
     projectId: 'offshore',

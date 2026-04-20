@@ -340,6 +340,9 @@ function chunkValues(values, size) {
     }
     return batches;
 }
+function normalizeRequestedEventIds(eventIds) {
+    return Array.from(new Set((eventIds !== null && eventIds !== void 0 ? eventIds : []).map(function (eventId) { return eventId.trim(); }).filter(Boolean)));
+}
 export function subscribeToEventAlerts(email) {
     return __awaiter(this, void 0, void 0, function () {
         var normalizedEmail;
@@ -396,7 +399,7 @@ export function getEventAlertUnsubscribePage(email, shouldFinalize) {
 }
 export function sendNewEventAlerts() {
     return __awaiter(this, arguments, void 0, function (options) {
-        var snapshot, activeSubscribers, pendingEvents, sentEvents, failures, resend, target, _a, _i, pendingEvents_1, pendingEvent, event, recipientEmails, project, response, _loop_1, _b, pendingEvents_2, pendingEvent;
+        var snapshot, activeSubscribers, requestedEventIds, requestedEventIdSet, pendingEvents, sentEvents, failures, resend, target, _a, _i, pendingEvents_1, pendingEvent, event, recipientEmails, project, response, _loop_1, _b, pendingEvents_2, pendingEvent;
         var _this = this;
         if (options === void 0) { options = {}; }
         return __generator(this, function (_c) {
@@ -408,6 +411,8 @@ export function sendNewEventAlerts() {
                 case 2:
                     snapshot = _c.sent();
                     activeSubscribers = snapshot.activeSubscriberEmails;
+                    requestedEventIds = normalizeRequestedEventIds(options.eventIds);
+                    requestedEventIdSet = new Set(requestedEventIds);
                     if (!activeSubscribers.length) {
                         return [2 /*return*/, {
                                 dryRun: Boolean(options.dryRun),
@@ -421,6 +426,7 @@ export function sendNewEventAlerts() {
                     }
                     pendingEvents = APP_EVENTS
                         .filter(isUpcomingEvent)
+                        .filter(function (event) { return !requestedEventIdSet.size || requestedEventIdSet.has(event.id); })
                         .map(function (event) {
                         var deliveredEmails = new Set(getDeliveredEmailsForEvent(snapshot.deliveries, event.id));
                         var recipientEmails = activeSubscribers.filter(function (email) { return !deliveredEmails.has(email); });
@@ -430,6 +436,19 @@ export function sendNewEventAlerts() {
                         };
                     })
                         .filter(function (entry) { return entry.recipientEmails.length > 0; });
+                    if (!pendingEvents.length) {
+                        return [2 /*return*/, {
+                                dryRun: Boolean(options.dryRun),
+                                storageDriver: snapshot.storageDriver,
+                                subscriberCount: activeSubscribers.length,
+                                pendingEvents: [],
+                                sentEvents: [],
+                                failures: [],
+                                skippedReason: requestedEventIds.length
+                                    ? "No pending event alerts matched the requested event ids: ".concat(requestedEventIds.join(', '))
+                                    : 'No pending event alerts to send.'
+                            }];
+                    }
                     sentEvents = [];
                     failures = [];
                     resend = options.dryRun ? null : getResendClient();

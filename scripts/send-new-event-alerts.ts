@@ -3,7 +3,11 @@ import { sendNewEventAlerts } from '../server/event-alerts/service';
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const result = await sendNewEventAlerts({ dryRun });
+  const eventIdIndex = args.indexOf('--event-id');
+  const eventIds = eventIdIndex !== -1 && eventIdIndex < args.length - 1
+    ? args[eventIdIndex + 1].split(',').map((value) => value.trim()).filter(Boolean)
+    : [];
+  const result = await sendNewEventAlerts({ dryRun, eventIds });
 
   console.log(`Storage: ${result.storageDriver}`);
   console.log(`Subscribers: ${result.subscriberCount}`);

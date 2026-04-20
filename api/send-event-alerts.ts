@@ -17,6 +17,15 @@ function readHeader(headers: ApiRequest['headers'], key: string) {
   return Array.isArray(value) ? value[0] : value;
 }
 
+function readQueryValues(query: ApiRequest['query'], key: string) {
+  const value = query?.[key];
+  const values = Array.isArray(value) ? value : value ? [value] : [];
+  return values
+    .flatMap((entry) => entry.split(','))
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
 function isAuthorized(request: ApiRequest) {
   const secret = process.env.EVENT_ALERTS_CRON_SECRET;
   if (!secret) {
@@ -47,7 +56,9 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   }
 
   try {
-    const result = await sendNewEventAlerts();
+    const result = await sendNewEventAlerts({
+      eventIds: readQueryValues(request.query, 'eventId')
+    });
     response.status(200).json({ ok: true, ...result });
   } catch (error) {
     response.status(500).json({

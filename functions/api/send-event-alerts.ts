@@ -264,10 +264,15 @@ function chunkValues<T>(values: T[], size: number) {
   return batches;
 }
 
-async function dispatchEventAlerts(context: FunctionContext, dryRun: boolean) {
+function normalizeRequestedEventIds(eventIds: string[] | undefined) {
+  return Array.from(new Set((eventIds ?? []).map((eventId) => eventId.trim()).filter(Boolean)));
+}
+
+async function dispatchEventAlerts(context: FunctionContext, dryRun: boolean, requestedEventIds: string[]) {
   const { request, env } = context;
   const snapshot = await getEventAlertsSnapshot(env);
   const activeSubscribers = snapshot.activeSubscriberEmails;
+  const requestedEventIdSet = new Set(requestedEventIds);
 
   if (!activeSubscribers.length) {
     return {
@@ -284,12 +289,28 @@ async function dispatchEventAlerts(context: FunctionContext, dryRun: boolean) {
 
   const pendingEvents = APP_EVENTS
     .filter(isUpcomingEvent)
+    .filter((event) => !requestedEventIdSet.size || requestedEventIdSet.has(event.id))
     .map((event) => {
       const deliveredEmails = new Set(getDeliveredEmailsForEvent(snapshot.deliveries, event.id));
       const recipientEmails = activeSubscribers.filter((email) => !deliveredEmails.has(email));
       return { event, recipientEmails };
     })
     .filter((entry) => entry.recipientEmails.length > 0);
+
+  if (!pendingEvents.length) {
+    return {
+      ok: true,
+      dryRun,
+      storageDriver: snapshot.storageDriver,
+      subscriberCount: activeSubscribers.length,
+      pendingEvents: [] as Array<{ eventId: string; recipientCount: number }>,
+      sentEvents: [] as Array<{ eventId: string; attemptedCount: number; sentCount: number; failedCount: number }>,
+      failures: [] as FailedDelivery[],
+      skippedReason: requestedEventIds.length
+        ? `No pending event alerts matched the requested event ids: ${requestedEventIds.join(', ')}`
+        : 'No pending event alerts to send.'
+    };
+  }
 
   const sentEvents: Array<{ eventId: string; attemptedCount: number; sentCount: number; failedCount: number }> = [];
   const failures: FailedDelivery[] = [];
@@ -455,8 +476,13 @@ async function handleRequest(context: FunctionContext) {
   const url = new URL(request.url);
   const body = request.method === 'POST' ? await parseJsonBody(request) : {};
   const dryRun = url.searchParams.get('dry_run') === 'true' || body.dryRun === true;
+  const requestedEventIds = normalizeRequestedEventIds([
+    ...url.searchParams.getAll('eventId'),
+    ...(typeof body.eventId === 'string' ? [body.eventId] : []),
+    ...(Array.isArray(body.eventIds) ? body.eventIds.filter((value): value is string => typeof value === 'string') : [])
+  ]);
 
-  const result = await dispatchEventAlerts(context, dryRun);
+  const result = await dispatchEventAlerts(context, dryRun, requestedEventIds);
   return jsonResponse(result, 200, { Allow: 'GET,POST,OPTIONS' });
 }
 

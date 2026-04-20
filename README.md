@@ -146,6 +146,8 @@ The GitHub send-alerts workflow does not create deployment secrets for the publi
 
 The repo includes `.github/workflows/send-event-alerts.yml`, scheduled hourly. It first tries the deployed `/api/send-event-alerts` route so Cloudflare Pages can send alerts from the same storage used by the subscription UI. If that route is unavailable, it falls back to the existing Node sender.
 
+For one-off tests, you can limit the sender to a specific event id by calling `/api/send-event-alerts?eventId=<event-id>` on the deployed API, or by running `npm run alerts:send -- --event-id <event-id>` locally.
+
 Configure the matching GitHub Actions secrets before enabling it:
 
 - `RESEND_API_KEY`

@@ -42,6 +42,7 @@ type ResendErrorLike = {
 
 type DispatchOptions = {
   dryRun?: boolean;
+  eventIds?: string[];
 };
 
 type FailedDelivery = {
@@ -384,6 +385,10 @@ function chunkValues<T>(values: T[], size: number) {
   return batches;
 }
 
+function normalizeRequestedEventIds(eventIds: string[] | undefined) {
+  return Array.from(new Set((eventIds ?? []).map((eventId) => eventId.trim()).filter(Boolean)));
+}
+
 export async function subscribeToEventAlerts(email: string) {
   const normalizedEmail = normalizeEmail(email);
   if (!isValidEventAlertEmail(normalizedEmail)) {
@@ -467,6 +472,8 @@ export async function sendNewEventAlerts(options: DispatchOptions = {}) {
   await ensureEventAlertStorage();
   const snapshot = await getEventAlertsSnapshot();
   const activeSubscribers = snapshot.activeSubscriberEmails;
+  const requestedEventIds = normalizeRequestedEventIds(options.eventIds);
+  const requestedEventIdSet = new Set(requestedEventIds);
 
   if (!activeSubscribers.length) {
     return {
@@ -482,6 +489,7 @@ export async function sendNewEventAlerts(options: DispatchOptions = {}) {
 
   const pendingEvents = APP_EVENTS
     .filter(isUpcomingEvent)
+    .filter((event) => !requestedEventIdSet.size || requestedEventIdSet.has(event.id))
     .map((event) => {
       const deliveredEmails = new Set(getDeliveredEmailsForEvent(snapshot.deliveries, event.id));
       const recipientEmails = activeSubscribers.filter((email) => !deliveredEmails.has(email));
@@ -491,6 +499,20 @@ export async function sendNewEventAlerts(options: DispatchOptions = {}) {
       };
     })
     .filter((entry) => entry.recipientEmails.length > 0);
+
+  if (!pendingEvents.length) {
+    return {
+      dryRun: Boolean(options.dryRun),
+      storageDriver: snapshot.storageDriver,
+      subscriberCount: activeSubscribers.length,
+      pendingEvents: [] as Array<{ eventId: string; recipientCount: number }>,
+      sentEvents: [] as Array<{ eventId: string; attemptedCount: number; sentCount: number; failedCount: number }>,
+      failures: [] as FailedDelivery[],
+      skippedReason: requestedEventIds.length
+        ? `No pending event alerts matched the requested event ids: ${requestedEventIds.join(', ')}`
+        : 'No pending event alerts to send.'
+    };
+  }
 
   const sentEvents: Array<{ eventId: string; attemptedCount: number; sentCount: number; failedCount: number }> = [];
   const failures: FailedDelivery[] = [];
