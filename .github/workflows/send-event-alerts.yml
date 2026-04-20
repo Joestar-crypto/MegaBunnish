@@ -30,15 +30,18 @@ jobs:
         id: deployed-sender
         continue-on-error: true
         env:
+          EVENT_ALERTS_API_BASE_URL: ${{ secrets.EVENT_ALERTS_API_BASE_URL }}
           EVENT_ALERTS_BASE_URL: ${{ secrets.EVENT_ALERTS_BASE_URL }}
           EVENT_ALERTS_CRON_SECRET: ${{ secrets.EVENT_ALERTS_CRON_SECRET }}
         run: |
-          if [ -z "$EVENT_ALERTS_BASE_URL" ]; then
-            echo "No EVENT_ALERTS_BASE_URL configured for deployed sender."
+          SENDER_BASE_URL="${EVENT_ALERTS_API_BASE_URL:-$EVENT_ALERTS_BASE_URL}"
+
+          if [ -z "$SENDER_BASE_URL" ]; then
+            echo "No EVENT_ALERTS_API_BASE_URL or EVENT_ALERTS_BASE_URL configured for deployed sender."
             exit 1
           fi
 
-          ENDPOINT="${EVENT_ALERTS_BASE_URL%/}/api/send-event-alerts"
+          ENDPOINT="${SENDER_BASE_URL%/}/api/send-event-alerts"
           if [ "${{ github.event.inputs.dry_run || 'false' }}" = "true" ]; then
             ENDPOINT="$ENDPOINT?dry_run=true"
           fi
@@ -73,6 +76,7 @@ jobs:
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM_ADDRESS: ${{ secrets.RESEND_FROM_ADDRESS }}
+          EVENT_ALERTS_API_BASE_URL: ${{ secrets.EVENT_ALERTS_API_BASE_URL }}
           EVENT_ALERTS_BASE_URL: ${{ secrets.EVENT_ALERTS_BASE_URL }}
         run: |
           EXTRA_ARGS=""

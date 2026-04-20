@@ -17,6 +17,7 @@ import {
 
 const DEFAULT_FROM_ADDRESS = process.env.RESEND_FROM_ADDRESS ?? 'Megabunnish <onboarding@resend.dev>';
 const EVENT_ALERTS_BASE_URL = (process.env.EVENT_ALERTS_BASE_URL ?? process.env.EVENTS_BASE_URL ?? '').replace(/\/$/, '');
+const EVENT_ALERTS_API_BASE_URL = (process.env.EVENT_ALERTS_API_BASE_URL ?? EVENT_ALERTS_BASE_URL).replace(/\/$/, '');
 const TEMPLATE_PATH = fileURLToPath(new URL('../../emails/resend-news-template.html', import.meta.url));
 const TEMPLATE_HTML = readFileSync(TEMPLATE_PATH, 'utf8');
 const EVENT_TIMEZONE = 'America/New_York';
@@ -118,6 +119,17 @@ function getAbsoluteUrl(pathOrUrl: string) {
   }
 
   return `${EVENT_ALERTS_BASE_URL}${pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`}`;
+}
+
+function getEventAlertApiUrl(pathOrUrl: string) {
+  if (/^https?:\/\//i.test(pathOrUrl)) {
+    return pathOrUrl;
+  }
+  if (!EVENT_ALERTS_API_BASE_URL) {
+    throw new EventAlertsConfigError('Missing EVENT_ALERTS_API_BASE_URL, EVENT_ALERTS_BASE_URL, or EVENTS_BASE_URL for event alert API links.');
+  }
+
+  return `${EVENT_ALERTS_API_BASE_URL}${pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`}`;
 }
 
 function toCalendarDateString(value: string) {
@@ -263,7 +275,7 @@ function buildEventAlertUnsubscribeUrl(email: string) {
     action: 'unsubscribe'
   });
 
-  return `${getAbsoluteUrl('/api/event-alert-subscriptions')}?${params.toString()}`;
+  return `${getEventAlertApiUrl('/api/event-alert-subscriptions')}?${params.toString()}`;
 }
 
 function buildEventAlertUnsubscribeConfirmationUrl(email: string) {
@@ -273,7 +285,7 @@ function buildEventAlertUnsubscribeConfirmationUrl(email: string) {
     action: 'confirm'
   });
 
-  return `${getAbsoluteUrl('/api/event-alert-subscriptions')}?${params.toString()}`;
+  return `${getEventAlertApiUrl('/api/event-alert-subscriptions')}?${params.toString()}`;
 }
 
 export function verifyEventAlertUnsubscribeToken(email: string, token: string) {

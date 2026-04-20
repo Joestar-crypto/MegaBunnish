@@ -83,6 +83,13 @@ RESEND_FROM_ADDRESS="Megabunnish <alerts@your-domain.com>"
 EVENT_ALERTS_BASE_URL=https://your-public-app-url
 ```
 
+If the alert API runs on a different host than the frontend, keep `EVENT_ALERTS_BASE_URL` pointed at the public app so email assets and "Manage alerts" links still land on the site, then add:
+
+```bash
+EVENT_ALERTS_API_BASE_URL=https://your-alert-api-host
+EVENT_ALERTS_ALLOWED_ORIGIN=https://your-public-app-url
+```
+
 For Cloudflare Pages native storage:
 
 ```bash
@@ -123,6 +130,11 @@ After this change, the minimal production setup is:
 - `RESEND_API_KEY`
 - `EVENT_ALERTS_BASE_URL`
 
+If the alert API is deployed separately from the frontend, also add:
+
+- `EVENT_ALERTS_API_BASE_URL`
+- `EVENT_ALERTS_ALLOWED_ORIGIN`
+
 Optional alternatives if you do not want Resend to hold the subscriber list:
 
 - A KV binding named EVENT_ALERTS
@@ -139,11 +151,47 @@ Configure the matching GitHub Actions secrets before enabling it:
 - `RESEND_API_KEY`
 - `RESEND_FROM_ADDRESS`
 - `EVENT_ALERTS_BASE_URL`
+- `EVENT_ALERTS_API_BASE_URL` (optional, if the sender API is not on the same host as the frontend)
 - `EVENT_ALERTS_CRON_SECRET` (recommended)
 
 Only add `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, and `EVENT_ALERTS_STORAGE_KEY` if you explicitly want to use the Upstash storage driver.
 
 If you deploy the frontend on a platform with serverless routes, the included `api/event-alert-subscriptions.ts` and `api/send-event-alerts.ts` files can be used directly. For Cloudflare Pages, the repo now also includes `functions/api/event-alert-subscriptions.ts` and `functions/api/send-event-alerts.ts`.
+
+If your frontend host is static-only or cannot keep the mail secrets, you can run the alert API separately on Railway with the included `server/railway.ts` entrypoint.
+
+### Railway API deployment
+
+Use Railway only if your current frontend host cannot serve the `/api/*` routes reliably. The shortest split deployment is:
+
+1. Deploy the repo to Railway as a backend service.
+2. Let Railway use the included `nixpacks.toml`, which installs dependencies and starts `npm run alerts:server`.
+3. Set Railway variables:
+
+```bash
+RESEND_API_KEY=your-resend-key
+RESEND_FROM_ADDRESS="Megabunnish <alerts@your-domain.com>"
+EVENT_ALERTS_BASE_URL=https://your-public-frontend-url
+EVENT_ALERTS_API_BASE_URL=https://your-railway-service.up.railway.app
+EVENT_ALERTS_ALLOWED_ORIGIN=https://your-public-frontend-url
+EVENT_ALERTS_CRON_SECRET=choose-a-secret
+EVENT_ALERTS_ADMIN_SECRET=choose-a-secret
+EVENT_ALERTS_UNSUBSCRIBE_SECRET=choose-a-secret
+```
+
+4. On the frontend host, set:
+
+```bash
+VITE_EVENT_ALERTS_API_URL=https://your-railway-service.up.railway.app/api/event-alert-subscriptions
+```
+
+5. In GitHub Actions, keep `EVENT_ALERTS_BASE_URL` as the public frontend URL, and add `EVENT_ALERTS_API_BASE_URL=https://your-railway-service.up.railway.app` if you want the workflow to hit the Railway sender first.
+
+With that setup:
+
+- the React app subscribes through Railway,
+- unsubscribe links in emails go back to Railway,
+- email images and "Manage alerts" links still use the public frontend URL.
 
 ### Inspecting subscribers
 

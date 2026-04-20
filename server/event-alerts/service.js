@@ -49,7 +49,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var _a, _b, _c;
+var _a, _b, _c, _d;
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -59,6 +59,7 @@ import { Resend } from 'resend';
 import { buildEventAlertBroadcastName, ensureEventAlertStorage, ensureResendEventAlertTarget, getDeliveredEmailsForEvent, getEventAlertsSnapshot, recordEventAlertDelivery, subscribeEventAlertSubscriber, unsubscribeEventAlertSubscriber } from './store';
 var DEFAULT_FROM_ADDRESS = (_a = process.env.RESEND_FROM_ADDRESS) !== null && _a !== void 0 ? _a : 'Megabunnish <onboarding@resend.dev>';
 var EVENT_ALERTS_BASE_URL = ((_c = (_b = process.env.EVENT_ALERTS_BASE_URL) !== null && _b !== void 0 ? _b : process.env.EVENTS_BASE_URL) !== null && _c !== void 0 ? _c : '').replace(/\/$/, '');
+var EVENT_ALERTS_API_BASE_URL = ((_d = process.env.EVENT_ALERTS_API_BASE_URL) !== null && _d !== void 0 ? _d : EVENT_ALERTS_BASE_URL).replace(/\/$/, '');
 var TEMPLATE_PATH = fileURLToPath(new URL('../../emails/resend-news-template.html', import.meta.url));
 var TEMPLATE_HTML = readFileSync(TEMPLATE_PATH, 'utf8');
 var EVENT_TIMEZONE = 'America/New_York';
@@ -126,6 +127,15 @@ function getAbsoluteUrl(pathOrUrl) {
         throw new EventAlertsConfigError('Missing EVENT_ALERTS_BASE_URL or EVENTS_BASE_URL for event alert rendering.');
     }
     return "".concat(EVENT_ALERTS_BASE_URL).concat(pathOrUrl.startsWith('/') ? pathOrUrl : "/".concat(pathOrUrl));
+}
+function getEventAlertApiUrl(pathOrUrl) {
+    if (/^https?:\/\//i.test(pathOrUrl)) {
+        return pathOrUrl;
+    }
+    if (!EVENT_ALERTS_API_BASE_URL) {
+        throw new EventAlertsConfigError('Missing EVENT_ALERTS_API_BASE_URL, EVENT_ALERTS_BASE_URL, or EVENTS_BASE_URL for event alert API links.');
+    }
+    return "".concat(EVENT_ALERTS_API_BASE_URL).concat(pathOrUrl.startsWith('/') ? pathOrUrl : "/".concat(pathOrUrl));
 }
 function toCalendarDateString(value) {
     return new Date(value).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
@@ -232,7 +242,7 @@ function buildEventAlertUnsubscribeUrl(email) {
         token: buildUnsubscribeToken(email),
         action: 'unsubscribe'
     });
-    return "".concat(getAbsoluteUrl('/api/event-alert-subscriptions'), "?").concat(params.toString());
+    return "".concat(getEventAlertApiUrl('/api/event-alert-subscriptions'), "?").concat(params.toString());
 }
 function buildEventAlertUnsubscribeConfirmationUrl(email) {
     var params = new URLSearchParams({
@@ -240,7 +250,7 @@ function buildEventAlertUnsubscribeConfirmationUrl(email) {
         token: buildUnsubscribeToken(email),
         action: 'confirm'
     });
-    return "".concat(getAbsoluteUrl('/api/event-alert-subscriptions'), "?").concat(params.toString());
+    return "".concat(getEventAlertApiUrl('/api/event-alert-subscriptions'), "?").concat(params.toString());
 }
 export function verifyEventAlertUnsubscribeToken(email, token) {
     var normalizedEmail = normalizeEmail(email);

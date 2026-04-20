@@ -1,0 +1,5 @@
+[phases.install]
+cmds = ["npm install --include=dev"]
+
+[start]
+cmd = "npm run alerts:server"

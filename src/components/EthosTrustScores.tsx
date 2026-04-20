@@ -663,11 +663,15 @@ const getEventAlertsFeedbackMessage = (message: string | undefined, status: numb
   }
 
   if (message.includes('Event alert storage is not configured on this deployment.')) {
-    return 'Event alerts are not configured on this deployment yet. Add event alert storage and redeploy.';
+    return 'This deployment is still on the old alerts backend or is missing RESEND_API_KEY. Redeploy after setting RESEND_API_KEY and EVENT_ALERTS_BASE_URL.';
   }
 
   if (message.includes('Unsubscribe links are not configured on this deployment.')) {
-    return 'Event alerts are not fully configured on this deployment yet.';
+    return 'This deployment is missing EVENT_ALERTS_CRON_SECRET, EVENT_ALERTS_UNSUBSCRIBE_SECRET, or RESEND_API_KEY.';
+  }
+
+  if (message.includes('Missing RESEND_API_KEY on this deployment.') || message.includes('Missing RESEND_API_KEY.')) {
+    return 'This deployment is missing RESEND_API_KEY.';
   }
 
   return message;

@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext ts,tsx",
+    "alerts:server": "tsx server/railway.ts",
     "alerts:list": "tsx scripts/list-event-alert-subscribers.ts",
     "alerts:send": "tsx scripts/send-new-event-alerts.ts",
     "alerts:dry-run": "tsx scripts/send-new-event-alerts.ts --dry-run",
