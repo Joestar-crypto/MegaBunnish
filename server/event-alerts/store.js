@@ -182,6 +182,12 @@ function getResendApiKey() {
     }
     return apiKey;
 }
+function normalizeResendApiErrorMessage(message) {
+    if (message.toLowerCase().includes('restricted to only send emails')) {
+        return 'RESEND_API_KEY is send-only. Event alert subscriptions use Resend Contacts, Segments, Topics, and Broadcasts. Replace it with a full-access Resend API key, or configure Upstash/KV storage instead.';
+    }
+    return message;
+}
 function resendRequest(path_1) {
     return __awaiter(this, arguments, void 0, function (path, init) {
         var headers, response, payload, message;
@@ -206,7 +212,7 @@ function resendRequest(path_1) {
                             : payload && typeof payload === 'object' && 'name' in payload && typeof payload.name === 'string'
                                 ? payload.name
                                 : "Resend API error (".concat(response.status, ")");
-                        throw new Error(message);
+                        throw new Error(normalizeResendApiErrorMessage(message));
                     }
                     return [2 /*return*/, payload];
             }
@@ -377,7 +383,7 @@ function getResendContact(email) {
                             : payload && typeof payload === 'object' && 'name' in payload && typeof payload.name === 'string'
                                 ? payload.name
                                 : "Resend API error (".concat(response.status, ")");
-                        throw new Error(message);
+                        throw new Error(normalizeResendApiErrorMessage(message));
                     }
                     return [2 /*return*/, payload];
             }

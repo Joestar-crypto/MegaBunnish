@@ -217,6 +217,14 @@ function getResendApiKey(env: EventAlertsEnv) {
   return apiKey;
 }
 
+function normalizeResendApiErrorMessage(message: string) {
+  if (message.toLowerCase().includes('restricted to only send emails')) {
+    return 'RESEND_API_KEY on this deployment is send-only. Event alert subscriptions use Resend Contacts, Segments, Topics, and Broadcasts. Replace it with a full-access Resend API key, or configure Upstash/KV storage instead.';
+  }
+
+  return message;
+}
+
 async function resendRequest<T>(env: EventAlertsEnv, path: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers);
   headers.set('Authorization', `Bearer ${getResendApiKey(env)}`);
@@ -236,7 +244,7 @@ async function resendRequest<T>(env: EventAlertsEnv, path: string, init: Request
       : payload && typeof payload === 'object' && 'name' in payload && typeof payload.name === 'string'
         ? payload.name
         : `Resend API error (${response.status})`;
-    throw new Error(message);
+    throw new Error(normalizeResendApiErrorMessage(message));
   }
 
   return payload as T;
@@ -360,7 +368,7 @@ async function getResendContact(env: EventAlertsEnv, email: string) {
       : payload && typeof payload === 'object' && 'name' in payload && typeof payload.name === 'string'
         ? payload.name
         : `Resend API error (${response.status})`;
-    throw new Error(message);
+    throw new Error(normalizeResendApiErrorMessage(message));
   }
 
   return payload as ResendContact | null;

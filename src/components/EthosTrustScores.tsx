@@ -674,6 +674,10 @@ const getEventAlertsFeedbackMessage = (message: string | undefined, status: numb
     return 'This deployment is missing RESEND_API_KEY.';
   }
 
+  if (message.includes('restricted to only send emails') || message.includes('RESEND_API_KEY is send-only') || message.includes('RESEND_API_KEY on this deployment is send-only')) {
+    return 'Your Railway RESEND_API_KEY is send-only. Replace it with a full-access Resend API key, or configure Upstash/KV storage instead.';
+  }
+
   return message;
 };
 

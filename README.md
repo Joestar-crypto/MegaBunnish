@@ -67,9 +67,9 @@ The app works without a key, but adding one helps avoid shared rate limits when 
 
 The Events panel can subscribe an email address to event notifications. The frontend posts subscriptions to `VITE_EVENT_ALERTS_API_URL` when defined, otherwise it uses `/api/event-alert-subscriptions`.
 
-The included backend stores subscriber emails itself and tracks which recipients already received each event. Automatic sends use Resend, so a send-only Resend API key is enough.
+The included backend stores subscriber emails itself and tracks which recipients already received each event. Automatic sends use Resend.
 
-For local development, subscriber data is written to `.data/event-alerts.json` by default. If no KV or Upstash storage is configured but `RESEND_API_KEY` is available, the app now falls back automatically to a Resend segment and topic for subscriptions plus Resend broadcast history for duplicate prevention. That means Cloudflare Pages and similar serverless deployments can work with just the Resend and base URL secrets after redeploying.
+For local development, subscriber data is written to `.data/event-alerts.json` by default. If no KV or Upstash storage is configured but `RESEND_API_KEY` is available, the app now falls back automatically to a Resend segment and topic for subscriptions plus Resend broadcast history for duplicate prevention. That means Cloudflare Pages and similar serverless deployments can work with just the Resend and base URL secrets after redeploying, but the Resend key must be allowed to manage Contacts, Segments, Topics, and Broadcasts. Send-only Resend keys will fail for subscriptions.
 
 Optional alternate storage backends remain available if you prefer to keep the subscriber list outside Resend.
 
