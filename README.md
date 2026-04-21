@@ -148,13 +148,14 @@ The repo includes `.github/workflows/send-event-alerts.yml`, scheduled hourly. I
 
 For one-off tests, you can limit the sender to a specific event id by calling `/api/send-event-alerts?eventId=<event-id>` on the deployed API, or by running `npm run alerts:send -- --event-id <event-id>` locally.
 
+In GitHub Actions, this repo's workflow now defaults the public site URL to `https://megabunnish.com`, so `EVENT_ALERTS_BASE_URL` does not have to be stored as a secret just to reach the deployed sender. If your deployed `/api/send-event-alerts` route is protected, add `EVENT_ALERTS_CRON_SECRET` to GitHub Actions so the workflow can authenticate. Only add `RESEND_API_KEY` there if you also want the Node fallback sender available.
+
 Configure the matching GitHub Actions secrets before enabling it:
 
-- `RESEND_API_KEY`
-- `RESEND_FROM_ADDRESS`
-- `EVENT_ALERTS_BASE_URL`
+- `EVENT_ALERTS_CRON_SECRET` if the deployed sender is protected
+- `RESEND_API_KEY` if you want the Node fallback sender
+- `RESEND_FROM_ADDRESS` if you want a custom From address for the Node fallback sender
 - `EVENT_ALERTS_API_BASE_URL` (optional, if the sender API is not on the same host as the frontend)
-- `EVENT_ALERTS_CRON_SECRET` (recommended)
 
 Only add `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, and `EVENT_ALERTS_STORAGE_KEY` if you explicitly want to use the Upstash storage driver.
 

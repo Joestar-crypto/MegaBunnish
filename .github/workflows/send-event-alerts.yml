@@ -13,6 +13,8 @@ on:
 jobs:
   send-alerts:
     runs-on: ubuntu-latest
+    env:
+      DEFAULT_EVENT_ALERTS_BASE_URL: https://megabunnish.com
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -30,14 +32,16 @@ jobs:
         id: deployed-sender
         continue-on-error: true
         env:
-          EVENT_ALERTS_API_BASE_URL: ${{ secrets.EVENT_ALERTS_API_BASE_URL }}
-          EVENT_ALERTS_BASE_URL: ${{ secrets.EVENT_ALERTS_BASE_URL }}
+          EVENT_ALERTS_API_BASE_URL_VAR: ${{ vars.EVENT_ALERTS_API_BASE_URL }}
+          EVENT_ALERTS_API_BASE_URL_SECRET: ${{ secrets.EVENT_ALERTS_API_BASE_URL }}
+          EVENT_ALERTS_BASE_URL_VAR: ${{ vars.EVENT_ALERTS_BASE_URL }}
+          EVENT_ALERTS_BASE_URL_SECRET: ${{ secrets.EVENT_ALERTS_BASE_URL }}
           EVENT_ALERTS_CRON_SECRET: ${{ secrets.EVENT_ALERTS_CRON_SECRET }}
         run: |
-          SENDER_BASE_URL="${EVENT_ALERTS_API_BASE_URL:-$EVENT_ALERTS_BASE_URL}"
+          SENDER_BASE_URL="${EVENT_ALERTS_API_BASE_URL_VAR:-${EVENT_ALERTS_API_BASE_URL_SECRET:-${EVENT_ALERTS_BASE_URL_VAR:-${EVENT_ALERTS_BASE_URL_SECRET:-$DEFAULT_EVENT_ALERTS_BASE_URL}}}}"
 
           if [ -z "$SENDER_BASE_URL" ]; then
-            echo "No EVENT_ALERTS_API_BASE_URL or EVENT_ALERTS_BASE_URL configured for deployed sender."
+            echo "::error::No EVENT_ALERTS_API_BASE_URL or EVENT_ALERTS_BASE_URL configured for deployed sender."
             exit 1
           fi
 
@@ -46,38 +50,62 @@ jobs:
             ENDPOINT="$ENDPOINT?dry_run=true"
           fi
 
+          RESPONSE_BODY="$(mktemp)"
+          CURL_STATUS=0
+
           if [ -n "$EVENT_ALERTS_CRON_SECRET" ]; then
-            curl --fail-with-body --show-error --silent -X POST -H "Authorization: Bearer $EVENT_ALERTS_CRON_SECRET" "$ENDPOINT"
+            HTTP_STATUS="$(curl --show-error --silent --output "$RESPONSE_BODY" --write-out "%{http_code}" -X POST -H "Authorization: Bearer $EVENT_ALERTS_CRON_SECRET" "$ENDPOINT")" || CURL_STATUS=$?
           else
-            curl --fail-with-body --show-error --silent -X POST "$ENDPOINT"
+            HTTP_STATUS="$(curl --show-error --silent --output "$RESPONSE_BODY" --write-out "%{http_code}" -X POST "$ENDPOINT")" || CURL_STATUS=$?
           fi
 
-      - name: Validate fallback sender configuration
-        if: steps.deployed-sender.outcome != 'success'
-        env:
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          EVENT_ALERTS_BASE_URL: ${{ secrets.EVENT_ALERTS_BASE_URL }}
-        run: |
-          missing=0
+          cat "$RESPONSE_BODY"
 
-          for name in RESEND_API_KEY EVENT_ALERTS_BASE_URL; do
-            if [ -z "${!name}" ]; then
-              echo "::error::$name is not configured for the fallback sender."
-              missing=1
-            fi
-          done
-
-          if [ "$missing" -ne 0 ]; then
+          if [ "$CURL_STATUS" -ne 0 ]; then
+            echo "::error::Unable to reach deployed sender at $ENDPOINT."
             exit 1
           fi
 
-      - name: Send event alerts
+          if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
+            if [ "$HTTP_STATUS" = "401" ] && [ -z "$EVENT_ALERTS_CRON_SECRET" ]; then
+              echo "::error::Deployed sender returned 401. Add EVENT_ALERTS_CRON_SECRET to GitHub Actions secrets so the workflow can authenticate."
+            fi
+
+            echo "::error::Deployed sender failed with HTTP $HTTP_STATUS."
+            exit 1
+          fi
+
+      - name: Check fallback sender configuration
         if: steps.deployed-sender.outcome != 'success'
+        id: fallback-config
+        env:
+          EVENT_ALERTS_API_BASE_URL_VAR: ${{ vars.EVENT_ALERTS_API_BASE_URL }}
+          EVENT_ALERTS_API_BASE_URL_SECRET: ${{ secrets.EVENT_ALERTS_API_BASE_URL }}
+          EVENT_ALERTS_BASE_URL_VAR: ${{ vars.EVENT_ALERTS_BASE_URL }}
+          EVENT_ALERTS_BASE_URL_SECRET: ${{ secrets.EVENT_ALERTS_BASE_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: |
+          FALLBACK_BASE_URL="${EVENT_ALERTS_BASE_URL_VAR:-${EVENT_ALERTS_BASE_URL_SECRET:-$DEFAULT_EVENT_ALERTS_BASE_URL}}"
+          FALLBACK_API_BASE_URL="${EVENT_ALERTS_API_BASE_URL_VAR:-${EVENT_ALERTS_API_BASE_URL_SECRET:-$FALLBACK_BASE_URL}}"
+
+          echo "base_url=$FALLBACK_BASE_URL" >> "$GITHUB_OUTPUT"
+          echo "api_base_url=$FALLBACK_API_BASE_URL" >> "$GITHUB_OUTPUT"
+
+          if [ -z "$RESEND_API_KEY" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::RESEND_API_KEY is not configured for the Node fallback sender."
+            exit 0
+          fi
+
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+      - name: Send event alerts
+        if: steps.deployed-sender.outcome != 'success' && steps.fallback-config.outputs.enabled == 'true'
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM_ADDRESS: ${{ secrets.RESEND_FROM_ADDRESS }}
-          EVENT_ALERTS_API_BASE_URL: ${{ secrets.EVENT_ALERTS_API_BASE_URL }}
-          EVENT_ALERTS_BASE_URL: ${{ secrets.EVENT_ALERTS_BASE_URL }}
+          EVENT_ALERTS_API_BASE_URL: ${{ steps.fallback-config.outputs.api_base_url }}
+          EVENT_ALERTS_BASE_URL: ${{ steps.fallback-config.outputs.base_url }}
         run: |
           EXTRA_ARGS=""
           if [ "${{ github.event.inputs.dry_run || 'false' }}" = "true" ]; then
@@ -85,3 +113,9 @@ jobs:
           fi
           echo "Deployed sender unavailable, falling back to the Node sender."
           npx tsx scripts/send-new-event-alerts.ts $EXTRA_ARGS
+
+      - name: Fail when no sender path is configured
+        if: steps.deployed-sender.outcome != 'success' && steps.fallback-config.outputs.enabled != 'true'
+        run: |
+          echo "::error::The deployed sender failed and the Node fallback is not configured. Add EVENT_ALERTS_CRON_SECRET for the deployed sender, or RESEND_API_KEY for the Node fallback sender."
+          exit 1
