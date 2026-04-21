@@ -16,6 +16,22 @@ export var APP_EVENTS = [
         ]
     },
     {
+        id: 'test-email-alert-2026-04-23',
+        title: '[TEST] Follow-up email trigger check',
+        projectId: 'megacorp',
+        start: '2026-04-23T18:30:00-05:00',
+        end: '2026-04-23T23:59:00-05:00',
+        tweetUrl: 'https://megabunnish.com',
+        detailsUrl: 'https://megabunnish.com',
+        phases: [
+            {
+                label: 'Follow-up smoke test',
+                start: '2026-04-23T18:30:00-05:00',
+                end: '2026-04-23T23:59:00-05:00'
+            }
+        ]
+    },
+    {
         id: 'offshore-presale',
         title: 'Presale Open',
         projectId: 'offshore',
