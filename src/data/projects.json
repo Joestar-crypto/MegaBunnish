@@ -156,7 +156,7 @@
     "name": "BunnzPaw",
     "categories": [
       "Jojo",
-      "Gambling",
+      "RWA",
       "Native"
     ],
     "networks": [
@@ -636,7 +636,8 @@
       "twitter": "https://x.com/TryNectarAI",
       "discord": "https://discord.com/invite/ZFfEAbgsHm"
     },
-    "logo": "/logos/NectarAI.webp"
+    "logo": "/logos/NectarAI.webp",
+    "isLive": true
   },
   {
     "id": "mtrkr",
@@ -1980,7 +1981,7 @@
     "id": "nextrare",
     "name": "NextRare",
     "categories": [
-      "Gambling",
+      "RWA",
       "Mobile",
       "Native"
     ],
