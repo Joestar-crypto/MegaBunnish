@@ -192,9 +192,7 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
     [
       textSegment('THE MegaETH super app, built by BadBunnz, already packed with major announcements like '),
       linkSegment('World Markets', 'worldmarkets'),
-      textSegment(' integration for perps, Polymarket for prediction markets, and '),
-      linkSegment('Avon', 'avon'),
-      textSegment(' for lending.')
+      textSegment(' integration for perps and Polymarket for prediction markets.')
     ],
     [textSegment("I\'m pretty sure this is the app you\'ll use the most.")]
   ],
@@ -333,14 +331,6 @@ const JOJO_DIALOGUE: Record<string, DialogueBlock[]> = {
       )
     ],
     [textSegment("You\'re probably not the PMF here, but this is typically a sign of a mature ecosystem.")]
-  ],
-  avon: [
-    [
-      textSegment(
-        'Imagine if lending offers worked like trading orders, with personalized risk, LTV, rates, and more. That\'s exactly what Avon is doing by using a CLOB with isolated markets, creating a real-time, dynamic market for lending rates.'
-      )
-    ],
-    [textSegment("Imo this is huge, isolated markets have already proven successful, but this is the first to use a CLOB architecture onchain. Definitely the lending app I\'m most excited about.")]
   ],
   blackhaven: [
     [

@@ -15,7 +15,6 @@ export const JOJO_PROFILES: JojoProfile[] = [
       'blitzo',
       'topstrike',
       'hello-trade',
-      'avon',
       'lemonade',
       'telis',
       'kumbaya',

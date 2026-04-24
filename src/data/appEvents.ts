@@ -196,21 +196,6 @@ export const APP_EVENTS: AppEvent[] = [
     ]
   },
   {
-    id: 'avon-bootstrapping-phase',
-    title: 'Bootstrapping phase live',
-    projectId: 'avon',
-    start: '2026-02-09T00:00:00-05:00',
-    end: '2026-02-16T23:59:00-05:00',
-    tweetUrl: 'https://x.com/avon_xyz',
-    phases: [
-      {
-        label: 'All day',
-        start: '2026-02-09T00:00:00-05:00',
-        end: '2026-02-16T23:59:00-05:00'
-      }
-    ]
-  },
-  {
     id: 'blackhaven-ico-registration',
     title: 'ICO Registration',
     projectId: 'blackhaven',

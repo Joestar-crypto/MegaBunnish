@@ -367,16 +367,12 @@ type RenderInputs = {
 };
 
 const CONTRACT_PROJECT_OVERRIDES: Record<string, string> = {
-  '0x2ea493384f42d7ea78564f3ef4c86986eab4a890': 'avon',
-  '0xfafddbb3fc7688494971a79cc65dca3ef82079e7': 'avon',
-  '0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb': 'avon',
   '0xe5bbef8de2db447a7432a47eba58924d94ee470e': 'kumbaya',
   '0x6c8e5d463a2473b1a8bcd87e1cea2724203a1d8f': 'kumbaya',
   '0x3fd43a658915a7ce5ae0a2e48f72b9fce7ba0c44': 'netizens'
 };
 
 const PROJECT_ALIAS_OVERRIDES: Record<string, string[]> = {
-  avon: ['avon', 'usdm', 'usdt0', 'usdmy', 'megausd'],
   dotmegadomains: [
     'dotmegadomains',
     'mega domains',

@@ -65,6 +65,14 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     "url": "https://app.ethos.network/profile/x/badbunnz_"
   },
   {
+    "projectId": "xeet",
+    "handle": "xeetdotai",
+    "score": 1652,
+    "tier": "Established",
+    "displayName": "Xeet",
+    "url": "https://app.ethos.network/profile/x/xeetdotai"
+  },
+  {
     "projectId": "euphoria",
     "handle": "Euphoria_fi",
     "score": 1597,
@@ -231,14 +239,6 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     "tier": "Known",
     "displayName": "Stomp",
     "url": "https://app.ethos.network/profile/x/stompdotgg"
-  },
-  {
-    "projectId": "avon",
-    "handle": "avon_xyz",
-    "score": 1450,
-    "tier": "Known",
-    "displayName": "Avon",
-    "url": "https://app.ethos.network/profile/x/avon_xyz"
   },
   {
     "projectId": "prismfi",
@@ -455,6 +455,14 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     "tier": "Neutral",
     "displayName": "Ubitel",
     "url": "https://app.ethos.network/profile/x/getubitel"
+  },
+  {
+    "projectId": "monster",
+    "handle": "mnstr",
+    "score": 1246,
+    "tier": "Neutral",
+    "displayName": "Monster",
+    "url": "https://app.ethos.network/profile/x/mnstr"
   },
   {
     "projectId": "rainmaker",
@@ -695,6 +703,14 @@ export const ETHOS_PROFILE_OVERRIDES: EthosProfileOverride[] = [
     "tier": "Questionable",
     "displayName": "Alzena",
     "url": "https://app.ethos.network/profile/x/alzenaworld"
+  },
+  {
+    "projectId": "omen",
+    "handle": "omeninvest",
+    "score": 1150,
+    "tier": "Questionable",
+    "displayName": "Omen",
+    "url": "https://app.ethos.network/profile/x/omeninvest"
   },
   {
     "projectId": "mega-heroes",

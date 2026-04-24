@@ -40,7 +40,7 @@ type KpiListItem = {
 };
 
 const KPI2_TARGET = 10;
-const KPI2_LIVE_IDS = new Set(['kumbaya', 'avon', 'cap', 'ubitel', 'showdown']);
+const KPI2_LIVE_IDS = new Set(['kumbaya', 'cap', 'ubitel', 'showdown']);
 const KPI2_APPS: Array<{ id: string; name: string; logoSrc: string }> = [
   { id: 'kumbaya', name: 'Kumbaya', logoSrc: '/logos/Kumbaya.webp' },
   { id: 'rocket', name: 'Rocket', logoSrc: '/logos/Rocket.webp' },
@@ -55,7 +55,6 @@ const KPI2_APPS: Array<{ id: string; name: string; logoSrc: string }> = [
   { id: 'brix', name: 'Brix', logoSrc: '/logos/Brix.webp' },
   { id: 'cap', name: 'Cap', logoSrc: '/logos/CapMoney.webp' },
   { id: 'benchmark', name: 'Benchmark', logoSrc: '/logos/Benchmark.webp' },
-  { id: 'avon', name: 'Avon', logoSrc: '/logos/Avon.webp' },
   { id: 'blackhaven', name: 'Blackhaven', logoSrc: '/logos/Blackhaven.webp' },
   { id: 'ubitel', name: 'Ubitel', logoSrc: '/logos/Ubitel.webp' },
   { id: 'hellotrade', name: 'Hellotrade', logoSrc: '/logos/Hellotrade.webp' },

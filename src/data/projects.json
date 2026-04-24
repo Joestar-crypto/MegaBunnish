@@ -304,34 +304,6 @@
     "logo": "/logos/Benchmark.webp"
   },
   {
-    "id": "avon",
-    "name": "Avon",
-    "categories": [
-      "Jojo",
-      "Megamafia",
-      "DeFi",
-      "Native"
-    ],
-    "networks": [
-      "MegaETH"
-    ],
-    "links": {
-      "site": "https://www.avon.xyz/",
-      "twitter": "https://x.com/avon_xyz",
-      "telegram": "https://t.me/avon_xyz"
-    },
-    "logo": "/logos/Avon.webp",
-    "isLive": true,
-    "incentives": [
-      {
-        "id": "avon-bootstrapping-phase",
-        "title": "Bootstrapping phase live",
-        "reward": "Runs Feb 9 - Feb 16",
-        "expiresAt": "2026-02-16T23:59:00-05:00"
-      }
-    ]
-  },
-  {
     "id": "blackhaven",
     "name": "BlackHaven",
     "categories": [
@@ -2012,6 +1984,59 @@
     },
     "logo": "/logos/Purrlend.webp",
     "jojoInsight": "Purrlend is a lending and borrowing protocol that started on HyperEVM and is expanding to MegaETH. We love every app here, give them some love."
+  },
+  {
+    "id": "monster",
+    "name": "Monster",
+    "categories": [
+      "RWA",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://mnstr.xyz/",
+      "twitter": "https://x.com/mnstr",
+      "discord": "https://discord.gg/5EnuG6XzWB"
+    },
+    "logo": "/logos/Monster.webp",
+    "jojoInsight": "Monster left Base for MegaETH and they're bringing an amazing TCG app to the ecosystem. Welcome them to the family!"
+  },
+  {
+    "id": "xeet",
+    "name": "Xeet",
+    "categories": [
+      "Social",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://www.xeet.ai/",
+      "twitter": "https://x.com/xeetdotai"
+    },
+    "logo": "/logos/Xeet.webp",
+    "jojoInsight": "Xeet is an innovative SocialFi app that recently left Abstract to deploy on MegaETH. Welcome them to the Mega family!"
+  },
+  {
+    "id": "omen",
+    "name": "Omen",
+    "categories": [
+      "Trading",
+      "Native"
+    ],
+    "networks": [
+      "MegaETH"
+    ],
+    "links": {
+      "site": "https://omen.trade/?utm_source=x&utm_campaign=profile",
+      "twitter": "https://x.com/omeninvest",
+      "discord": "https://discord.com/invite/ntcW6Y2sR8"
+    },
+    "logo": "/logos/Omen.webp",
+    "jojoInsight": "Omen is a trading app offering perps, prediction markets, and agent trading. Backed by the same team that backed Robinhood, this might be a sleeping giant who knows?"
   }
 ]
 
