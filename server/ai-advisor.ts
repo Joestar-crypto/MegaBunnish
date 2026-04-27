@@ -59,6 +59,7 @@ type IntentProfile = {
   preferIncentives: boolean;
   preferSafety: boolean;
   preferBeginnerFriendly: boolean;
+  wantsGeneralChainInfo: boolean;
   keywords: string[];
 };
 
@@ -98,8 +99,19 @@ const DEFAULT_SUGGESTED_PROMPTS = [
   'Which lending protocol looks strongest on MegaETH right now?',
   'Compare the safest DeFi options for a new user.',
   'Which bridge should I use to move into MegaETH?',
-  'Which mobile-first app should I try first?'
+  'Which mobile-first app should I try first?',
+  'How does MegaETH differ from a typical Ethereum L2?'
 ];
+
+const GENERAL_MEGAETH_CONTEXT = [
+  'MegaETH is presented in its official docs as a high-performance Ethereum L2 and the first real-time blockchain.',
+  'Official site claims include 100,000+ transactions per second, 10+ Ggas per second, and sub-10 ms block times.',
+  'Official docs describe mini-blocks every ~10 ms for fast confirmations and standard EVM blocks every ~1 second for Ethereum compatibility.',
+  'Architecture docs say the sequencer executes transactions, streams mini-block results to RPC nodes, and settles to Ethereum L1.',
+  'MegaETH docs say block data is posted via EigenDA and disputes are resolved on Ethereum using the OP Stack fault-proof framework, with Kailua mentioned as the ZK fraud-proof system.',
+  'MegaETH docs emphasize real-time UX for trading, gaming, live feeds, and apps that need millisecond-level responsiveness.',
+  'The current MegaBunnish context does not provide a verified numeric token supply. If asked for supply, say the current context does not specify it.'
+].join('\n');
 
 export class AiAdvisorConfigError extends Error {}
 
@@ -136,6 +148,7 @@ const buildCorpus = (project: AdvisorProject) =>
 function detectIntent(query: string): IntentProfile {
   const normalized = normalize(query);
   const categories = new Set<string>();
+  const wantsGeneralChainInfo = /(megaeth|chain|network|mainnet|l2|ethereum|throughput|tps|ggas|latency|block ?time|mini block|miniblock|realtime|real time|architecture|sequencer|settlement|eigenda|op stack|kailua|supply|token|tge|capacity|capabilities)/.test(normalized);
 
   if (/(lend|lending|borrow|loan|yield|farm|stable|money market|credit)/.test(normalized)) {
     categories.add('DeFi');
@@ -153,7 +166,7 @@ function detectIntent(query: string): IntentProfile {
     categories.add('AI');
   }
 
-  if (!categories.size) {
+  if (!categories.size && !wantsGeneralChainInfo) {
     categories.add('DeFi');
   }
 
@@ -168,6 +181,7 @@ function detectIntent(query: string): IntentProfile {
     preferIncentives: /(farm|yield|points|reward|incentive)/.test(normalized),
     preferSafety: /(safe|safest|safety|secure|securest|trusted|trust|reliable|risk|risky)/.test(normalized),
     preferBeginnerFriendly: /(new user|beginner|first time|first-time|starter|easy|simple)/.test(normalized),
+    wantsGeneralChainInfo,
     keywords: tokenize(query)
   };
 }
@@ -318,6 +332,10 @@ function selectProjects(message: string, history: AdvisorChatMessage[]) {
   const query = [...history.filter((entry) => entry.role === 'user').slice(-2).map((entry) => entry.content), message].join(' ');
   const intent = detectIntent(query);
 
+  if (intent.wantsGeneralChainInfo && intent.categories.length === 0) {
+    return [];
+  }
+
   return PROJECTS
     .map((project) => scoreProject(project, query, intent))
     .filter((entry): entry is RankedProject => Boolean(entry))
@@ -348,8 +366,14 @@ function buildContextBlock(projects: RankedProject[]) {
     ].join('\n');
   });
 
+  const sections = [`MegaETH chain context:\n${GENERAL_MEGAETH_CONTEXT}`];
+
+  if (lines.length) {
+    sections.push(`Relevant ecosystem projects:\n\n${lines.join('\n\n')}`);
+  }
+
   return {
-    text: lines.join('\n\n'),
+    text: sections.join('\n\n'),
     sourceEventIds: Array.from(eventIds)
   };
 }
@@ -395,12 +419,15 @@ function buildPrompt(message: string, history: AdvisorChatMessage[], contextText
     'Never invent incentives, launches, token plans, live status, or opinions not grounded in the provided data.',
     'If the evidence is weak, say that directly.',
     'Write in polished, natural prose with complete sentences.',
-    'Do not answer with compressed fragments, note dumps, or telegraphic phrasing.',
-    'Lead with a clear conclusion, then explain the ranking in well-written sentences.',
+    'Use short, direct sentences that go straight to the point.',
+    'Do not answer with compressed fragments, note dumps, telegraphic phrasing, or long clause chains.',
+    'Lead with a clear conclusion, then explain the ranking or answer in well-written sentences.',
     'For any answer longer than three sentences, split the response into two or three short paragraphs with visible line breaks.',
+    'Prefer short paragraphs of one to three sentences each.',
     'For comparison questions, mention the top options first and explain why each one fits in one or two complete sentences.',
     'When the user asks about safety, trust, reliability, or beginner-friendly choices, explicitly factor Ethos trust scores into the comparison, but do not rely on Ethos alone.',
     'When recommending projects, explain the distinction between explicit fit and broader fallback options when relevant.',
+    'You are not limited to recommending apps. You can also answer general questions about MegaETH itself when the provided context covers them.',
     'Keep answers concise but useful, usually one short paragraph plus up to three bullet points if needed.'
   ].join(' ');
 

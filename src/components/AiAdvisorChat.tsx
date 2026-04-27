@@ -59,14 +59,18 @@ const INITIAL_MESSAGE: ChatMessage = {
 };
 
 export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => {
-  const { allProjects, ethosScores, selectProject } = useConstellation();
+  const { allProjects, ethosScores, selectedProjectId, selectProject } = useConstellation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>(STARTER_PROMPTS);
+  const [showStarterPrompts, setShowStarterPrompts] = useState(false);
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  const previousSelectedProjectIdRef = useRef<string | null>(null);
+  const restoreAfterDetailCloseRef = useRef(false);
+  const preservedScrollTopRef = useRef<number | null>(null);
 
   useEffect(() => {
     const storedConversationId = window.localStorage.getItem(CONVERSATION_STORAGE_KEY);
@@ -86,10 +90,31 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
     if (!isOpen) {
       return;
     }
+
+    if (preservedScrollTopRef.current !== null && bodyRef.current) {
+      bodyRef.current.scrollTop = preservedScrollTopRef.current;
+      preservedScrollTopRef.current = null;
+      return;
+    }
+
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight, behavior: 'smooth' });
   }, [isOpen, messages, isLoading]);
 
   const hasUserMessages = useMemo(() => messages.some((entry) => entry.role === 'user'), [messages]);
+
+  useEffect(() => {
+    const previousSelectedProjectId = previousSelectedProjectIdRef.current;
+    previousSelectedProjectIdRef.current = selectedProjectId;
+
+    if (!restoreAfterDetailCloseRef.current) {
+      return;
+    }
+
+    if (previousSelectedProjectId && !selectedProjectId) {
+      restoreAfterDetailCloseRef.current = false;
+      setIsOpen(true);
+    }
+  }, [selectedProjectId]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -121,6 +146,7 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
 
     setMessages((current) => [...current, userMessage]);
     setInput('');
+    setShowStarterPrompts(false);
     setIsLoading(true);
 
     try {
@@ -198,6 +224,13 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
     await sendMessage(input);
   };
 
+  const handleProjectOpen = (projectId: string) => {
+    preservedScrollTopRef.current = bodyRef.current?.scrollTop ?? null;
+    restoreAfterDetailCloseRef.current = true;
+    selectProject(projectId);
+    setIsOpen(false);
+  };
+
   return (
     <div className="ai-chat-shell">
       <button
@@ -247,7 +280,39 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
               </p>
               <div className="ai-chat-starters">
                 {suggestedPrompts.map((prompt) => (
-                  <button key={prompt} type="button" onClick={() => void sendMessage(prompt)}>
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => {
+                      setShowStarterPrompts(false);
+                      void sendMessage(prompt);
+                    }}
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {hasUserMessages && showStarterPrompts ? (
+            <section className="ai-chat-prompt-picker">
+              <div className="ai-chat-prompt-picker__header">
+                <p>Starter questions</p>
+                <button type="button" onClick={() => setShowStarterPrompts(false)}>
+                  Hide
+                </button>
+              </div>
+              <div className="ai-chat-starters">
+                {suggestedPrompts.map((prompt) => (
+                  <button
+                    key={`picker-${prompt}`}
+                    type="button"
+                    onClick={() => {
+                      setShowStarterPrompts(false);
+                      void sendMessage(prompt);
+                    }}
+                  >
                     {prompt}
                   </button>
                 ))}
@@ -295,10 +360,7 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
                             <button
                               type="button"
                               className="ai-recommendation-card__project-link"
-                              onClick={() => {
-                                selectProject(project.id);
-                                setIsOpen(false);
-                              }}
+                              onClick={() => handleProjectOpen(project.id)}
                               aria-label={`Open ${project.name} details`}
                               title={`Open ${project.name} details`}
                             >
@@ -322,9 +384,7 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
                                     aria-label={`Open ${project.name} on X`}
                                     title={`Open ${project.name} on X`}
                                   >
-                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                      <path d="M18.9 3H21l-4.59 5.25L21.81 21h-4.23l-3.31-4.95L9.94 21H7.83l4.9-5.6L2.19 3h4.34l2.99 4.48L13.46 3h2.11Zm-1.48 16h1.17L5.95 4.92H4.69L17.42 19Z" fill="currentColor" />
-                                    </svg>
+                                    <span aria-hidden="true">X</span>
                                   </a>
                                 ) : null}
                               </div>
@@ -352,6 +412,13 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
           </div>
         </div>
         <div className="ai-chat-composer">
+          <div className="ai-chat-composer__toolbar">
+            {hasUserMessages ? (
+              <button type="button" className="ai-chat-composer__secondary" onClick={() => setShowStarterPrompts((current) => !current)}>
+                {showStarterPrompts ? 'Hide starter prompts' : 'Starter prompts'}
+              </button>
+            ) : null}
+          </div>
           <form className="ai-chat-composer__form" onSubmit={handleSubmit}>
             <input
               className="ai-chat-composer__input"
