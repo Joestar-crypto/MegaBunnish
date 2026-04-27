@@ -126,7 +126,8 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
       });
 
       const payload = (await response.json()) as AdvisorResponse;
-      if (!response.ok || !payload.answer) {
+      const answer = payload.answer;
+      if (!response.ok || !answer) {
         throw new Error(payload.error || 'The AI advisor could not answer right now.');
       }
 
@@ -143,7 +144,7 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
         {
           id: `assistant-${Date.now()}`,
           role: 'assistant',
-          content: payload.answer,
+          content: answer,
           recommendations: payload.recommendations ?? []
         }
       ]);

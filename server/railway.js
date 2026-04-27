@@ -35,6 +35,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 import { createServer } from 'node:http';
+import aiChatHandler from '../api/ai-chat';
+import aiAdvisorHandler from '../api/ai-advisor';
 import subscriptionsHandler from '../api/event-alert-subscriptions';
 import sendEventAlertsHandler from '../api/send-event-alerts';
 var PORT = readPort(process.env.PORT);
@@ -180,9 +182,13 @@ function routeRequest(request, response) {
                     }
                     handler = pathname === '/api/event-alert-subscriptions'
                         ? subscriptionsHandler
-                        : pathname === '/api/send-event-alerts'
-                            ? sendEventAlertsHandler
-                            : null;
+                        : pathname === '/api/ai-chat'
+                            ? aiChatHandler
+                            : pathname === '/api/ai-advisor'
+                                ? aiAdvisorHandler
+                                : pathname === '/api/send-event-alerts'
+                                    ? sendEventAlertsHandler
+                                    : null;
                     if (!handler) {
                         sendJson(response, 404, { error: 'Not found.' });
                         return [2 /*return*/];

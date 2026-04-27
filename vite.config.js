@@ -36,13 +36,26 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import aiChatHandler from './api/ai-chat';
 import basicSsl from '@vitejs/plugin-basic-ssl';
+import aiAdvisorHandler from './api/ai-advisor';
 import eventAlertSubscriptionsHandler from './api/event-alert-subscriptions';
 import sendEventAlertsHandler from './api/send-event-alerts';
-var LOCAL_API_HANDLERS = new Map([
-    ['/api/event-alert-subscriptions', eventAlertSubscriptionsHandler],
-    ['/api/send-event-alerts', sendEventAlertsHandler]
-]);
+function resolveLocalApiHandler(pathname) {
+    if (pathname === '/api/ai-chat') {
+        return aiChatHandler;
+    }
+    if (pathname === '/api/ai-advisor') {
+        return aiAdvisorHandler;
+    }
+    if (pathname === '/api/event-alert-subscriptions') {
+        return eventAlertSubscriptionsHandler;
+    }
+    if (pathname === '/api/send-event-alerts') {
+        return sendEventAlertsHandler;
+    }
+    return null;
+}
 function readRequestBody(request) {
     return new Promise(function (resolve, reject) {
         var chunks = [];
@@ -107,7 +120,7 @@ function attachLocalApiMiddleware(server) {
                         return [2 /*return*/];
                     }
                     url = new URL(request.url, 'https://localhost');
-                    handler = LOCAL_API_HANDLERS.get(url.pathname);
+                    handler = resolveLocalApiHandler(url.pathname);
                     if (!handler) {
                         next();
                         return [2 /*return*/];
