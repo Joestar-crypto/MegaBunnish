@@ -69,6 +69,8 @@ type RankedProject = {
 };
 export declare class AiAdvisorConfigError extends Error {
 }
+declare function isMemeCulturePrompt(query: string): boolean;
+declare function isSeriousTechnicalPrompt(query: string): boolean;
 declare function detectIntent(query: string): IntentProfile;
 declare function selectProjects(message: string, history: AdvisorChatMessage[]): {
     ranked: RankedProject[];
@@ -79,9 +81,12 @@ declare function buildContextBlock(projects: RankedProject[], intent?: IntentPro
     sourceEventIds: string[];
 };
 declare function buildPrompt(message: string, history: AdvisorChatMessage[], contextText: string): {
-    role: string;
-    content: string;
-}[];
+    messages: {
+        role: string;
+        content: string;
+    }[];
+    memeMode: boolean;
+};
 export declare function generateAiAdvisorReply(input: {
     message: string;
     history?: AdvisorChatMessage[];
@@ -92,5 +97,7 @@ export declare const __testables: {
     selectProjects: typeof selectProjects;
     buildContextBlock: typeof buildContextBlock;
     buildPrompt: typeof buildPrompt;
+    isMemeCulturePrompt: typeof isMemeCulturePrompt;
+    isSeriousTechnicalPrompt: typeof isSeriousTechnicalPrompt;
 };
 export {};

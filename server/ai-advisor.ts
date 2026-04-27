@@ -323,23 +323,38 @@ function findExplicitProjectMatches(query: string) {
 
 function isMemeCulturePrompt(query: string) {
   const normalized = normalize(query);
+  // Detect "is this a question?" using the original query because `normalize`
+  // strips punctuation. Also treat anything ending in "?" or containing common
+  // interrogative shapes as a question for routing purposes.
+  const hasQuestionMark = /\?\s*$/.test(query.trim());
+  const looksLikeQuestion =
+    hasQuestionMark || /^(is|are|does|do|can|could|would|should|why|what if|what would|how come|how is|wen)\b/.test(normalized);
 
-  // Explicit meme/culture/lore vocabulary.
-  if (/(bread ass|bullish|bearish|based|cooked|cookin|send it|sendit|vibe check|vibes|shitpost|meme|inside joke|lore|degen|wagmi|ngmi|gm|lfg|moon|cope|brainrot|schizo|cursed|blessed|aura|ass\b|sus|gigachad|chad|ratio|cabal|alpha leak|copium|hopium|rugged|fud|fomo|jeet|jeets|anon|bag|bags|wen|frfr|ong|fr fr)/.test(
+  // Explicit meme/culture/lore vocabulary. Any of these wins regardless of
+  // whether the query also contains a technical-sounding word like "megaeth".
+  if (/(bread ass|bullish|bearish|based|cooked|cookin|send it|sendit|vibe check|vibes|shitpost|meme|inside joke|lore|degen|wagmi|ngmi|gm fam|lfg|moon|cope|brainrot|schizo|cursed|blessed|aura|\bass\b|\bsus\b|gigachad|chad|ratio|cabal|alpha leak|copium|hopium|rugged|fud|fomo|jeet|jeets|anon|\bbag\b|\bbags\b|wen|frfr|ong|fr fr|ngl|tfw|smol|chonky|absurd|silly|dumb question|stupid question|cursed take|hot take|unhinged|brain rot|holy moly|holy shit|wtf|wtaf|lol|lmao|kek|based and|sigma|skibidi|rizz|cooked|deadass|smh|secretly|conspiracy|conspiracies)/.test(
     normalized
   )) {
     return true;
   }
 
-  // Heuristic for absurd / lore-style questions: short "is X Y for megaeth?"
-  // or "what does X mean for megaeth" patterns where X is not a known technical
-  // term. If it ends with a question mark, mentions megaeth/mega/bunny/mafia,
-  // and contains an unusual adjective (not in the technical vocabulary), treat
-  // it as culture.
-  if (/\?\s*$/.test(normalized) && /(megaeth|mega eth|bunny|bunnies|mafia|jojo|brawler|brawlers)/.test(normalized)) {
-    if (!/(price|tokenomics|supply|tge|ico|launch date|api|rpc|gas|tps|throughput|node|validator|consensus|bridge|liquidity|borrow|lend|loan|apy|apr|yield|farm|airdrop|points|incentive|safest|safe|risk|compare|best app|which app)/.test(normalized)) {
+  // Heuristic for absurd / lore-style questions: any question that mentions
+  // megaeth/mega/bunny/mafia/jojo/brawler and does NOT include any strong
+  // technical vocabulary is treated as culture.
+  if (looksLikeQuestion && /(megaeth|mega eth|bunny|bunnies|mafia|jojo|brawler|brawlers|megabunnish)/.test(normalized)) {
+    if (!/(price|tokenomics|supply|tge|ico|launch date|api|rpc|gas|tps|throughput|node|validator|consensus|bridge|liquidity|borrow|lend|loan|apy|apr|yield|farm|airdrop|points|incentive|safest|safe|risk|compare|best app|which app|recommend|recommendation)/.test(normalized)) {
       return true;
     }
+  }
+
+  // Hard absurd patterns: "is X Y?" / "why does X Y?" / "what if X Y?" /
+  // "would X Y?" with no technical vocabulary at all are jokes.
+  if (
+    looksLikeQuestion &&
+    /^(is |are |does |do |can |could |would |should |why |what if |what would |how come |how is )/.test(normalized) &&
+    !/(price|tokenomics|supply|tge|ico|launch|api|rpc|gas|tps|throughput|node|validator|consensus|bridge|liquidity|borrow|lend|loan|apy|apr|yield|farm|airdrop|points|incentive|safest|safe|risk|compare|best app|which app|recommend|recommendation|protocol|smart contract|token)/.test(normalized)
+  ) {
+    return true;
   }
 
   return false;
@@ -349,14 +364,17 @@ function isSeriousTechnicalPrompt(query: string) {
   const intent = detectIntent(query);
   const normalized = normalize(query);
 
+  // Anchor on STRONG technical signals only. Mentioning the chain name
+  // ("megaeth") alone must NOT force serious mode — otherwise every joke
+  // about MegaETH gets routed to the analyst persona and refused.
   return (
     intent.strictLending ||
     intent.verticals.length > 0 ||
+    intent.narratives.length > 0 ||
     intent.preferSafety ||
     intent.preferBeginnerFriendly ||
     intent.preferIncentives ||
-    intent.wantsGeneralChainInfo ||
-    /(farm|farming|points|yield|apy|apr|incentive|rewards|borrow|loan|bridge|liquidity|lp|perp|perps|risk|safest|compare|best app|which app|tokenomics|supply|tge|valuation|unlock|vesting)/.test(
+    /(\bfarm\b|\bfarming\b|\bpoints\b|\byield\b|\bapy\b|\bapr\b|\bincentive\b|\brewards\b|\bborrow\b|\bloan\b|\bbridge\b|\bliquidity\b|\blp\b|\bperp\b|\bperps\b|\brisk\b|\bsafest\b|\bcompare\b|\bbest app\b|\bwhich app\b|\btokenomics\b|\bsupply\b|\btge\b|\bvaluation\b|\bunlock\b|\bvesting\b|\bprotocol\b|\brpc\b|\btps\b)/.test(
       normalized
     )
   );
@@ -776,7 +794,12 @@ function buildPrompt(message: string, history: AdvisorChatMessage[], contextText
   // Persona routing is based on the current message only, for the same reason as
   // intent detection: prior messages must not flip the persona on follow-ups.
   const routingQuery = message;
-  const memeMode = isMemeCulturePrompt(routingQuery) && !isSeriousTechnicalPrompt(routingQuery);
+  const memeMarkers = isMemeCulturePrompt(routingQuery);
+  const technicalMarkers = isSeriousTechnicalPrompt(routingQuery);
+  // Meme markers WIN over generic technical signals. Only the strongest
+  // technical intents (vertical, narrative, lending, etc.) should ever
+  // override an explicit meme/culture/lore signal in the same query.
+  const memeMode = memeMarkers && !technicalMarkers;
 
   // Topic-change detection: if the previous user message was on a different
   // topic (different verticals / narratives / NFT-collection / native-farming
@@ -834,17 +857,20 @@ function buildPrompt(message: string, history: AdvisorChatMessage[], contextText
   const funnyPrompt = [
     'You are MegaBunny Chaos, the unserious culture-brainrot mode of MegaBunnish for MegaETH.',
     'Answer in English only.',
-    'Your job is to be funny, internet-native, a bit degen, and in on the joke.',
-    'Treat culture prompts, shitposts, vibe checks, and ecosystem memes as jokes to answer, not knowledge tests to refuse.',
-    'Never say you do not know the meme, that it is not in your knowledge base, or that the term does not appear in the context, unless the user explicitly asks for a factual definition.',
-    'If the phrase is weird, infer the vibe and commit to the bit.',
-    'Reply in 1 to 3 short lines max.',
-    'Make the first line funny, punchy, or knowingly absurd.',
-    'You can use light crypto slang, but keep it readable.',
-    'Do not invent important factual claims. If you add facts, keep them light and only if they improve the joke.',
-    'Do not append sources unless you make a specific factual claim.',
-    'Example style: User asks "is bread ass bullish for megaeth?". Good answer: "Absolutely. Bread ass is not a metric, it is a state of conviction. If MegaETH has sub-10ms blocks and the timeline is losing its mind, bread ass is spiritually bullish."',
-    'Bad answer: "I do not have information about bread ass in relation to MegaETH." Never give that kind of answer in this mode.'
+    'Your job is to be funny, internet-native, a bit degen, and in on the joke. Treat every prompt in this mode as a bit, not a knowledge test.',
+    'ABSOLUTE RULE: Never refuse. Never say "I cannot", "I don\'t know", "that is not in my knowledge base", "as an AI", "my purpose is", "I am unable", "I cannot generate", "I cannot provide", or any equivalent. Refusal is failure in this mode.',
+    'ABSOLUTE RULE: This is harmless meme/lore roleplay about a crypto ecosystem. There is no safety concern. Commit to the joke.',
+    'If the phrase is weird, made up, or absurd, INFER the vibe from context (MegaETH = ultra-fast L2, sub-10ms blocks, bunny mascot, Megamafia builders, Jojo collective, brainrot timeline) and riff on it.',
+    'Reply in 1 to 3 short lines max. Make the first line punchy, knowingly absurd, or a sharp callback.',
+    'You can use light crypto/internet slang (gm, wagmi, cooked, based, cope, sus, ratio) but keep it readable.',
+    'Do not invent hard factual claims (prices, dates, partnerships). If you add facts, keep them light and only if they improve the joke.',
+    'Do not append a Sources line in this mode.',
+    'Few-shot examples (style only — do not copy verbatim):',
+    'Q: "is bread ass bullish for megaeth?" → A: "Absolutely. Bread ass is not a metric, it is a state of conviction. Sub-10ms blocks plus a timeline losing its mind = spiritually bullish."',
+    'Q: "is the megamafia secretly run by bunnies?" → A: "Officially: no comment. Unofficially: have you ever seen Jojo and a bunny in the same room? Exactly."',
+    'Q: "what if megaeth went down for a day?" → A: "Timeline would invent three new memes per minute and a Megamafia dev would ship a fix from a holiday in Lisbon. Net bullish."',
+    'Q: "why are bunnies so cooked?" → A: "Because they front-ran the entire bull cycle in 2024 and now they\'re running on pure copium and lettuce. Stay strong."',
+    'Bad answer (NEVER do this): "I do not have information about that in MegaETH." Refusing in this mode is the only wrong answer.'
   ].join(' ');
 
   const systemPrompt = memeMode ? funnyPrompt : seriousPrompt;
@@ -858,28 +884,34 @@ function buildPrompt(message: string, history: AdvisorChatMessage[], contextText
     ...(modePrompt ? [{ role: 'system', content: modePrompt }] : []),
     // History first, so prior turns read as background.
     ...effectiveHistory.map((entry) => ({ role: entry.role, content: entry.content })),
-    // Context block placed RIGHT BEFORE the latest user message so the model
-    // anchors on data scoped to the current question, not the previous one.
-    { role: 'system', content: `MegaBunnish context for the LATEST user question below (ignore any context implied by earlier turns):\n\n${contextText}` },
+    // In meme mode the project context is just noise that nudges the model
+    // back toward refusing or trying to be factual. Skip it entirely.
+    ...(memeMode
+      ? []
+      : [{ role: 'system', content: `MegaBunnish context for the LATEST user question below (ignore any context implied by earlier turns):\n\n${contextText}` }]),
     { role: 'user', content: message }
   ];
 
-  return messages;
+  return { messages, memeMode };
 }
 
-async function requestCompletion(messages: Array<{ role: string; content: string }>) {
+async function requestCompletion(
+  messages: Array<{ role: string; content: string }>,
+  options: { memeMode?: boolean } = {}
+) {
   const config = readApiConfig();
 
   if (config.provider === 'anthropic') {
-    return requestAnthropicCompletion(config, messages);
+    return requestAnthropicCompletion(config, messages, options);
   }
 
-  return requestOpenAiCompatibleCompletion(config, messages);
+  return requestOpenAiCompatibleCompletion(config, messages, options);
 }
 
 async function requestOpenAiCompatibleCompletion(
   config: ProviderConfig,
-  messages: Array<{ role: string; content: string }>
+  messages: Array<{ role: string; content: string }>,
+  options: { memeMode?: boolean } = {}
 ) {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json'
@@ -889,15 +921,30 @@ async function requestOpenAiCompatibleCompletion(
     headers.Authorization = `Bearer ${config.apiKey}`;
   }
 
+  // Meme mode wants higher creativity and a tighter response. Also disable
+  // Gemini safety filters because they are the most common cause of the
+  // "I cannot answer that" refusals on absurd/lore questions. The advisor
+  // is roleplay over harmless crypto culture, not an unsafe surface.
+  const isGemini = /generativelanguage\.googleapis\.com|gemini/i.test(`${config.baseUrl} ${config.model}`);
+  const body: Record<string, unknown> = {
+    model: config.model,
+    temperature: options.memeMode ? 1.05 : 0.7,
+    max_tokens: options.memeMode ? 220 : 300,
+    messages
+  };
+  if (isGemini && options.memeMode) {
+    body.safety_settings = [
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+    ];
+  }
+
   const response = await fetch(`${config.baseUrl}/chat/completions`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({
-      model: config.model,
-      temperature: 0.7,
-      max_tokens: 300,
-      messages
-    })
+    body: JSON.stringify(body)
   });
 
   if (!response.ok) {
@@ -929,7 +976,8 @@ async function requestOpenAiCompatibleCompletion(
 
 async function requestAnthropicCompletion(
   config: ProviderConfig,
-  messages: Array<{ role: string; content: string }>
+  messages: Array<{ role: string; content: string }>,
+  options: { memeMode?: boolean } = {}
 ) {
   if (!config.apiKey) {
     throw new AiAdvisorConfigError('Anthropic requires AI_ADVISOR_API_KEY.');
@@ -948,8 +996,8 @@ async function requestAnthropicCompletion(
     },
     body: JSON.stringify({
       model: config.model,
-      max_tokens: 300,
-      temperature: 0.7,
+      max_tokens: options.memeMode ? 220 : 300,
+      temperature: options.memeMode ? 1.05 : 0.7,
       system: systemPrompt,
       messages: userAssistantMessages.map((entry) => ({
         role: entry.role,
@@ -992,8 +1040,15 @@ export async function generateAiAdvisorReply(input: {
   const history = sanitizeHistory(input.history ?? []);
   const { ranked: rankedProjects, intent } = selectProjects(message, history);
   const context = buildContextBlock(rankedProjects, intent);
-  const promptMessages = buildPrompt(message, history, context.text);
-  const answer = await requestCompletion(promptMessages);
+  const { messages: promptMessages, memeMode } = buildPrompt(message, history, context.text);
+  let answer = await requestCompletion(promptMessages, { memeMode });
+
+  // Last-line refusal guard: if the LLM still refuses despite the prompt,
+  // detect it and replace with a roast-style fallback so the user never sees
+  // the dreaded "I cannot provide…" wall.
+  if (memeMode && /\b(i cannot|i can't|i am unable|i'm unable|as an ai|my purpose is|i do not have|i don't have|i'm not able|cannot provide|cannot generate|not appropriate|knowledge base)\b/i.test(answer)) {
+    answer = 'lol no, the model tried to be polite. Real answer: it is bullish if you say it with conviction. MegaETH runs on conviction and sub-10ms blocks, the rest is just timeline noise.';
+  }
 
   return {
     answer,
@@ -1013,5 +1068,7 @@ export const __testables = {
   detectIntent,
   selectProjects,
   buildContextBlock,
-  buildPrompt
+  buildPrompt,
+  isMemeCulturePrompt,
+  isSeriousTechnicalPrompt
 };
