@@ -2050,38 +2050,38 @@ select {
 .ai-recommendation-card__ethos-inline--untrusted {
   background: linear-gradient(135deg, #7a0215, #ff2e49);
   border-color: #ff6a80;
-  color: #fff5f7;
+  color: #000;
   box-shadow: 0 0 0 1px rgba(255, 82, 120, 0.35);
 }
 
 .ai-recommendation-card__ethos-inline--questionable {
   background: linear-gradient(135deg, #b67200, #ffb11f);
   border-color: #ffc857;
-  color: #2b1600;
+  color: #000;
 }
 
 .ai-recommendation-card__ethos-inline--neutral {
   background: linear-gradient(135deg, #f8f7f0, #ffffff);
   border-color: rgba(0, 0, 0, 0.15);
-  color: #0e142b;
+  color: #000;
 }
 
 .ai-recommendation-card__ethos-inline--reputable {
   background: linear-gradient(135deg, #8ab0ff, #bdd4ff);
   border-color: #dfe9ff;
-  color: #03102d;
+  color: #000;
 }
 
 .ai-recommendation-card__ethos-inline--exemplary {
   background: linear-gradient(135deg, #1c86ff, #46b2ff);
   border-color: #72c8ff;
-  color: #03102d;
+  color: #000;
 }
 
 .ai-recommendation-card__ethos-inline--revered {
   background: linear-gradient(135deg, #172d66, #3049ad);
   border-color: #4f6fe1;
-  color: #e6edff;
+  color: #000;
 }
 
 .ai-recommendation-card__ethos-inline img {

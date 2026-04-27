@@ -209,7 +209,8 @@
       "telegram": "https://t.me/BrixDotMoney"
     },
     "logo": "/logos/Brix.webp",
-    "jojoInsight": "Brix is a macro/RWA app on MegaETH focused on tokenized emerging market assets, with iTRY and wiTRY tied to Turkish lira money market funds. Strong RWA angle, but not the cleanest match if you want specifically rental or real-estate exposure."
+    "jojoInsight": "Brix is a macro/RWA app on MegaETH focused on tokenized emerging market assets, with iTRY and wiTRY tied to Turkish lira money market funds. Strong RWA angle, but not the cleanest match if you want specifically rental or real-estate exposure.",
+    "isLive": true
   },
   {
     "id": "blitzo",
@@ -356,7 +357,7 @@
       "discord": "https://discord.com/invite/aave"
     },
     "logo": "/logos/Aave.webp",
-    "isLive": true
+    "isLive": false
   },
   {
     "id": "aurion",
@@ -431,7 +432,7 @@
       "twitter": "https://x.com/stompdotgg"
     },
     "logo": "/logos/Stomp.webp",
-    "isLive": true
+    "isLive": false
   },
   {
     "id": "rainmaker",
@@ -449,7 +450,7 @@
       "discord": "https://discord.com/invite/rainmakrxyz"
     },
     "logo": "/logos/RainMaker.webp",
-    "isLive": true
+    "isLive": false
   },
   {
     "id": "realtime",
@@ -539,7 +540,7 @@
       "twitter": "https://x.com/getubitel"
     },
     "logo": "/logos/Ubitel.webp",
-    "isLive": true
+    "isLive": false
   },
   {
     "id": "hunch",
@@ -829,7 +830,7 @@
     "linkedIds": [
       "megalio"
     ],
-    "isLive": true
+    "isLive": false
   },
   {
     "id": "lora-finance",
@@ -881,7 +882,7 @@
       "twitter": "https://x.com/SupernovaLabs_"
     },
     "logo": "/logos/Supernova.webp",
-    "isLive": true
+    "isLive": false
   },
   {
     "id": "nunchi",
@@ -950,7 +951,7 @@
       "discord": "https://discord.com/invite/rfgMebUeV4"
     },
     "logo": "/logos/SectorOne.webp",
-    "isLive": true
+    "isLive": false
   },
   {
     "id": "valhalla",
@@ -999,7 +1000,7 @@
       "twitter": "https://x.com/Tulpea_org"
     },
     "logo": "/logos/Tulpea.webp",
-    "isLive": true,
+    "isLive": false,
     "jojoInsight": "Tulpea is the clearest real-estate-flavored RWA app in the current MegaETH set. Their site pitches undercollateralized lending backed by real-world assets and explicitly shows rental real-estate investment and smart-collateralized real-estate credit use cases."
   },
   {
@@ -1414,7 +1415,7 @@
       "twitter": "https://x.com/OffshoreOnMega"
     },
     "logo": "/logos/Offshore.webp",
-    "isLive": true
+    "isLive": false
   },
   {
     "id": "syscall",
@@ -1968,7 +1969,8 @@
       "discord": "https://discord.com/invite/nextrare"
     },
     "logo": "/logos/NextRare.webp",
-    "jojoInsight": "A gacha app already live on mobile and desktop that looks pretty cool. Haven't tried it yet but it looks sick. Imo TCG is one of the most interesting narratives and we haven't seen much innovation or competition there, so love to see NextRare iterate!"
+    "jojoInsight": "A gacha app already live on mobile and desktop that looks pretty cool. Haven't tried it yet but it looks sick. Imo TCG is one of the most interesting narratives and we haven't seen much innovation or competition there, so love to see NextRare iterate!",
+    "isLive": true
   },
   {
     "id": "purrlend",
@@ -2041,4 +2043,3 @@
     "jojoInsight": "Omen is a trading app offering perps, prediction markets, and agent trading. Backed by the same team that backed Robinhood, this might be a sleeping giant who knows?"
   }
 ]
-
