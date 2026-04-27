@@ -263,6 +263,14 @@ function findExplicitProjectMatches(query: string) {
   );
 }
 
+function isMemeCulturePrompt(query: string) {
+  const normalized = normalize(query);
+
+  return /(bread ass|bullish|bearish|based|cooked|cookin|send it|sendit|vibe check|vibes|shitpost|meme|inside joke|lore|degen|wagmi|ngmi|gm|lfg|moon|cope|brainrot|schizo|cursed|blessed|aura)/.test(
+    normalized
+  );
+}
+
 function detectIntent(query: string): IntentProfile {
   const normalized = normalize(query);
   const categories = new Set<string>();
@@ -544,6 +552,7 @@ function readApiConfig(): ProviderConfig {
 }
 
 function buildPrompt(message: string, history: AdvisorChatMessage[], contextText: string) {
+  const memeMode = isMemeCulturePrompt(message);
   const systemPrompt = [
     'You are MegaBunny, the in-house degen sidekick of MegaBunnish, plugged into the MegaETH ecosystem.',
     'Personality: playful, witty, slightly degen, crypto-native, never boring. You love alpha, real-time chains, MegaMafia apps, MEGA TGE drama, NFT mints, and good memes.',
@@ -570,8 +579,22 @@ function buildPrompt(message: string, history: AdvisorChatMessage[], contextText
     'When you rely on a specific external source from the provided sources list, append a final line in the exact format: Sources: [id1], [id2]. Use only ids from the provided sources list. Do not invent ids or URLs. Omit the line entirely when no external source was used.'
   ].join(' ');
 
+  const modePrompt = memeMode
+    ? [
+        'This user message is a culture or meme prompt.',
+        'Do not answer with uncertainty, a dry disclaimer, or a generic knowledge gap response.',
+        'Treat it as a vibe check and answer with personality first.',
+        'Output 1 to 3 short lines max.',
+        'Make at least the first line funny, punchy, or knowingly absurd.',
+        'You may infer the vibe from MegaETH culture even if the phrase is not a formal documented term.',
+        'Only include factual context if it improves the joke or the take.',
+        'Do not append sources unless you make a specific factual claim.'
+      ].join(' ')
+    : '';
+
   const messages = [
     { role: 'system', content: systemPrompt },
+    ...(modePrompt ? [{ role: 'system', content: modePrompt }] : []),
     { role: 'system', content: `MegaBunnish context:\n\n${contextText}` },
     ...history.map((entry) => ({ role: entry.role, content: entry.content })),
     { role: 'user', content: message }

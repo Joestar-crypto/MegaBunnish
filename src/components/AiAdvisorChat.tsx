@@ -147,6 +147,19 @@ function getMinutesUntil(timestamp: number, now: number) {
   return Math.max(1, Math.ceil((timestamp - now) / 60000));
 }
 
+function getUtcResetCountdown(isoString: string | undefined, now: number) {
+  if (!isoString) {
+    return '';
+  }
+
+  const target = new Date(isoString).getTime();
+  if (!Number.isFinite(target) || target <= now) {
+    return '';
+  }
+
+  return formatCountdown(target, now);
+}
+
 export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => {
   const { allProjects, ethosScores, selectedProjectId, selectProject } = useConstellation();
   const [isOpen, setIsOpen] = useState(false);
@@ -276,10 +289,14 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
   const windowLimitedUntil = recentWindowTimestamps.length >= WINDOW_MESSAGE_LIMIT ? recentWindowTimestamps[0] + WINDOW_MS : 0;
   const spamCooldownActive = sessionGuard.cooldownUntil > clockMs;
   const hardDailyLimitReached = Boolean(budgetStatus?.blocked);
+  const windowCooldownActive = windowLimitedUntil > clockMs;
+  const dailyResetCountdown = getUtcResetCountdown(budgetStatus?.resetsAtUtc, clockMs);
   const bannerMessage = hardDailyLimitReached
-    ? 'Daily limit reached, back tomorrow.'
+    ? `Daily limit reached, back tomorrow${dailyResetCountdown ? ` (${dailyResetCountdown})` : ''}.`
     : spamCooldownActive
       ? `Too many rapid sends. Come back in ${formatCountdown(sessionGuard.cooldownUntil, clockMs)}.`
+      : windowCooldownActive
+        ? `You've reached the limit, come back in ${formatCountdown(windowLimitedUntil, clockMs)}.`
       : budgetStatus?.warning
         ? 'High traffic today, responses may be slower.'
         : null;
@@ -305,7 +322,7 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
     }
 
     if (hardDailyLimitReached) {
-      pushLocalAssistantMessage('Daily limit reached, back tomorrow.');
+      pushLocalAssistantMessage(`Daily limit reached, back tomorrow${dailyResetCountdown ? ` (${dailyResetCountdown})` : ''}.`);
       return;
     }
 
@@ -340,8 +357,7 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
     }
 
     if (windowLimitedUntil > now) {
-      const minutes = getMinutesUntil(windowLimitedUntil, now);
-      pushLocalAssistantMessage(`You\'ve reached the limit, come back in ${minutes} minute${minutes === 1 ? '' : 's'}.`);
+      pushLocalAssistantMessage(`You\'ve reached the limit, come back in ${formatCountdown(windowLimitedUntil, now)}.`);
       return;
     }
 
@@ -509,6 +525,12 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
             <p className="ai-chat-panel__eyebrow">AI advisor</p>
             <h2>MegaETH chat</h2>
             <p className="ai-chat-panel__usage">{remainingSessionMessages}/{SESSION_MESSAGE_LIMIT} messages left</p>
+            {windowCooldownActive ? (
+              <p className="ai-chat-panel__cooldown">Rolling limit resets in {formatCountdown(windowLimitedUntil, clockMs)}</p>
+            ) : null}
+            {hardDailyLimitReached && dailyResetCountdown ? (
+              <p className="ai-chat-panel__cooldown">Daily budget resets in {dailyResetCountdown}</p>
+            ) : null}
           </div>
           <button type="button" className="ai-chat-panel__close" onClick={() => setIsOpen(false)} aria-label="Close AI chat">
             x

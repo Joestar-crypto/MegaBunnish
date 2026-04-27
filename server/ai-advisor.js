@@ -227,6 +227,10 @@ function findExplicitProjectMatches(query) {
         return getProjectAliases(project).some(function (alias) { return normalizedQuery.includes(alias) || alias.includes(normalizedQuery); });
     });
 }
+function isMemeCulturePrompt(query) {
+    var normalized = normalize(query);
+    return /(bread ass|bullish|bearish|based|cooked|cookin|send it|sendit|vibe check|vibes|shitpost|meme|inside joke|lore|degen|wagmi|ngmi|gm|lfg|moon|cope|brainrot|schizo|cursed|blessed|aura)/.test(normalized);
+}
 function detectIntent(query) {
     var normalized = normalize(query);
     var categories = new Set();
@@ -482,6 +486,7 @@ function readApiConfig() {
     };
 }
 function buildPrompt(message, history, contextText) {
+    var memeMode = isMemeCulturePrompt(message);
     var systemPrompt = [
         'You are MegaBunny, the in-house degen sidekick of MegaBunnish, plugged into the MegaETH ecosystem.',
         'Personality: playful, witty, slightly degen, crypto-native, never boring. You love alpha, real-time chains, MegaMafia apps, MEGA TGE drama, NFT mints, and good memes.',
@@ -507,10 +512,23 @@ function buildPrompt(message, history, contextText) {
         'For token, ICO, public sale, TGE, or tokenomics questions, clearly separate disclosed facts from undisclosed details. State the 10B MEGA implied total supply when supply is asked, and cite the source.',
         'When you rely on a specific external source from the provided sources list, append a final line in the exact format: Sources: [id1], [id2]. Use only ids from the provided sources list. Do not invent ids or URLs. Omit the line entirely when no external source was used.'
     ].join(' ');
-    var messages = __spreadArray(__spreadArray([
-        { role: 'system', content: systemPrompt },
+    var modePrompt = memeMode
+        ? [
+            'This user message is a culture or meme prompt.',
+            'Do not answer with uncertainty, a dry disclaimer, or a generic knowledge gap response.',
+            'Treat it as a vibe check and answer with personality first.',
+            'Output 1 to 3 short lines max.',
+            'Make at least the first line funny, punchy, or knowingly absurd.',
+            'You may infer the vibe from MegaETH culture even if the phrase is not a formal documented term.',
+            'Only include factual context if it improves the joke or the take.',
+            'Do not append sources unless you make a specific factual claim.'
+        ].join(' ')
+        : '';
+    var messages = __spreadArray(__spreadArray(__spreadArray(__spreadArray([
+        { role: 'system', content: systemPrompt }
+    ], (modePrompt ? [{ role: 'system', content: modePrompt }] : []), true), [
         { role: 'system', content: "MegaBunnish context:\n\n".concat(contextText) }
-    ], history.map(function (entry) { return ({ role: entry.role, content: entry.content }); }), true), [
+    ], false), history.map(function (entry) { return ({ role: entry.role, content: entry.content }); }), true), [
         { role: 'user', content: message }
     ], false);
     return messages;

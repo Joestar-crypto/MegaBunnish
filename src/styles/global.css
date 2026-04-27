@@ -1652,6 +1652,12 @@ select {
   font-size: 0.78rem;
 }
 
+.ai-chat-panel__cooldown {
+  margin: 0.22rem 0 0;
+  color: rgba(255, 206, 107, 0.82);
+  font-size: 0.74rem;
+}
+
 .ai-chat-panel__close {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
