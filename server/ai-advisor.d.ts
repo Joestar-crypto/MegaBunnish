@@ -52,6 +52,8 @@ type IntentProfile = {
     preferIncentives: boolean;
     preferSafety: boolean;
     preferBeginnerFriendly: boolean;
+    preferNative: boolean;
+    wantsNftCollections: boolean;
     wantsGeneralChainInfo: boolean;
     keywords: string[];
 };

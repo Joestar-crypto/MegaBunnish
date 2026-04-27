@@ -62,6 +62,10 @@ import { randomUUID } from 'node:crypto';
 import { APP_EVENTS } from '../src/data/appEvents';
 import { ETHOS_PROFILE_OVERRIDES } from '../src/data/ethosManualProfiles';
 import rawProjects from '../src/data/projects.json';
+// Projects in the dataset that are NFT marketplaces or aggregators rather
+// than mintable NFT collections. When the user asks for collections to buy or
+// mint, these should not be surfaced as collections.
+var NFT_MARKETPLACE_IDS = new Set(['opensea', 'rarible', 'nextrare', 'magiceden']);
 var PROJECTS = rawProjects;
 var ETHOS_BY_PROJECT_ID = new Map(ETHOS_PROFILE_OVERRIDES.filter(function (entry) { return entry.projectId; }).map(function (entry) { return [
     entry.projectId,
@@ -284,6 +288,12 @@ function detectIntent(query) {
         preferIncentives: /(farm|yield|points|reward|incentive)/.test(normalized),
         preferSafety: /(safe|safest|safety|secure|securest|trusted|trust|reliable|risk|risky)/.test(normalized),
         preferBeginnerFriendly: /(new user|beginner|first time|first-time|starter|easy|simple)/.test(normalized),
+        // Farming / airdrop / points hunting is far more rewarding on MegaETH-native
+        // projects without a live token. Prefer Native, penalize non-Native.
+        preferNative: /\b(farm|farming|airdrop|airdrops|points|incentive|incentives|reward|rewards|allocation|eligibility|grind|grinding|sybil)\b/.test(normalized),
+        // "Best NFT collection to buy/mint" should return mintable collections,
+        // not marketplaces. Detect a collection-buying intent specifically.
+        wantsNftCollections: /\b(nft|nfts|pfp|pfps|jpeg|jpegs|collectible|collectibles)\b/.test(normalized) && /\b(collection|collections|mint|minting|buy|cop|cope|hold|flip|invest|cheapest|floor)\b/.test(normalized),
         wantsGeneralChainInfo: wantsGeneralChainInfo,
         keywords: tokenize(query)
     };
@@ -387,6 +397,29 @@ function scoreProject(project, query, intent) {
     }
     if (intent.preferLive && !project.isLive && !((_c = project.incentives) === null || _c === void 0 ? void 0 : _c.length) && !event) {
         score -= 8;
+    }
+    // Farming / airdrop intent: native MegaETH apps with no liquid token are the
+    // only ones worth grinding. Heavily favor Native projects, drop the rest.
+    if (intent.preferNative) {
+        if (project.categories.includes('Native')) {
+            score += 35;
+        }
+        else {
+            score -= 40;
+        }
+    }
+    // NFT collection intent: exclude marketplaces and aggregators outright;
+    // boost actual NFT collections (and especially native ones).
+    if (intent.wantsNftCollections) {
+        if (NFT_MARKETPLACE_IDS.has(project.id)) {
+            return null;
+        }
+        if (project.categories.includes('NFT')) {
+            score += 25;
+            if (project.categories.includes('Native')) {
+                score += 15;
+            }
+        }
     }
     if (intent.preferSafety || intent.preferBeginnerFriendly) {
         if (ethos) {
@@ -553,6 +586,8 @@ function buildPrompt(message, history, contextText) {
         'Use polished natural prose with complete sentences.',
         'Default to 2 to 5 short sentences, or up to 3 bullets for comparisons.',
         'When the user asks about farming, points, yield, rewards, safety, or app comparisons, be explicit about tradeoffs and risk.',
+        'CRITICAL: For farming, airdrops, points, or incentive grinding, recommend ONLY MegaETH-native projects (those tagged Native, Megamafia, or Jojo). Non-native projects (Aave, GMX, Lido, Stargate, OpenSea, etc.) already have liquid tokens and are far less rewarding to farm — never recommend them for airdrop/farming questions.',
+        'CRITICAL: When the user asks for NFT collections to buy, mint, or hold, recommend actual mintable collections (e.g. Glitchy Bunnies, Meganacci, Fluffle, Miniminds, Alzena). Never recommend NFT marketplaces (OpenSea, Rarible, NextRare, Magic Eden) as a "collection" — they are venues, not collections.',
         'When the user asks about safety, trust, reliability, or beginner-friendly choices, explicitly factor Ethos trust scores into the comparison, but never rely on Ethos alone.',
         'For token, ICO, public sale, TGE, or tokenomics questions, clearly separate disclosed facts from undisclosed details. State the 10B MEGA implied total supply when supply is asked, and cite the source.',
         'When you rely on a specific external source from the provided sources list, append a final line in the exact format: Sources: [id1], [id2]. Use only ids from the provided sources list. Do not invent ids or URLs. Omit the line entirely when no external source was used.'

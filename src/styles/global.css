@@ -2095,6 +2095,13 @@ select {
   padding: 1px;
 }
 
+/* Override `.ai-recommendation-card__title span` color so the score text
+   renders in black on top of the tier-colored badge background. */
+.ai-recommendation-card__title .ai-recommendation-card__ethos-inline,
+.ai-recommendation-card__title .ai-recommendation-card__ethos-inline span {
+  color: #000;
+}
+
 .ai-recommendation-card__x-link {
   display: inline-flex;
   align-items: center;
