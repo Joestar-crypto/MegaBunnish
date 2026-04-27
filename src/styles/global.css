@@ -1607,14 +1607,24 @@ select {
 
 @media (max-width: 768px) {
   .ai-chat-panel {
-    width: min(32rem, calc(100vw - 1rem));
-    max-height: min(76vh, 700px);
+    /* Anchor to the viewport on mobile instead of the top-right HUD shell so
+       the panel always sits inside the screen regardless of where the
+       launcher lives. */
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+    width: auto;
+    max-width: none;
+    max-height: none;
+    border-radius: 1.25rem;
   }
 }
 
 @media (max-width: 480px) {
   .ai-chat-panel {
-    width: min(28rem, calc(100vw - 1rem));
+    border-radius: 1rem;
   }
 }
 
@@ -1661,11 +1671,18 @@ select {
 .ai-chat-panel__close {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
-  width: 2rem;
-  height: 2rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  min-width: 2.4rem;
   background: rgba(255, 255, 255, 0.04);
   color: rgba(255, 255, 255, 0.72);
   cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
 }
 
 .ai-chat-panel__body {
@@ -2172,6 +2189,8 @@ select {
   background: rgba(255, 255, 255, 0.04);
   color: #f4f6ff;
   padding: 0.9rem 1rem;
+  /* Prevent iOS Safari from zooming the viewport when the input gains focus. */
+  font-size: max(16px, 0.95rem);
 }
 
 .ai-chat-composer__input::placeholder {
@@ -2226,35 +2245,96 @@ select {
 
 @media (max-width: 768px) {
   .ai-chat-panel {
-    top: 4.1rem;
-    left: 0.5rem;
-    right: 0.5rem;
-    bottom: 0.5rem;
-    width: auto;
+    /* On mobile the panel itself is fixed (rule above), so the body scroll
+       still works inside the panel. Header padding is also tightened. */
+  }
+
+  .ai-chat-panel__header {
+    padding: 0.85rem 0.85rem 0.7rem;
+    gap: 0.6rem;
+  }
+
+  .ai-chat-panel__header h2 {
+    font-size: 0.95rem;
+  }
+
+  .ai-chat-panel__body {
+    padding: 0.85rem;
+    gap: 0.7rem;
   }
 
   .ai-chat-launcher {
-    left: 0.5rem;
-    top: 0.5rem;
+    /* Tighten launcher label so the Ask AI pill fits next to the Ethos chip. */
+    padding: 0.36rem 0.6rem 0.36rem 0.4rem;
+    font-size: 0.82rem;
+    gap: 0.24rem;
+  }
+
+  .ai-chat-launcher__spark {
+    width: 1.7rem;
+    height: 1.7rem;
+  }
+
+  .ai-chat-launcher__spark svg {
+    width: 1rem;
+    height: 1rem;
   }
 
   .ai-chat-composer__form {
     grid-template-columns: 1fr;
   }
+
+  .ai-chat-composer__form button {
+    /* Full-width send button on mobile. */
+    padding: 0.95rem 1rem;
+    font-size: 1rem;
+  }
 }
 
 @media (max-width: 480px) {
   .ai-chat-panel__body {
-    padding: 0.85rem;
-  }
-
-  .ai-chat-launcher {
-    left: 0.5rem;
-    top: 0.5rem;
+    padding: 0.75rem;
   }
 
   .ai-chat-composer {
-    padding: 0 0.85rem 0.85rem;
+    padding: 0 0.75rem 0.75rem;
+  }
+
+  .ai-chat-composer__toolbar {
+    padding-top: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .ai-chat-composer__footer {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .ai-chat-empty {
+    padding: 0.85rem;
+  }
+
+  .ai-chat-empty h3 {
+    font-size: 0.98rem;
+  }
+
+  .ai-chat-message__bubble,
+  .ai-chat-message p {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .ai-chat-message--user p {
+    max-width: 92%;
+  }
+
+  .ai-recommendation-card {
+    padding: 0.8rem;
+  }
+
+  .ai-recommendation-card__project-link img {
+    width: 2.2rem;
+    height: 2.2rem;
   }
 }
 
