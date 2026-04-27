@@ -921,25 +921,17 @@ async function requestOpenAiCompatibleCompletion(
     headers.Authorization = `Bearer ${config.apiKey}`;
   }
 
-  // Meme mode wants higher creativity and a tighter response. Also disable
-  // Gemini safety filters because they are the most common cause of the
-  // "I cannot answer that" refusals on absurd/lore questions. The advisor
-  // is roleplay over harmless crypto culture, not an unsafe surface.
-  const isGemini = /generativelanguage\.googleapis\.com|gemini/i.test(`${config.baseUrl} ${config.model}`);
+  // Meme mode wants higher creativity and a tighter response. We do NOT send
+  // `safety_settings` here: Gemini's OpenAI-compat endpoint rejects it as an
+  // unknown field (HTTP 400 INVALID_ARGUMENT). Refusals that still slip
+  // through are caught by the refusal-guard regex in `generateAiAdvisorReply`
+  // and replaced with a hardcoded in-character fallback.
   const body: Record<string, unknown> = {
     model: config.model,
     temperature: options.memeMode ? 1.05 : 0.7,
     max_tokens: options.memeMode ? 220 : 300,
     messages
   };
-  if (isGemini && options.memeMode) {
-    body.safety_settings = [
-      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
-    ];
-  }
 
   const response = await fetch(`${config.baseUrl}/chat/completions`, {
     method: 'POST',

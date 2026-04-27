@@ -798,7 +798,7 @@ function requestCompletion(messages_1) {
 }
 function requestOpenAiCompatibleCompletion(config_1, messages_1) {
     return __awaiter(this, arguments, void 0, function (config, messages, options) {
-        var headers, isGemini, body, response, body_1, payload, content, text;
+        var headers, body, response, body_1, payload, content, text;
         var _a, _b, _c;
         if (options === void 0) { options = {}; }
         return __generator(this, function (_d) {
@@ -810,21 +810,12 @@ function requestOpenAiCompatibleCompletion(config_1, messages_1) {
                     if (config.apiKey) {
                         headers.Authorization = "Bearer ".concat(config.apiKey);
                     }
-                    isGemini = /generativelanguage\.googleapis\.com|gemini/i.test("".concat(config.baseUrl, " ").concat(config.model));
                     body = {
                         model: config.model,
                         temperature: options.memeMode ? 1.05 : 0.7,
                         max_tokens: options.memeMode ? 220 : 300,
                         messages: messages
                     };
-                    if (isGemini && options.memeMode) {
-                        body.safety_settings = [
-                            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-                            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-                            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-                            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
-                        ];
-                    }
                     return [4 /*yield*/, fetch("".concat(config.baseUrl, "/chat/completions"), {
                             method: 'POST',
                             headers: headers,
