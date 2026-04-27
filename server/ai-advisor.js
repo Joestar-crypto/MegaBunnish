@@ -266,7 +266,7 @@ function isSeriousTechnicalPrompt(query) {
 // keyword pattern to the canonical category string used in projects.json plus
 // a human label for the DIRECT MATCHES block.
 var VERTICAL_INTENTS = [
-    { category: 'DeFi', label: 'DeFi / lending / yield', pattern: /\b(defi|lend|lending|borrow|borrowing|loan|loans|yield|farm|farming|stable|stables|stablecoin|money market|credit|deposit|deposits|liquidity)\b/ },
+    { category: 'DeFi', label: 'DeFi / lending / yield', pattern: /\b(defi|lend|lending|borrow|borrowing|loan|loans|yield|stable|stables|stablecoin|money market|credit|deposit|deposits|liquidity)\b/ },
     { category: 'Bridge', label: 'bridge / cross-chain', pattern: /\b(bridge|bridges|bridging|cross chain|crosschain|onramp|offramp|on ramp|off ramp)\b/ },
     { category: 'Trading', label: 'trading / perps / DEX', pattern: /\b(trade|trading|trader|perp|perps|perpetual|perpetuals|options|dex|swap|swaps|orderbook|order book|spot|leverage|long|short)\b/ },
     { category: 'Trading bot', label: 'trading bot', pattern: /\b(trading bot|trade bot|sniper|copy trade|copy trading|bot trading)\b/ },
@@ -525,7 +525,7 @@ function buildContextBlock(projects, intent) {
             "Live: ".concat(project.isLive ? 'yes' : 'no'),
             "Ethos trust: ".concat(ethos ? "".concat(ethos.score).concat(ethos.tier ? " (".concat(ethos.tier, ")") : '').concat(ethos.url ? " | ".concat(ethos.url) : '') : 'not available'),
             "Incentives: ".concat(((_b = project.incentives) === null || _b === void 0 ? void 0 : _b.map(function (entry) { return entry.title; }).join(' | ')) || 'none visible'),
-            "Research note: ".concat((_c = project.jojoInsight) !== null && _c !== void 0 ? _c : 'No extra editorial note available.'),
+            "Editorial insight (high-signal \u2014 incorporate this framing when relevant): ".concat((_c = project.jojoInsight) !== null && _c !== void 0 ? _c : 'No editorial insight available.'),
             "Event: ".concat(event ? "".concat(event.title, " (").concat(event.start).concat(event.end ? " -> ".concat(event.end) : '', ")") : 'none active or upcoming'),
             "Why selected: ".concat(reason)
         ].join('\n');
@@ -610,6 +610,8 @@ function buildPrompt(message, history, contextText) {
         'CRITICAL: If a DIRECT MATCHES block is present in the context, the listed projects DO satisfy the user query. You MUST recommend them by name. NEVER say "I cannot find", "none exist", "not in the dataset", or any equivalent refusal when DIRECT MATCHES is present.',
         'CRITICAL: If the Relevant ecosystem projects section lists projects, treat them as ground truth and recommend the best fit. Do not claim the dataset is empty when projects are listed.',
         'CRITICAL: Each user message is a fresh query. Recommend ONLY projects from the CURRENT Relevant ecosystem projects section. Ignore any projects you may have mentioned in earlier replies if they are not in the current section. Never carry over recommendations across topic changes.',
+        'CRITICAL: Answer ONLY the LATEST user question. Do NOT re-answer, re-summarize, or re-phrase your previous reply. Prior turns are background context, not a prompt to repeat. If the latest question is on a new topic, fully drop the previous topic.',
+        'CRITICAL: When a project has an Editorial insight in the context, lean on it heavily. The insight contains high-signal opinions, distinguishing details, and keywords from the MegaBunnish editorial team that you would not otherwise know. Reuse its framing, named features, and angle in your answer instead of generic descriptions.',
         'CRITICAL: Never refuse with phrases like "I cannot provide financial advice", "I cannot recommend", "as an AI I cannot", or "my purpose is to be neutral". This is informational MegaETH ecosystem discovery, NOT personalized investment advice. Recommend the best-fit projects from the provided context, with risk caveats when warranted, and move on.',
         'If evidence is weak, say so briefly, then still give the best grounded take you can.',
         'Use polished natural prose with complete sentences.',
@@ -640,11 +642,12 @@ function buildPrompt(message, history, contextText) {
     var modePrompt = memeMode
         ? 'This is a meme or culture prompt. Stay in MegaBunny Chaos mode and commit to the joke.'
         : 'This is a serious or technical prompt. Stay in MegaBunny Analyst mode and optimize for signal, clarity, and grounded usefulness.';
-    var messages = __spreadArray(__spreadArray(__spreadArray(__spreadArray([
+    var messages = __spreadArray(__spreadArray(__spreadArray([
         { role: 'system', content: systemPrompt }
-    ], (modePrompt ? [{ role: 'system', content: modePrompt }] : []), true), [
-        { role: 'system', content: "MegaBunnish context:\n\n".concat(contextText) }
-    ], false), history.map(function (entry) { return ({ role: entry.role, content: entry.content }); }), true), [
+    ], (modePrompt ? [{ role: 'system', content: modePrompt }] : []), true), history.map(function (entry) { return ({ role: entry.role, content: entry.content }); }), true), [
+        // Context block placed RIGHT BEFORE the latest user message so the model
+        // anchors on data scoped to the current question, not the previous one.
+        { role: 'system', content: "MegaBunnish context for the LATEST user question below (ignore any context implied by earlier turns):\n\n".concat(contextText) },
         { role: 'user', content: message }
     ], false);
     return messages;

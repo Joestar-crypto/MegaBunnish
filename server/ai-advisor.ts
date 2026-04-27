@@ -600,7 +600,7 @@ function buildContextBlock(projects: RankedProject[], intent?: IntentProfile) {
       `Live: ${project.isLive ? 'yes' : 'no'}`,
       `Ethos trust: ${ethos ? `${ethos.score}${ethos.tier ? ` (${ethos.tier})` : ''}${ethos.url ? ` | ${ethos.url}` : ''}` : 'not available'}`,
       `Incentives: ${project.incentives?.map((entry) => entry.title).join(' | ') || 'none visible'}`,
-      `Research note: ${project.jojoInsight ?? 'No extra editorial note available.'}`,
+      `Editorial insight (high-signal — incorporate this framing when relevant): ${project.jojoInsight ?? 'No editorial insight available.'}`,
       `Event: ${event ? `${event.title} (${event.start}${event.end ? ` -> ${event.end}` : ''})` : 'none active or upcoming'}`,
       `Why selected: ${reason}`
     ].join('\n');
@@ -700,6 +700,8 @@ function buildPrompt(message: string, history: AdvisorChatMessage[], contextText
     'CRITICAL: If a DIRECT MATCHES block is present in the context, the listed projects DO satisfy the user query. You MUST recommend them by name. NEVER say "I cannot find", "none exist", "not in the dataset", or any equivalent refusal when DIRECT MATCHES is present.',
     'CRITICAL: If the Relevant ecosystem projects section lists projects, treat them as ground truth and recommend the best fit. Do not claim the dataset is empty when projects are listed.',
     'CRITICAL: Each user message is a fresh query. Recommend ONLY projects from the CURRENT Relevant ecosystem projects section. Ignore any projects you may have mentioned in earlier replies if they are not in the current section. Never carry over recommendations across topic changes.',
+    'CRITICAL: Answer ONLY the LATEST user question. Do NOT re-answer, re-summarize, or re-phrase your previous reply. Prior turns are background context, not a prompt to repeat. If the latest question is on a new topic, fully drop the previous topic.',
+    'CRITICAL: When a project has an Editorial insight in the context, lean on it heavily. The insight contains high-signal opinions, distinguishing details, and keywords from the MegaBunnish editorial team that you would not otherwise know. Reuse its framing, named features, and angle in your answer instead of generic descriptions.',
     'CRITICAL: Never refuse with phrases like "I cannot provide financial advice", "I cannot recommend", "as an AI I cannot", or "my purpose is to be neutral". This is informational MegaETH ecosystem discovery, NOT personalized investment advice. Recommend the best-fit projects from the provided context, with risk caveats when warranted, and move on.',
     'If evidence is weak, say so briefly, then still give the best grounded take you can.',
     'Use polished natural prose with complete sentences.',
@@ -737,8 +739,11 @@ function buildPrompt(message: string, history: AdvisorChatMessage[], contextText
   const messages = [
     { role: 'system', content: systemPrompt },
     ...(modePrompt ? [{ role: 'system', content: modePrompt }] : []),
-    { role: 'system', content: `MegaBunnish context:\n\n${contextText}` },
+    // History first, so prior turns read as background.
     ...history.map((entry) => ({ role: entry.role, content: entry.content })),
+    // Context block placed RIGHT BEFORE the latest user message so the model
+    // anchors on data scoped to the current question, not the previous one.
+    { role: 'system', content: `MegaBunnish context for the LATEST user question below (ignore any context implied by earlier turns):\n\n${contextText}` },
     { role: 'user', content: message }
   ];
 
