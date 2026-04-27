@@ -908,6 +908,49 @@ async function requestCompletion(
   return requestOpenAiCompatibleCompletion(config, messages, options);
 }
 
+// Transient upstream errors (model overloaded, gateway issues, rate limit).
+// We retry these with exponential backoff before bubbling up. Anything else
+// (4xx other than 429) is a real client error and is thrown immediately.
+const RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function fetchWithRetry(url: string, init: RequestInit, label: string) {
+  const maxAttempts = 4;
+  let lastErrorBody = '';
+  let lastStatus = 0;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    let response: Response;
+    try {
+      response = await fetch(url, init);
+    } catch (error) {
+      // Network-level failure: retry a couple of times then give up.
+      if (attempt < maxAttempts) {
+        await sleep(400 * 2 ** (attempt - 1));
+        continue;
+      }
+      throw error;
+    }
+    if (response.ok) {
+      return response;
+    }
+    lastStatus = response.status;
+    lastErrorBody = await response.text();
+    if (!RETRYABLE_STATUSES.has(response.status) || attempt === maxAttempts) {
+      // Friendlier message for the most common upstream issue (Gemini overload).
+      if (response.status === 503) {
+        throw new Error(
+          `${label} is temporarily overloaded upstream (503). Try again in a moment. Details: ${lastErrorBody.slice(0, 200) || response.statusText}`
+        );
+      }
+      throw new Error(`${label} request failed (${response.status}): ${lastErrorBody || response.statusText}`);
+    }
+    // 400ms, 800ms, 1600ms backoff with jitter.
+    const backoff = 400 * 2 ** (attempt - 1) + Math.floor(Math.random() * 200);
+    await sleep(backoff);
+  }
+  throw new Error(`${label} request failed (${lastStatus}): ${lastErrorBody}`);
+}
+
 async function requestOpenAiCompatibleCompletion(
   config: ProviderConfig,
   messages: Array<{ role: string; content: string }>,
@@ -933,16 +976,15 @@ async function requestOpenAiCompatibleCompletion(
     messages
   };
 
-  const response = await fetch(`${config.baseUrl}/chat/completions`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body)
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`AI advisor request failed (${response.status}): ${body || response.statusText}`);
-  }
+  const response = await fetchWithRetry(
+    `${config.baseUrl}/chat/completions`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body)
+    },
+    'AI advisor'
+  );
 
   const payload = (await response.json()) as {
     choices?: Array<{ message?: { content?: string | Array<{ type?: string; text?: string }> } }>;
@@ -979,29 +1021,28 @@ async function requestAnthropicCompletion(
   const userAssistantMessages = messages.filter((entry) => entry.role !== 'system');
   const systemPrompt = systemMessages.map((entry) => entry.content).join('\n\n');
 
-  const response = await fetch(`${config.baseUrl}/messages`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': config.apiKey,
-      'anthropic-version': '2023-06-01'
+  const response = await fetchWithRetry(
+    `${config.baseUrl}/messages`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': config.apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: config.model,
+        max_tokens: options.memeMode ? 220 : 300,
+        temperature: options.memeMode ? 1.05 : 0.7,
+        system: systemPrompt,
+        messages: userAssistantMessages.map((entry) => ({
+          role: entry.role,
+          content: entry.content
+        }))
+      })
     },
-    body: JSON.stringify({
-      model: config.model,
-      max_tokens: options.memeMode ? 220 : 300,
-      temperature: options.memeMode ? 1.05 : 0.7,
-      system: systemPrompt,
-      messages: userAssistantMessages.map((entry) => ({
-        role: entry.role,
-        content: entry.content
-      }))
-    })
-  });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(`AI advisor request failed (${response.status}): ${body || response.statusText}`);
-  }
+    'AI advisor'
+  );
 
   const payload = (await response.json()) as {
     content?: Array<{ type?: string; text?: string }>;

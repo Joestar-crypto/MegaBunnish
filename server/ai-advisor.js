@@ -796,9 +796,71 @@ function requestCompletion(messages_1) {
         });
     });
 }
+// Transient upstream errors (model overloaded, gateway issues, rate limit).
+// We retry these with exponential backoff before bubbling up. Anything else
+// (4xx other than 429) is a real client error and is thrown immediately.
+var RETRYABLE_STATUSES = new Set([408, 425, 429, 500, 502, 503, 504]);
+var sleep = function (ms) { return new Promise(function (resolve) { return setTimeout(resolve, ms); }); };
+function fetchWithRetry(url, init, label) {
+    return __awaiter(this, void 0, void 0, function () {
+        var maxAttempts, lastErrorBody, lastStatus, attempt, response, error_1, backoff;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    maxAttempts = 4;
+                    lastErrorBody = '';
+                    lastStatus = 0;
+                    attempt = 1;
+                    _a.label = 1;
+                case 1:
+                    if (!(attempt <= maxAttempts)) return [3 /*break*/, 11];
+                    response = void 0;
+                    _a.label = 2;
+                case 2:
+                    _a.trys.push([2, 4, , 7]);
+                    return [4 /*yield*/, fetch(url, init)];
+                case 3:
+                    response = _a.sent();
+                    return [3 /*break*/, 7];
+                case 4:
+                    error_1 = _a.sent();
+                    if (!(attempt < maxAttempts)) return [3 /*break*/, 6];
+                    return [4 /*yield*/, sleep(400 * Math.pow(2, (attempt - 1)))];
+                case 5:
+                    _a.sent();
+                    return [3 /*break*/, 10];
+                case 6: throw error_1;
+                case 7:
+                    if (response.ok) {
+                        return [2 /*return*/, response];
+                    }
+                    lastStatus = response.status;
+                    return [4 /*yield*/, response.text()];
+                case 8:
+                    lastErrorBody = _a.sent();
+                    if (!RETRYABLE_STATUSES.has(response.status) || attempt === maxAttempts) {
+                        // Friendlier message for the most common upstream issue (Gemini overload).
+                        if (response.status === 503) {
+                            throw new Error("".concat(label, " is temporarily overloaded upstream (503). Try again in a moment. Details: ").concat(lastErrorBody.slice(0, 200) || response.statusText));
+                        }
+                        throw new Error("".concat(label, " request failed (").concat(response.status, "): ").concat(lastErrorBody || response.statusText));
+                    }
+                    backoff = 400 * Math.pow(2, (attempt - 1)) + Math.floor(Math.random() * 200);
+                    return [4 /*yield*/, sleep(backoff)];
+                case 9:
+                    _a.sent();
+                    _a.label = 10;
+                case 10:
+                    attempt += 1;
+                    return [3 /*break*/, 1];
+                case 11: throw new Error("".concat(label, " request failed (").concat(lastStatus, "): ").concat(lastErrorBody));
+            }
+        });
+    });
+}
 function requestOpenAiCompatibleCompletion(config_1, messages_1) {
     return __awaiter(this, arguments, void 0, function (config, messages, options) {
-        var headers, body, response, body_1, payload, content, text;
+        var headers, body, response, payload, content, text;
         var _a, _b, _c;
         if (options === void 0) { options = {}; }
         return __generator(this, function (_d) {
@@ -816,20 +878,15 @@ function requestOpenAiCompatibleCompletion(config_1, messages_1) {
                         max_tokens: options.memeMode ? 220 : 300,
                         messages: messages
                     };
-                    return [4 /*yield*/, fetch("".concat(config.baseUrl, "/chat/completions"), {
+                    return [4 /*yield*/, fetchWithRetry("".concat(config.baseUrl, "/chat/completions"), {
                             method: 'POST',
                             headers: headers,
                             body: JSON.stringify(body)
-                        })];
+                        }, 'AI advisor')];
                 case 1:
                     response = _d.sent();
-                    if (!!response.ok) return [3 /*break*/, 3];
-                    return [4 /*yield*/, response.text()];
+                    return [4 /*yield*/, response.json()];
                 case 2:
-                    body_1 = _d.sent();
-                    throw new Error("AI advisor request failed (".concat(response.status, "): ").concat(body_1 || response.statusText));
-                case 3: return [4 /*yield*/, response.json()];
-                case 4:
                     payload = (_d.sent());
                     content = (_c = (_b = (_a = payload.choices) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.message) === null || _c === void 0 ? void 0 : _c.content;
                     if (typeof content === 'string') {
@@ -851,7 +908,7 @@ function requestOpenAiCompatibleCompletion(config_1, messages_1) {
 }
 function requestAnthropicCompletion(config_1, messages_1) {
     return __awaiter(this, arguments, void 0, function (config, messages, options) {
-        var systemMessages, userAssistantMessages, systemPrompt, response, body, payload, text;
+        var systemMessages, userAssistantMessages, systemPrompt, response, payload, text;
         var _a;
         if (options === void 0) { options = {}; }
         return __generator(this, function (_b) {
@@ -863,7 +920,7 @@ function requestAnthropicCompletion(config_1, messages_1) {
                     systemMessages = messages.filter(function (entry) { return entry.role === 'system'; });
                     userAssistantMessages = messages.filter(function (entry) { return entry.role !== 'system'; });
                     systemPrompt = systemMessages.map(function (entry) { return entry.content; }).join('\n\n');
-                    return [4 /*yield*/, fetch("".concat(config.baseUrl, "/messages"), {
+                    return [4 /*yield*/, fetchWithRetry("".concat(config.baseUrl, "/messages"), {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -880,16 +937,11 @@ function requestAnthropicCompletion(config_1, messages_1) {
                                     content: entry.content
                                 }); })
                             })
-                        })];
+                        }, 'AI advisor')];
                 case 1:
                     response = _b.sent();
-                    if (!!response.ok) return [3 /*break*/, 3];
-                    return [4 /*yield*/, response.text()];
+                    return [4 /*yield*/, response.json()];
                 case 2:
-                    body = _b.sent();
-                    throw new Error("AI advisor request failed (".concat(response.status, "): ").concat(body || response.statusText));
-                case 3: return [4 /*yield*/, response.json()];
-                case 4:
                     payload = (_b.sent());
                     text = (_a = payload.content) === null || _a === void 0 ? void 0 : _a.map(function (entry) { var _a; return (entry.type === 'text' || !entry.type ? (_a = entry.text) !== null && _a !== void 0 ? _a : '' : ''); }).join('').trim();
                     if (!text) {
