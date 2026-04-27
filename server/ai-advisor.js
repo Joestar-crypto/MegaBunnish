@@ -60,8 +60,17 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
 };
 import { randomUUID } from 'node:crypto';
 import { APP_EVENTS } from '../src/data/appEvents';
+import { ETHOS_PROFILE_OVERRIDES } from '../src/data/ethosManualProfiles';
 import rawProjects from '../src/data/projects.json';
 var PROJECTS = rawProjects;
+var ETHOS_BY_PROJECT_ID = new Map(ETHOS_PROFILE_OVERRIDES.filter(function (entry) { return entry.projectId; }).map(function (entry) { return [
+    entry.projectId,
+    {
+        score: entry.score,
+        tier: entry.tier,
+        url: entry.url
+    }
+]; }));
 var DEFAULT_MODEL = 'gpt-4.1-mini';
 var DEFAULT_BASE_URL = 'https://api.openai.com/v1';
 var DEFAULT_SUGGESTED_PROMPTS = [
@@ -132,33 +141,39 @@ function detectIntent(query) {
         strictAi: /(ai|agent|agents|autonomous)/.test(normalized),
         preferLive: /(live|now|active|today|current|right now)/.test(normalized),
         preferIncentives: /(farm|yield|points|reward|incentive)/.test(normalized),
+        preferSafety: /(safe|safest|safety|secure|securest|trusted|trust|reliable|risk|risky)/.test(normalized),
+        preferBeginnerFriendly: /(new user|beginner|first time|first-time|starter|easy|simple)/.test(normalized),
         keywords: tokenize(query)
     };
 }
 function buildReason(project, corpus, intent, event) {
     var _a, _b, _c, _d, _e, _f, _g, _h;
+    var ethos = ETHOS_BY_PROJECT_ID.get(project.id);
+    var ethosNote = ethos
+        ? " Ethos trust score: ".concat(ethos.score).concat(ethos.tier ? " (".concat(ethos.tier, ")") : '', ".")
+        : '';
     if (intent.strictLending && /lending|borrow|loan|credit/.test(corpus)) {
-        return (_a = project.jojoInsight) !== null && _a !== void 0 ? _a : 'Explicitly positioned around lending and borrowing in the current MegaBunnish data.';
+        return ((_a = project.jojoInsight) !== null && _a !== void 0 ? _a : 'Explicitly positioned around lending and borrowing in the current MegaBunnish data.') + ethosNote;
     }
     if (intent.strictBridge && project.categories.includes('Bridge')) {
-        return (_b = project.jojoInsight) !== null && _b !== void 0 ? _b : 'Bridge-focused project in the MegaETH ecosystem dataset.';
+        return ((_b = project.jojoInsight) !== null && _b !== void 0 ? _b : 'Bridge-focused project in the MegaETH ecosystem dataset.') + ethosNote;
     }
     if (intent.strictTrading && project.categories.includes('Trading')) {
-        return (_c = project.jojoInsight) !== null && _c !== void 0 ? _c : 'Trading-focused project with a clear product thesis in the dataset.';
+        return ((_c = project.jojoInsight) !== null && _c !== void 0 ? _c : 'Trading-focused project with a clear product thesis in the dataset.') + ethosNote;
     }
     if (intent.strictMobile && project.categories.includes('Mobile')) {
-        return (_d = project.jojoInsight) !== null && _d !== void 0 ? _d : 'Mobile-oriented product in the current MegaETH ecosystem list.';
+        return ((_d = project.jojoInsight) !== null && _d !== void 0 ? _d : 'Mobile-oriented product in the current MegaETH ecosystem list.') + ethosNote;
     }
     if (intent.strictAi && project.categories.includes('AI')) {
-        return (_e = project.jojoInsight) !== null && _e !== void 0 ? _e : 'AI project with a differentiated angle in the current dataset.';
+        return ((_e = project.jojoInsight) !== null && _e !== void 0 ? _e : 'AI project with a differentiated angle in the current dataset.') + ethosNote;
     }
     if ((_f = project.incentives) === null || _f === void 0 ? void 0 : _f.length) {
-        return "Visible incentive: ".concat(project.incentives[0].title, ".");
+        return "Visible incentive: ".concat(project.incentives[0].title, ".").concat(ethosNote);
     }
     if (event) {
-        return "Relevant event: ".concat(event.title, ".");
+        return "Relevant event: ".concat(event.title, ".").concat(ethosNote);
     }
-    return (_g = project.jojoInsight) !== null && _g !== void 0 ? _g : "".concat(project.name, " is a relevant ").concat((_h = project.categories[0]) !== null && _h !== void 0 ? _h : 'ecosystem', " project in the current site data.");
+    return ((_g = project.jojoInsight) !== null && _g !== void 0 ? _g : "".concat(project.name, " is a relevant ").concat((_h = project.categories[0]) !== null && _h !== void 0 ? _h : 'ecosystem', " project in the current site data.")) + ethosNote;
 }
 function findBestEvent(projectId, nowMs) {
     var _a, _b;
@@ -186,6 +201,7 @@ function scoreProject(project, query, intent) {
     var corpus = buildCorpus(project);
     var normalizedQuery = normalize(query);
     var event = findBestEvent(project.id, Date.now());
+    var ethos = ETHOS_BY_PROJECT_ID.get(project.id);
     var score = 0;
     if (intent.categories.some(function (category) { return project.categories.includes(category); })) {
         score += 30;
@@ -201,6 +217,9 @@ function scoreProject(project, query, intent) {
     }
     var matchedKeywords = intent.keywords.filter(function (token) { return token.length > 2 && corpus.includes(token); });
     score += Math.min(18, matchedKeywords.length * 3);
+    if (ethos) {
+        score += Math.max(0, Math.min(18, Math.round((ethos.score - 1100) / 40)));
+    }
     if (intent.strictLending) {
         if (/lending|borrow|loan|credit/.test(corpus)) {
             score += 40;
@@ -227,6 +246,28 @@ function scoreProject(project, query, intent) {
     if (intent.preferLive && !project.isLive && !((_c = project.incentives) === null || _c === void 0 ? void 0 : _c.length) && !event) {
         score -= 8;
     }
+    if (intent.preferSafety || intent.preferBeginnerFriendly) {
+        if (ethos) {
+            if (ethos.score >= 1600) {
+                score += 28;
+            }
+            else if (ethos.score >= 1400) {
+                score += 18;
+            }
+            else if (ethos.score >= 1200) {
+                score += 8;
+            }
+            else {
+                score -= 10;
+            }
+        }
+        else {
+            score -= 6;
+        }
+        if (project.categories.includes('Bridge') || project.categories.includes('DeFi')) {
+            score += 4;
+        }
+    }
     if (score < 18) {
         return null;
     }
@@ -252,6 +293,7 @@ function buildContextBlock(projects) {
         var _b, _c;
         var project = _a.project, reason = _a.reason;
         var event = findBestEvent(project.id, nowMs);
+        var ethos = ETHOS_BY_PROJECT_ID.get(project.id);
         if (event) {
             eventIds.add(event.id);
         }
@@ -259,6 +301,7 @@ function buildContextBlock(projects) {
             "Project: ".concat(project.name, " (").concat(project.id, ")"),
             "Categories: ".concat(project.categories.join(', ')),
             "Live: ".concat(project.isLive ? 'yes' : 'no'),
+            "Ethos trust: ".concat(ethos ? "".concat(ethos.score).concat(ethos.tier ? " (".concat(ethos.tier, ")") : '').concat(ethos.url ? " | ".concat(ethos.url) : '') : 'not available'),
             "Incentives: ".concat(((_b = project.incentives) === null || _b === void 0 ? void 0 : _b.map(function (entry) { return entry.title; }).join(' | ')) || 'none visible'),
             "Research note: ".concat((_c = project.jojoInsight) !== null && _c !== void 0 ? _c : 'No extra editorial note available.'),
             "Event: ".concat(event ? "".concat(event.title, " (").concat(event.start).concat(event.end ? " -> ".concat(event.end) : '', ")") : 'none active or upcoming'),
@@ -305,6 +348,11 @@ function buildPrompt(message, history, contextText) {
         'Use only the provided MegaBunnish context and conversation history.',
         'Never invent incentives, launches, token plans, live status, or opinions not grounded in the provided data.',
         'If the evidence is weak, say that directly.',
+        'Write in polished, natural prose with complete sentences.',
+        'Do not answer with compressed fragments, note dumps, or telegraphic phrasing.',
+        'Lead with a clear conclusion, then explain the ranking in well-written sentences.',
+        'For comparison questions, mention the top options first and explain why each one fits in one or two complete sentences.',
+        'When the user asks about safety, trust, reliability, or beginner-friendly choices, explicitly factor Ethos trust scores into the comparison, but do not rely on Ethos alone.',
         'When recommending projects, explain the distinction between explicit fit and broader fallback options when relevant.',
         'Keep answers concise but useful, usually one short paragraph plus up to three bullet points if needed.'
     ].join(' ');

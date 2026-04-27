@@ -14,6 +14,7 @@
     "api/**/*.ts",
     "server/**/*.ts",
     "src/data/appEvents.ts",
+    "src/data/ethosManualProfiles.ts",
     "src/data/projects.json"
   ]
 }
