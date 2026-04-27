@@ -139,7 +139,7 @@ function detectIntent(query: string): IntentProfile {
   }
 
   return {
-    categories: [...categories],
+    categories: Array.from(categories),
     strictLending: /(lend|lending|borrow|loan|credit)/.test(normalized),
     strictBridge: /(bridge|bridg|transfer|onramp|offramp)/.test(normalized),
     strictTrading: /(trade|trading|perp|perps|options|dex|swap)/.test(normalized),
@@ -297,7 +297,7 @@ function buildContextBlock(projects: RankedProject[]) {
 
   return {
     text: lines.join('\n\n'),
-    sourceEventIds: [...eventIds]
+    sourceEventIds: Array.from(eventIds)
   };
 }
 
