@@ -1537,12 +1537,11 @@ select {
   position: relative;
   display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem;
-  min-width: 8.9rem;
+  justify-content: flex-start;
+  gap: 0.42rem;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 999px;
-  padding: 0.4rem 0.68rem 0.4rem 0.48rem;
+  padding: 0.4rem 0.68rem 0.4rem 0.46rem;
   background: linear-gradient(180deg, rgba(8, 11, 22, 0.88), rgba(8, 11, 22, 0.76));
   color: rgba(244, 246, 255, 0.96);
   font-size: 0.88rem;
@@ -1838,6 +1837,8 @@ select {
   padding: 0.9rem 1rem;
   border-radius: 1rem;
   line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .ai-chat-message--assistant p {
@@ -1872,8 +1873,7 @@ select {
 }
 
 .ai-recommendation-card__topline,
-.ai-recommendation-card__meta,
-.ai-recommendation-card__actions {
+.ai-recommendation-card__meta {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1884,7 +1884,16 @@ select {
   justify-content: space-between;
 }
 
+.ai-recommendation-card__badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .ai-recommendation-card__quality,
+.ai-recommendation-card__ethos,
 .ai-recommendation-card__score,
 .ai-recommendation-card__meta span {
   display: inline-flex;
@@ -1900,6 +1909,11 @@ select {
   color: #8affd2;
 }
 
+.ai-recommendation-card__ethos {
+  background: rgba(113, 167, 255, 0.16);
+  color: #b8d0ff;
+}
+
 .ai-recommendation-card__score {
   background: rgba(255, 255, 255, 0.08);
   color: rgba(244, 246, 255, 0.75);
@@ -1911,18 +1925,74 @@ select {
   gap: 0.8rem;
 }
 
-.ai-recommendation-card__title img {
+.ai-recommendation-card__project-link {
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ai-recommendation-card__project-link img {
   width: 2.6rem;
   height: 2.6rem;
   border-radius: 0.9rem;
   object-fit: cover;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.ai-recommendation-card__project-link:hover img {
+  transform: translateY(-1px);
+  border-color: rgba(113, 167, 255, 0.42);
+}
+
+.ai-recommendation-card__heading-row {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  flex-wrap: wrap;
 }
 
 .ai-recommendation-card__title strong,
 .ai-recommendation-card__title span {
   display: block;
+}
+
+.ai-recommendation-card__ethos-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  color: rgba(244, 246, 255, 0.78);
+  font-size: 0.78rem;
+}
+
+.ai-recommendation-card__ethos-inline img {
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 50%;
+}
+
+.ai-recommendation-card__x-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  color: rgba(244, 246, 255, 0.58);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.ai-recommendation-card__x-link svg {
+  width: 0.88rem;
+  height: 0.88rem;
+  display: block;
+}
+
+.ai-recommendation-card__x-link:hover {
+  color: rgba(244, 246, 255, 0.9);
+  transform: translateY(-1px);
 }
 
 .ai-recommendation-card__title span,
@@ -1941,26 +2011,6 @@ select {
 .ai-recommendation-card__meta span {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.ai-recommendation-card__actions button,
-.ai-recommendation-card__actions a {
-  border: 1px solid rgba(78, 241, 255, 0.22);
-  border-radius: 0.9rem;
-  background: rgba(78, 241, 255, 0.08);
-  color: #eafcff;
-  padding: 0.55rem 0.8rem;
-  font-size: 0.82rem;
-  text-decoration: none;
-  cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
-}
-
-.ai-recommendation-card__actions button:hover,
-.ai-recommendation-card__actions a:hover {
-  border-color: rgba(78, 241, 255, 0.48);
-  background: rgba(78, 241, 255, 0.16);
-  transform: translateY(-1px);
 }
 
 .ai-chat-composer {

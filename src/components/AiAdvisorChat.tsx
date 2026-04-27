@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { ETHOS_PROFILE_OVERRIDES } from '../data/ethosManualProfiles';
 import { useConstellation } from '../state/constellation';
 
 type AiAdvisorChatProps = {
@@ -18,6 +19,12 @@ type ChatMessage = {
   content: string;
   recommendations?: ApiRecommendation[];
   isError?: boolean;
+};
+
+type RecommendationProject = {
+  project: ReturnType<typeof useConstellation>['allProjects'][number];
+  reason: string;
+  ethosScore?: number;
 };
 
 type AdvisorResponse = {
@@ -40,6 +47,10 @@ const STARTER_PROMPTS = [
   'Which mobile-first app should I try first?'
 ];
 
+const ETHOS_SCORE_FALLBACK = new Map(
+  ETHOS_PROFILE_OVERRIDES.filter((entry) => entry.projectId).map((entry) => [entry.projectId as string, entry.score])
+);
+
 const INITIAL_MESSAGE: ChatMessage = {
   id: 'assistant-intro',
   role: 'assistant',
@@ -48,7 +59,7 @@ const INITIAL_MESSAGE: ChatMessage = {
 };
 
 export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => {
-  const { allProjects, selectProject } = useConstellation();
+  const { allProjects, ethosScores, selectProject } = useConstellation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
@@ -246,12 +257,19 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
 
           <div className="ai-chat-thread">
             {messages.map((message) => {
-              const recommendationProjects = (message.recommendations ?? [])
-                .map((entry) => {
+              const recommendationProjects = (message.recommendations ?? []).reduce<RecommendationProject[]>(
+                (acc, entry) => {
                   const project = allProjects.find((candidate) => candidate.id === entry.projectId);
-                  return project ? { project, reason: entry.reason } : null;
-                })
-                .filter((entry): entry is { project: (typeof allProjects)[number]; reason: string } => Boolean(entry));
+                  if (!project) {
+                    return acc;
+                  }
+
+                  const ethosScore = ethosScores[project.id] ?? ETHOS_SCORE_FALLBACK.get(project.id);
+                  acc.push({ project, reason: entry.reason, ethosScore });
+                  return acc;
+                },
+                []
+              );
 
               return (
                 <article key={message.id} className={`ai-chat-message ai-chat-message--${message.role}`}>
@@ -260,18 +278,56 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
                   </p>
                   {recommendationProjects.length ? (
                     <div className="ai-chat-message__grid">
-                      {recommendationProjects.map(({ project, reason }) => (
+                      {recommendationProjects.map(({ project, reason, ethosScore }) => (
                         <section key={project.id} className="ai-recommendation-card">
                           <div className="ai-recommendation-card__topline">
                             <span className="ai-recommendation-card__quality">
                               {project.isLive ? 'Live' : project.incentives.length ? 'Incentivized' : 'Watchlist'}
                             </span>
-                            <span className="ai-recommendation-card__score">{project.primaryCategory}</span>
+                            <div className="ai-recommendation-card__badges">
+                              {typeof ethosScore === 'number' ? (
+                                <span className="ai-recommendation-card__ethos">Ethos {ethosScore}</span>
+                              ) : null}
+                              <span className="ai-recommendation-card__score">{project.primaryCategory}</span>
+                            </div>
                           </div>
                           <div className="ai-recommendation-card__title">
-                            <img src={project.logo} alt="" aria-hidden="true" />
+                            <button
+                              type="button"
+                              className="ai-recommendation-card__project-link"
+                              onClick={() => {
+                                selectProject(project.id);
+                                setIsOpen(false);
+                              }}
+                              aria-label={`Open ${project.name} details`}
+                              title={`Open ${project.name} details`}
+                            >
+                              <img src={project.logo} alt="" aria-hidden="true" />
+                            </button>
                             <div>
-                              <strong>{project.name}</strong>
+                              <div className="ai-recommendation-card__heading-row">
+                                <strong>{project.name}</strong>
+                                {typeof ethosScore === 'number' ? (
+                                  <span className="ai-recommendation-card__ethos-inline" title={`Ethos trust score ${ethosScore}`}>
+                                    <img src="/logos/Ethos.webp" alt="" aria-hidden="true" />
+                                    <span>{ethosScore}</span>
+                                  </span>
+                                ) : null}
+                                {project.links.twitter ? (
+                                  <a
+                                    className="ai-recommendation-card__x-link"
+                                    href={project.links.twitter}
+                                    target="_blank"
+                                    rel="noreferrer noopener"
+                                    aria-label={`Open ${project.name} on X`}
+                                    title={`Open ${project.name} on X`}
+                                  >
+                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                      <path d="M18.9 3H21l-4.59 5.25L21.81 21h-4.23l-3.31-4.95L9.94 21H7.83l4.9-5.6L2.19 3h4.34l2.99 4.48L13.46 3h2.11Zm-1.48 16h1.17L5.95 4.92H4.69L17.42 19Z" fill="currentColor" />
+                                    </svg>
+                                  </a>
+                                ) : null}
+                              </div>
                               <span>{project.categories.join(' · ')}</span>
                             </div>
                           </div>
@@ -279,26 +335,6 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
                           <div className="ai-recommendation-card__meta">
                             {project.isLive ? <span>Live now</span> : null}
                             {project.incentives.length ? <span>{project.incentives[0].title}</span> : null}
-                          </div>
-                          <div className="ai-recommendation-card__actions">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                selectProject(project.id);
-                                setIsOpen(false);
-                              }}
-                            >
-                              Open project
-                            </button>
-                            {project.links.site ? (
-                              <a href={project.links.site} target="_blank" rel="noreferrer noopener">
-                                Visit site
-                              </a>
-                            ) : project.links.twitter ? (
-                              <a href={project.links.twitter} target="_blank" rel="noreferrer noopener">
-                                Open X
-                              </a>
-                            ) : null}
                           </div>
                         </section>
                       ))}

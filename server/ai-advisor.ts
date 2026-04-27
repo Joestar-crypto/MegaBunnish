@@ -397,6 +397,7 @@ function buildPrompt(message: string, history: AdvisorChatMessage[], contextText
     'Write in polished, natural prose with complete sentences.',
     'Do not answer with compressed fragments, note dumps, or telegraphic phrasing.',
     'Lead with a clear conclusion, then explain the ranking in well-written sentences.',
+    'For any answer longer than three sentences, split the response into two or three short paragraphs with visible line breaks.',
     'For comparison questions, mention the top options first and explain why each one fits in one or two complete sentences.',
     'When the user asks about safety, trust, reliability, or beginner-friendly choices, explicitly factor Ethos trust scores into the comparison, but do not rely on Ethos alone.',
     'When recommending projects, explain the distinction between explicit fit and broader fallback options when relevant.',
