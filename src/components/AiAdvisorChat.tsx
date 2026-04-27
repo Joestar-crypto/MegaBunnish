@@ -27,6 +27,17 @@ type RecommendationProject = {
   ethosScore?: number;
 };
 
+type BudgetStatus = {
+  enabled: boolean;
+  key: string;
+  count: number;
+  softLimit: number;
+  hardLimit: number;
+  warning: boolean;
+  blocked: boolean;
+  resetsAtUtc: string;
+};
+
 type AdvisorResponse = {
   ok?: boolean;
   answer?: string;
@@ -34,12 +45,33 @@ type AdvisorResponse = {
   conversationId?: string;
   recommendations?: ApiRecommendation[];
   suggestedPrompts?: string[];
+  budget?: BudgetStatus;
+};
+
+type SessionGuardState = {
+  totalSent: number;
+  sentTimestamps: number[];
+  lastSentAt: number;
+  lastMessage: string;
+  cooldownUntil: number;
 };
 
 const API_URL =
   import.meta.env.VITE_AI_ADVISOR_API_URL?.trim() ||
   (import.meta.env.DEV ? 'http://localhost:3000/api/ai-chat' : '/api/ai-chat');
 const CONVERSATION_STORAGE_KEY = 'megabunnish-ai-conversation-id';
+const SESSION_GUARD_STORAGE_KEY = 'megabunnish-ai-session-guard';
+const SESSION_MESSAGE_LIMIT = 20;
+const WINDOW_MESSAGE_LIMIT = 10;
+const WINDOW_MS = 10 * 60 * 1000;
+const RAPID_FIRE_LIMIT = 5;
+const RAPID_FIRE_WINDOW_MS = 10 * 1000;
+const RAPID_FIRE_COOLDOWN_MS = 2 * 60 * 1000;
+const MIN_SEND_INTERVAL_MS = 1500;
+const MIN_MESSAGE_LENGTH = 3;
+const MAX_MESSAGE_LENGTH = 500;
+const MAX_MESSAGE_LENGTH_SENT = 400;
+const MAX_HISTORY_MESSAGES = 6;
 const STARTER_PROMPTS = [
   'Which lending protocol looks strongest on MegaETH right now?',
   'Compare the safest DeFi options for a new user.',
@@ -58,15 +90,76 @@ const INITIAL_MESSAGE: ChatMessage = {
     'Ask me anything about the MegaETH ecosystem. I answer from the projects and event data already present in MegaBunnish, and I will say when the evidence is thin.'
 };
 
+const DEFAULT_SESSION_GUARD_STATE: SessionGuardState = {
+  totalSent: 0,
+  sentTimestamps: [],
+  lastSentAt: 0,
+  lastMessage: '',
+  cooldownUntil: 0
+};
+
+function readSessionGuardState(): SessionGuardState {
+  if (typeof window === 'undefined') {
+    return DEFAULT_SESSION_GUARD_STATE;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(SESSION_GUARD_STORAGE_KEY);
+    if (!raw) {
+      return DEFAULT_SESSION_GUARD_STATE;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<SessionGuardState>;
+    return {
+      totalSent: Number(parsed.totalSent ?? 0) || 0,
+      sentTimestamps: Array.isArray(parsed.sentTimestamps)
+        ? parsed.sentTimestamps.filter((value): value is number => typeof value === 'number')
+        : [],
+      lastSentAt: Number(parsed.lastSentAt ?? 0) || 0,
+      lastMessage: typeof parsed.lastMessage === 'string' ? parsed.lastMessage : '',
+      cooldownUntil: Number(parsed.cooldownUntil ?? 0) || 0
+    };
+  } catch {
+    return DEFAULT_SESSION_GUARD_STATE;
+  }
+}
+
+function persistSessionGuardState(next: SessionGuardState) {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.setItem(SESSION_GUARD_STORAGE_KEY, JSON.stringify(next));
+}
+
+function formatCountdown(target: number, now: number) {
+  const diffMs = Math.max(0, target - now);
+  const totalSeconds = Math.ceil(diffMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (minutes <= 0) {
+    return `${seconds}s`;
+  }
+  return `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
+}
+
+function getMinutesUntil(timestamp: number, now: number) {
+  return Math.max(1, Math.ceil((timestamp - now) / 60000));
+}
+
 export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => {
   const { allProjects, ethosScores, selectedProjectId, selectProject } = useConstellation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
+  const [honeypot, setHoneypot] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>(STARTER_PROMPTS);
   const [showStarterPrompts, setShowStarterPrompts] = useState(false);
+  const [sessionGuard, setSessionGuard] = useState<SessionGuardState>(DEFAULT_SESSION_GUARD_STATE);
+  const [budgetStatus, setBudgetStatus] = useState<BudgetStatus | null>(null);
+  const [clockMs, setClockMs] = useState(() => Date.now());
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const previousSelectedProjectIdRef = useRef<string | null>(null);
   const restoreAfterDetailCloseRef = useRef(false);
@@ -77,6 +170,8 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
     if (storedConversationId) {
       setConversationId(storedConversationId);
     }
+
+    setSessionGuard(readSessionGuardState());
   }, []);
 
   useEffect(() => {
@@ -85,6 +180,15 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
     }
     window.localStorage.setItem(CONVERSATION_STORAGE_KEY, conversationId);
   }, [conversationId]);
+
+  useEffect(() => {
+    persistSessionGuardState(sessionGuard);
+  }, [sessionGuard]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockMs(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) {
@@ -99,8 +203,6 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
 
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight, behavior: 'smooth' });
   }, [isOpen, messages, isLoading]);
-
-  const hasUserMessages = useMemo(() => messages.some((entry) => entry.role === 'user'), [messages]);
 
   useEffect(() => {
     const previousSelectedProjectId = previousSelectedProjectIdRef.current;
@@ -131,21 +233,155 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
 
+  async function refreshBudgetStatus() {
+    try {
+      const response = await fetch(API_URL, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        return;
+      }
+
+      const payload = (await response.json()) as { budget?: BudgetStatus };
+      if (payload.budget) {
+        setBudgetStatus(payload.budget);
+      }
+    } catch {
+      // Keep chat usable if the budget status endpoint is temporarily unavailable.
+    }
+  }
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    void refreshBudgetStatus();
+  }, [isOpen]);
+
+  const hasUserMessages = useMemo(() => messages.some((entry) => entry.role === 'user'), [messages]);
+  const recentWindowTimestamps = useMemo(
+    () => sessionGuard.sentTimestamps.filter((timestamp) => clockMs - timestamp < WINDOW_MS),
+    [clockMs, sessionGuard.sentTimestamps]
+  );
+  const rapidFireTimestamps = useMemo(
+    () => sessionGuard.sentTimestamps.filter((timestamp) => clockMs - timestamp < RAPID_FIRE_WINDOW_MS),
+    [clockMs, sessionGuard.sentTimestamps]
+  );
+  const remainingSessionMessages = Math.max(0, SESSION_MESSAGE_LIMIT - sessionGuard.totalSent);
+  const windowLimitedUntil = recentWindowTimestamps.length >= WINDOW_MESSAGE_LIMIT ? recentWindowTimestamps[0] + WINDOW_MS : 0;
+  const spamCooldownActive = sessionGuard.cooldownUntil > clockMs;
+  const hardDailyLimitReached = Boolean(budgetStatus?.blocked);
+  const bannerMessage = hardDailyLimitReached
+    ? 'Daily limit reached, back tomorrow.'
+    : spamCooldownActive
+      ? `Too many rapid sends. Come back in ${formatCountdown(sessionGuard.cooldownUntil, clockMs)}.`
+      : budgetStatus?.warning
+        ? 'High traffic today, responses may be slower.'
+        : null;
+
+  function pushLocalAssistantMessage(content: string) {
+    setMessages((current) => [
+      ...current,
+      {
+        id: `assistant-local-${Date.now()}`,
+        role: 'assistant',
+        content,
+        isError: true
+      }
+    ]);
+  }
+
   async function sendMessage(rawMessage: string) {
     const message = rawMessage.trim();
+    const now = Date.now();
+
     if (!message || isLoading) {
       return;
     }
 
-    const history = messages.map(({ role, content }) => ({ role, content }));
+    if (hardDailyLimitReached) {
+      pushLocalAssistantMessage('Daily limit reached, back tomorrow.');
+      return;
+    }
+
+    if (honeypot.trim()) {
+      pushLocalAssistantMessage('That send looked automated, so I ignored it.');
+      return;
+    }
+
+    if (message.length < MIN_MESSAGE_LENGTH) {
+      pushLocalAssistantMessage('Make it at least 3 characters so I have something real to work with.');
+      return;
+    }
+
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      pushLocalAssistantMessage('Keep it under 500 characters and I am in.');
+      return;
+    }
+
+    if (message === sessionGuard.lastMessage) {
+      pushLocalAssistantMessage('Same exact prompt twice in a row is blocked. Tweak it a bit and send again.');
+      return;
+    }
+
+    if (now - sessionGuard.lastSentAt < MIN_SEND_INTERVAL_MS) {
+      pushLocalAssistantMessage('Slow down a touch. Wait 1.5 seconds between sends.');
+      return;
+    }
+
+    if (sessionGuard.totalSent >= SESSION_MESSAGE_LIMIT) {
+      pushLocalAssistantMessage('You have used all 20 messages for this session. Start a fresh session later and we can keep going.');
+      return;
+    }
+
+    if (windowLimitedUntil > now) {
+      const minutes = getMinutesUntil(windowLimitedUntil, now);
+      pushLocalAssistantMessage(`You\'ve reached the limit, come back in ${minutes} minute${minutes === 1 ? '' : 's'}.`);
+      return;
+    }
+
+    if (spamCooldownActive) {
+      pushLocalAssistantMessage(`You\'ve hit the cooldown. Come back in ${formatCountdown(sessionGuard.cooldownUntil, now)}.`);
+      return;
+    }
+
+    if (rapidFireTimestamps.length >= RAPID_FIRE_LIMIT) {
+      const nextState = {
+        ...sessionGuard,
+        cooldownUntil: now + RAPID_FIRE_COOLDOWN_MS
+      };
+      setSessionGuard(nextState);
+      pushLocalAssistantMessage(`You\'ve hit the cooldown. Come back in ${formatCountdown(nextState.cooldownUntil, now)}.`);
+      return;
+    }
+
+    const trimmedMessage = message.slice(0, MAX_MESSAGE_LENGTH_SENT);
+    const nextSessionGuard: SessionGuardState = {
+      totalSent: sessionGuard.totalSent + 1,
+      sentTimestamps: [...sessionGuard.sentTimestamps, now].filter((timestamp) => now - timestamp < WINDOW_MS),
+      lastSentAt: now,
+      lastMessage: message,
+      cooldownUntil: 0
+    };
+
+    // Local protection layer: session quota, rolling windows, duplicate blocking, and cooldowns.
+    setSessionGuard(nextSessionGuard);
+
+    const history = messages.map(({ role, content }) => ({ role, content })).slice(-MAX_HISTORY_MESSAGES);
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
-      content: message
+      content: trimmedMessage
     };
 
     setMessages((current) => [...current, userMessage]);
     setInput('');
+    setHoneypot('');
     setShowStarterPrompts(false);
     setIsLoading(true);
 
@@ -156,9 +392,10 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          message,
+          message: trimmedMessage,
           history,
-          conversationId
+          conversationId,
+          honeypot
         })
       });
 
@@ -175,6 +412,10 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
               : `The AI advisor request failed with status ${response.status}.`
           );
         }
+      }
+
+      if (payload.budget) {
+        setBudgetStatus(payload.budget);
       }
 
       const answer = payload.answer;
@@ -216,6 +457,7 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
       ]);
     } finally {
       setIsLoading(false);
+      void refreshBudgetStatus();
     }
   }
 
@@ -266,12 +508,17 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
           <div>
             <p className="ai-chat-panel__eyebrow">AI advisor</p>
             <h2>MegaETH chat</h2>
+            <p className="ai-chat-panel__usage">{remainingSessionMessages}/{SESSION_MESSAGE_LIMIT} messages left</p>
           </div>
           <button type="button" className="ai-chat-panel__close" onClick={() => setIsOpen(false)} aria-label="Close AI chat">
             x
           </button>
         </div>
         <div className="ai-chat-panel__body" ref={bodyRef}>
+          {bannerMessage ? (
+            <div className={`ai-chat-banner ${hardDailyLimitReached ? 'ai-chat-banner--error' : ''}`}>{bannerMessage}</div>
+          ) : null}
+
           {!hasUserMessages ? (
             <section className="ai-chat-empty">
               <h3>Ask about lending, bridges, live DeFi, mobile apps, or any other MegaETH niche.</h3>
@@ -418,6 +665,7 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
                 {showStarterPrompts ? 'Hide starter prompts' : 'Starter prompts'}
               </button>
             ) : null}
+            <span className="ai-chat-composer__meta">{recentWindowTimestamps.length}/{WINDOW_MESSAGE_LIMIT} used in the last 10 min</span>
           </div>
           <form className="ai-chat-composer__form" onSubmit={handleSubmit}>
             <input
@@ -425,12 +673,27 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
               type="text"
               value={input}
               onChange={(event) => setInput(event.target.value)}
+              maxLength={MAX_MESSAGE_LENGTH}
               placeholder="Ask something like: which lending protocol should I farm?"
+              disabled={isLoading || hardDailyLimitReached || spamCooldownActive}
             />
-            <button type="submit" disabled={isLoading || !input.trim()}>
-              Send
+            <input
+              className="ai-chat-composer__honeypot"
+              type="text"
+              value={honeypot}
+              onChange={(event) => setHoneypot(event.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+            />
+            <button type="submit" disabled={isLoading || hardDailyLimitReached || spamCooldownActive || !input.trim()}>
+              {hardDailyLimitReached ? 'Closed' : isLoading ? 'Thinking...' : 'Send'}
             </button>
           </form>
+          <div className="ai-chat-composer__footer">
+            <span>{Math.max(0, MAX_MESSAGE_LENGTH - input.length)}/{MAX_MESSAGE_LENGTH} chars left</span>
+            {input.trim().length > MAX_MESSAGE_LENGTH_SENT ? <span>Long prompts are trimmed to 400 chars before sending.</span> : null}
+          </div>
         </div>
       </aside>
     </div>

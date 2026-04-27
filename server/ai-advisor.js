@@ -505,7 +505,7 @@ function requestOpenAiCompatibleCompletion(config, messages) {
                             body: JSON.stringify({
                                 model: config.model,
                                 temperature: 0.7,
-                                max_tokens: 360,
+                                max_tokens: 300,
                                 messages: messages
                             })
                         })];
@@ -559,7 +559,7 @@ function requestAnthropicCompletion(config, messages) {
                             },
                             body: JSON.stringify({
                                 model: config.model,
-                                max_tokens: 360,
+                                max_tokens: 300,
                                 temperature: 0.7,
                                 system: systemPrompt,
                                 messages: userAssistantMessages.map(function (entry) { return ({

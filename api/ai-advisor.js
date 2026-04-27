@@ -45,7 +45,15 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var _a, _b;
 import { AiAdvisorConfigError, generateAiAdvisorReply } from '../server/ai-advisor';
+var DAILY_SOFT_LIMIT = 500;
+var DAILY_HARD_LIMIT = 1000;
+var MAX_HISTORY_MESSAGES = 6;
+var MAX_MESSAGE_LENGTH = 400;
+var MIN_MESSAGE_LENGTH = 3;
+var UPSTASH_URL = (_a = process.env.UPSTASH_REDIS_REST_URL) === null || _a === void 0 ? void 0 : _a.trim();
+var UPSTASH_TOKEN = (_b = process.env.UPSTASH_REDIS_REST_TOKEN) === null || _b === void 0 ? void 0 : _b.trim();
 function parseBody(body) {
     if (typeof body === 'string') {
         try {
@@ -76,44 +84,177 @@ function sanitizeHistory(value) {
         }
         return { role: role, content: content };
     })
-        .filter(function (entry) { return Boolean(entry); });
+        .filter(function (entry) { return Boolean(entry); })
+        .slice(-MAX_HISTORY_MESSAGES);
+}
+function getBudgetKey(date) {
+    if (date === void 0) { date = new Date(); }
+    return "megabunnish:ai-budget:".concat(date.toISOString().slice(0, 10));
+}
+function getNextUtcMidnight(date) {
+    if (date === void 0) { date = new Date(); }
+    return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + 1, 0, 0, 0));
+}
+function runUpstashCommand(command) {
+    return __awaiter(this, void 0, void 0, function () {
+        var response, payload;
+        var _a;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    if (!UPSTASH_URL || !UPSTASH_TOKEN) {
+                        return [2 /*return*/, null];
+                    }
+                    return [4 /*yield*/, fetch(UPSTASH_URL, {
+                            method: 'POST',
+                            headers: {
+                                Authorization: "Bearer ".concat(UPSTASH_TOKEN),
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(command)
+                        })];
+                case 1:
+                    response = _b.sent();
+                    if (!response.ok) {
+                        throw new Error("Budget store request failed (".concat(response.status, ")."));
+                    }
+                    return [4 /*yield*/, response.json()];
+                case 2:
+                    payload = (_b.sent());
+                    return [2 /*return*/, (_a = payload.result) !== null && _a !== void 0 ? _a : null];
+            }
+        });
+    });
+}
+function buildBudgetStatus(count, now) {
+    if (now === void 0) { now = new Date(); }
+    return {
+        enabled: Boolean(UPSTASH_URL && UPSTASH_TOKEN),
+        key: getBudgetKey(now),
+        count: count,
+        softLimit: DAILY_SOFT_LIMIT,
+        hardLimit: DAILY_HARD_LIMIT,
+        warning: count >= DAILY_SOFT_LIMIT,
+        blocked: count >= DAILY_HARD_LIMIT,
+        resetsAtUtc: getNextUtcMidnight(now).toISOString()
+    };
+}
+function readBudgetStatus() {
+    return __awaiter(this, void 0, void 0, function () {
+        var raw, count;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (!UPSTASH_URL || !UPSTASH_TOKEN) {
+                        return [2 /*return*/, buildBudgetStatus(0)];
+                    }
+                    return [4 /*yield*/, runUpstashCommand(['GET', getBudgetKey()])];
+                case 1:
+                    raw = _a.sent();
+                    count = typeof raw === 'number' ? raw : Number(raw !== null && raw !== void 0 ? raw : 0) || 0;
+                    return [2 /*return*/, buildBudgetStatus(count)];
+            }
+        });
+    });
+}
+function incrementBudgetCounter() {
+    return __awaiter(this, void 0, void 0, function () {
+        var now, key, nextMidnight, raw, count;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (!UPSTASH_URL || !UPSTASH_TOKEN) {
+                        return [2 /*return*/, buildBudgetStatus(0)];
+                    }
+                    now = new Date();
+                    key = getBudgetKey(now);
+                    nextMidnight = getNextUtcMidnight(now);
+                    return [4 /*yield*/, runUpstashCommand(['INCR', key])];
+                case 1:
+                    raw = _a.sent();
+                    count = typeof raw === 'number' ? raw : Number(raw !== null && raw !== void 0 ? raw : 0) || 0;
+                    // Reset the daily budget automatically at midnight UTC.
+                    return [4 /*yield*/, runUpstashCommand(['EXPIREAT', key, Math.floor(nextMidnight.getTime() / 1000)])];
+                case 2:
+                    // Reset the daily budget automatically at midnight UTC.
+                    _a.sent();
+                    return [2 /*return*/, buildBudgetStatus(count, now)];
+            }
+        });
+    });
 }
 export default function handler(request, response) {
     return __awaiter(this, void 0, void 0, function () {
-        var payload, message, conversationId, result, error_1, statusCode;
+        var budget, error_1, payload, message, conversationId, budget, result, error_2, statusCode;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     response.setHeader('Cache-Control', 'no-store');
                     response.setHeader('Content-Type', 'application/json; charset=utf-8');
-                    response.setHeader('Allow', 'POST');
+                    response.setHeader('Allow', 'GET, POST');
+                    if (!(request.method === 'GET')) return [3 /*break*/, 5];
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, readBudgetStatus()];
+                case 2:
+                    budget = _a.sent();
+                    response.status(200).json({ ok: true, budget: budget });
+                    return [3 /*break*/, 4];
+                case 3:
+                    error_1 = _a.sent();
+                    response.status(500).json({
+                        error: error_1 instanceof Error ? error_1.message : 'Unable to read budget status right now.'
+                    });
+                    return [3 /*break*/, 4];
+                case 4: return [2 /*return*/];
+                case 5:
                     if (request.method !== 'POST') {
                         response.status(405).json({ error: 'Method not allowed.' });
                         return [2 /*return*/];
                     }
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 3, , 4]);
+                    _a.label = 6;
+                case 6:
+                    _a.trys.push([6, 9, , 10]);
                     payload = parseBody(request.body);
-                    message = typeof payload.message === 'string' ? payload.message : '';
+                    // Hidden honeypot field catches basic scripted form submissions.
+                    if (typeof payload.honeypot === 'string' && payload.honeypot.trim()) {
+                        response.status(400).json({ error: 'That send looked automated, so I ignored it.' });
+                        return [2 /*return*/];
+                    }
+                    message = typeof payload.message === 'string' ? payload.message.trim().slice(0, MAX_MESSAGE_LENGTH) : '';
+                    if (message.length < MIN_MESSAGE_LENGTH) {
+                        response.status(400).json({ error: 'Give me a little more to work with.' });
+                        return [2 /*return*/];
+                    }
                     conversationId = typeof payload.conversationId === 'string' ? payload.conversationId : undefined;
+                    return [4 /*yield*/, incrementBudgetCounter()];
+                case 7:
+                    budget = _a.sent();
+                    if (budget.blocked) {
+                        response.status(429).json({
+                            error: 'Daily limit reached, back tomorrow.',
+                            budget: budget
+                        });
+                        return [2 /*return*/];
+                    }
                     return [4 /*yield*/, generateAiAdvisorReply({
                             message: message,
                             history: sanitizeHistory(payload.history),
                             conversationId: conversationId
                         })];
-                case 2:
+                case 8:
                     result = _a.sent();
-                    response.status(200).json(__assign({ ok: true }, result));
-                    return [3 /*break*/, 4];
-                case 3:
-                    error_1 = _a.sent();
-                    statusCode = error_1 instanceof AiAdvisorConfigError ? 503 : 500;
+                    response.status(200).json(__assign(__assign({ ok: true }, result), { budget: budget }));
+                    return [3 /*break*/, 10];
+                case 9:
+                    error_2 = _a.sent();
+                    statusCode = error_2 instanceof AiAdvisorConfigError ? 503 : 500;
                     response.status(statusCode).json({
-                        error: error_1 instanceof Error ? error_1.message : 'Unable to answer right now.'
+                        error: error_2 instanceof Error ? error_2.message : 'Unable to answer right now.'
                     });
-                    return [3 /*break*/, 4];
-                case 4: return [2 /*return*/];
+                    return [3 /*break*/, 10];
+                case 10: return [2 /*return*/];
             }
         });
     });
