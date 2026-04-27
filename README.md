@@ -16,6 +16,83 @@ npm run dev
 
 The dev server defaults to http://localhost:5173.
 
+## AI Advisor
+
+MegaBunnish now includes a conversational AI advisor exposed through `/api/ai-chat`.
+
+The chat is grounded in the site's own ecosystem data:
+
+- `src/data/projects.json`
+- `src/data/appEvents.ts`
+
+For split deployments, the route is available from the Node server entrypoint in `server/railway.ts`. The underlying handler also exists in `api/ai-advisor.ts`, but the frontend defaults to `/api/ai-chat` in production.
+
+In local development, the chat defaults to `http://localhost:3000/api/ai-chat`, so run the companion API server in another terminal:
+
+```bash
+npm run alerts:server
+```
+
+### Hosted model setup
+
+```bash
+AI_ADVISOR_API_KEY=your-llm-provider-api-key
+```
+
+Optional:
+
+```bash
+AI_ADVISOR_MODEL=gpt-4.1-mini
+AI_ADVISOR_BASE_URL=https://api.openai.com/v1
+AI_ADVISOR_PROVIDER=openai-compatible
+VITE_AI_ADVISOR_API_URL=/api/ai-chat
+```
+
+`AI_ADVISOR_BASE_URL` is OpenAI-compatible, so you can point it at another provider if it supports the `chat/completions` API shape.
+
+### Anthropic setup
+
+If you want to use Anthropic instead of an OpenAI-compatible provider, set:
+
+```bash
+AI_ADVISOR_API_KEY=your-anthropic-key
+AI_ADVISOR_PROVIDER=anthropic
+AI_ADVISOR_BASE_URL=https://api.anthropic.com/v1
+AI_ADVISOR_MODEL=claude-3-haiku-20240307
+```
+
+`claude-3-haiku-20240307` is the sensible low-cost default if you want to keep each chat turn cheap.
+
+### Free local setup with Ollama
+
+If you want the chat to be free to use, run a local model instead of a hosted API.
+
+1. Install Ollama.
+2. Pull a model, for example:
+
+```bash
+ollama pull llama3.1:8b
+```
+
+3. Start Ollama locally.
+4. Set these environment variables before running `npm run alerts:server`:
+
+```bash
+AI_ADVISOR_BASE_URL=http://localhost:11434/v1
+AI_ADVISOR_MODEL=llama3.1:8b
+```
+
+With that setup, `AI_ADVISOR_API_KEY` is not required because the backend talks to your own local model.
+
+Tradeoff: this is free in API cost, but slower and usually less accurate than a strong hosted model.
+
+### Behavior
+
+- The frontend keeps a short multi-turn conversation.
+- The backend selects the most relevant projects and events before calling the model.
+- Recommendations stay grounded in the site data instead of sending the full project catalog on every turn.
+- If neither `AI_ADVISOR_API_KEY` nor a local OpenAI-compatible endpoint is configured, the endpoint returns a configuration error instead of silently fabricating an answer.
+
 ## Available Scripts
 
 - `npm run dev` – start Vite in development mode.

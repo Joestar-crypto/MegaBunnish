@@ -2,7 +2,9 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { defineConfig } from 'vite';
 import type { Plugin, PreviewServer, ViteDevServer } from 'vite';
 import react from '@vitejs/plugin-react';
+import aiChatHandler from './api/ai-chat';
 import basicSsl from '@vitejs/plugin-basic-ssl';
+import aiAdvisorHandler from './api/ai-advisor';
 import eventAlertSubscriptionsHandler from './api/event-alert-subscriptions';
 import sendEventAlertsHandler from './api/send-event-alerts';
 
@@ -19,10 +21,21 @@ type LocalApiHandler = (request: {
   end?(payload?: unknown): void;
 }) => Promise<void>;
 
-const LOCAL_API_HANDLERS = new Map<string, LocalApiHandler>([
-  ['/api/event-alert-subscriptions', eventAlertSubscriptionsHandler],
-  ['/api/send-event-alerts', sendEventAlertsHandler]
-]);
+function resolveLocalApiHandler(pathname: string): LocalApiHandler | null {
+  if (pathname === '/api/ai-chat') {
+    return aiChatHandler;
+  }
+  if (pathname === '/api/ai-advisor') {
+    return aiAdvisorHandler;
+  }
+  if (pathname === '/api/event-alert-subscriptions') {
+    return eventAlertSubscriptionsHandler;
+  }
+  if (pathname === '/api/send-event-alerts') {
+    return sendEventAlertsHandler;
+  }
+  return null;
+}
 
 function readRequestBody(request: IncomingMessage) {
   return new Promise<string>((resolve, reject) => {
@@ -86,7 +99,7 @@ function attachLocalApiMiddleware(server: ViteDevServer | PreviewServer) {
     }
 
     const url = new URL(request.url, 'https://localhost');
-    const handler = LOCAL_API_HANDLERS.get(url.pathname);
+    const handler = resolveLocalApiHandler(url.pathname);
     if (!handler) {
       next();
       return;

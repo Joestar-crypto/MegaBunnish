@@ -5,6 +5,7 @@ import { ProjectDetailDrawer } from './components/ProjectDetailDrawer';
 import { WalletChecker } from './components/WalletChecker';
 import { KpiDashboard } from './components/KpiDashboard';
 import { EthosTrustScores } from './components/EthosTrustScores';
+import { AiAdvisorChat } from './components/AiAdvisorChat';
 import { ConstellationProvider, useConstellation } from './state/constellation';
 
 const AppContent = () => {
@@ -77,6 +78,7 @@ const AppContent = () => {
             </div>
           ) : null}
           <ProjectDetailDrawer />
+          <AiAdvisorChat isInteracting={isInteracting} />
           <div className="hud-stack">
             <EthosTrustScores isInteracting={isInteracting} />
             <WalletChecker isInteracting={isInteracting} />

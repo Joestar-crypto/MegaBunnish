@@ -1,4 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import aiChatHandler from '../api/ai-chat';
+import aiAdvisorHandler from '../api/ai-advisor';
 import subscriptionsHandler from '../api/event-alert-subscriptions';
 import sendEventAlertsHandler from '../api/send-event-alerts';
 
@@ -184,6 +186,10 @@ async function routeRequest(request: IncomingMessage, response: ServerResponse) 
 
   const handler: ApiHandler | null = pathname === '/api/event-alert-subscriptions'
     ? subscriptionsHandler
+    : pathname === '/api/ai-chat'
+      ? aiChatHandler
+    : pathname === '/api/ai-advisor'
+      ? aiAdvisorHandler
     : pathname === '/api/send-event-alerts'
       ? sendEventAlertsHandler
       : null;
