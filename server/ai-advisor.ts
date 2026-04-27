@@ -66,8 +66,53 @@ type IntentProfile = {
   preferNative: boolean;
   wantsNftCollections: boolean;
   wantsGeneralChainInfo: boolean;
+  // Narrative buckets (TCG, perp DEX, spot DEX, …) detected in the query.
+  // Independent of `categories` because they slice across or through them.
+  narratives: NarrativeMatch[];
   keywords: string[];
 };
+
+type NarrativeMatch = {
+  id: string;
+  label: string;
+};
+
+// Narrative buckets are sub-categories or cross-cutting themes that are NOT
+// represented as a `categories` value in projects.json. The `corpusPattern`
+// is matched against the per-project corpus (name + id + categories + links
+// + jojoInsight). When a narrative is detected in the query, every project
+// whose corpus matches the corpusPattern is force-included in the result
+// list — even if its score would otherwise be too low — so the user gets
+// the FULL set of relevant apps for that narrative, not just the top 1.
+const NARRATIVE_BUCKETS: Array<{
+  id: string;
+  label: string;
+  queryPattern: RegExp;
+  corpusPattern: RegExp;
+  excludeCorpus?: RegExp;
+}> = [
+  {
+    id: 'tcg',
+    label: 'TCG / trading card / gacha',
+    queryPattern: /\b(tcg|tcgs|trading card|trading cards|card game|card games|gacha)\b/,
+    corpusPattern: /\b(tcg|trading card|card game|gacha)\b/
+  },
+  {
+    id: 'perp-dex',
+    label: 'perp DEX / perpetuals',
+    queryPattern: /\b(perp|perps|perpetual|perpetuals|perp dex|perpetual dex|leverage trading|futures)\b/,
+    corpusPattern: /\b(perp|perps|perpetual|perpetuals|leverage|futures)\b/
+  },
+  {
+    id: 'spot-dex',
+    label: 'spot DEX / swap / AMM',
+    queryPattern: /\b(spot dex|spot trading|swap|swaps|amm|order ?book|spot market)\b/,
+    corpusPattern: /\b(spot|swap|amm|order ?book|dex)\b/,
+    // A perp DEX is not a spot DEX. Exclude projects whose corpus is
+    // dominated by perp/leverage language.
+    excludeCorpus: /\b(perp|perps|perpetual|perpetuals|leverage|futures)\b/
+  }
+];
 
 // Projects in the dataset that are NFT marketplaces or aggregators rather
 // than mintable NFT collections. When the user asks for collections to buy or
@@ -323,7 +368,7 @@ function isSeriousTechnicalPrompt(query: string) {
 const VERTICAL_INTENTS: Array<{ category: string; label: string; pattern: RegExp }> = [
   { category: 'DeFi', label: 'DeFi / lending / yield', pattern: /\b(defi|lend|lending|borrow|borrowing|loan|loans|yield|stable|stables|stablecoin|money market|credit|deposit|deposits|liquidity)\b/ },
   { category: 'Bridge', label: 'bridge / cross-chain', pattern: /\b(bridge|bridges|bridging|cross chain|crosschain|onramp|offramp|on ramp|off ramp)\b/ },
-  { category: 'Trading', label: 'trading / perps / DEX', pattern: /\b(trade|trading|trader|perp|perps|perpetual|perpetuals|options|dex|swap|swaps|orderbook|order book|spot|leverage|long|short)\b/ },
+  { category: 'Trading', label: 'trading / DEX / perps', pattern: /\b(trade|trading|trader|perp|perps|perpetual|perpetuals|options|dex|swap|swaps|orderbook|order book|spot|leverage|long|short|futures|amm)\b/ },
   { category: 'Trading bot', label: 'trading bot', pattern: /\b(trading bot|trade bot|sniper|copy trade|copy trading|bot trading)\b/ },
   { category: 'Mobile', label: 'mobile app', pattern: /\b(mobile|iphone|ios|android|app store|play store)\b/ },
   { category: 'AI', label: 'AI / agents', pattern: /\b(ai|llm|llms|agent|agents|autonomous|chatbot|copilot)\b/ },
@@ -347,6 +392,10 @@ function detectIntent(query: string): IntentProfile {
     .filter((entry) => entry.pattern.test(normalized))
     .map((entry) => ({ category: entry.category, label: entry.label }));
 
+  const narratives: NarrativeMatch[] = NARRATIVE_BUCKETS
+    .filter((entry) => entry.queryPattern.test(normalized))
+    .map((entry) => ({ id: entry.id, label: entry.label }));
+
   const categories = new Set<string>(verticals.map((entry) => entry.category));
 
   if (!categories.size && !wantsGeneralChainInfo) {
@@ -369,6 +418,7 @@ function detectIntent(query: string): IntentProfile {
     // not marketplaces. Detect a collection-buying intent specifically.
     wantsNftCollections: /\b(nft|nfts|pfp|pfps|jpeg|jpegs|collectible|collectibles)\b/.test(normalized) && /\b(collection|collections|mint|minting|buy|cop|cope|hold|flip|invest|cheapest|floor)\b/.test(normalized),
     wantsGeneralChainInfo,
+    narratives,
     keywords: tokenize(query)
   };
 }
@@ -572,15 +622,55 @@ function selectProjects(message: string, history: AdvisorChatMessage[]) {
     }
   }
 
+  // Narrative buckets: if the user mentioned a narrative (TCG, perp DEX,
+  // spot DEX, …), find every project whose corpus matches that narrative
+  // and force-include them — even if not live, even if score is low. The
+  // user explicitly asked to surface ALL apps in the narrative, not just
+  // the top scorer.
+  const narrativeForced: RankedProject[] = [];
+  if (intent.narratives.length > 0) {
+    for (const narrative of intent.narratives) {
+      const bucket = NARRATIVE_BUCKETS.find((entry) => entry.id === narrative.id);
+      if (!bucket) continue;
+      const matches = PROJECTS.filter((project) => {
+        const corpus = buildCorpus(project);
+        if (!bucket.corpusPattern.test(corpus)) return false;
+        if (bucket.excludeCorpus && bucket.excludeCorpus.test(corpus)) return false;
+        return true;
+      });
+      for (const project of matches) {
+        if (narrativeForced.some((entry) => entry.project.id === project.id)) continue;
+        narrativeForced.push({
+          project,
+          score: 900,
+          reason: `Matches the "${narrative.label}" narrative the user asked about. ${project.jojoInsight ?? ''}`.trim()
+        });
+      }
+    }
+    // When narratives are present, drop the generic scored list entirely.
+    // The narrative match IS the answer — don't dilute it with off-narrative
+    // projects that scored well on Native/Live bonuses, and don't list the
+    // same project twice (forced + scored).
+    if (narrativeForced.length > 0) {
+      scoredProjects = scoredProjects.filter((entry) =>
+        !narrativeForced.some((forced) => forced.project.id === entry.project.id)
+      );
+    }
+  }
+
   const forcedMatches = explicitMatches
     .filter((project) => !scoredProjects.some((entry) => entry.project.id === project.id))
+    .filter((project) => !narrativeForced.some((entry) => entry.project.id === project.id))
     .map((project) => ({
       project,
       score: 999,
       reason: `Explicitly mentioned by name in the user query. ${project.jojoInsight ?? `${project.name} appears in the current MegaBunnish ecosystem dataset.`}`
     }));
 
-  return { ranked: [...forcedMatches, ...scoredProjects].slice(0, 6), intent };
+  // Cap output: bigger budget when a narrative is matched so we can list ALL
+  // apps in the narrative (user explicitly wants the full set).
+  const limit = intent.narratives.length > 0 ? 10 : 6;
+  return { ranked: [...forcedMatches, ...narrativeForced, ...scoredProjects].slice(0, limit), intent };
 }
 
 function buildContextBlock(projects: RankedProject[], intent?: IntentProfile) {
@@ -685,9 +775,34 @@ function readApiConfig(): ProviderConfig {
 function buildPrompt(message: string, history: AdvisorChatMessage[], contextText: string) {
   // Persona routing is based on the current message only, for the same reason as
   // intent detection: prior messages must not flip the persona on follow-ups.
-  void history;
   const routingQuery = message;
   const memeMode = isMemeCulturePrompt(routingQuery) && !isSeriousTechnicalPrompt(routingQuery);
+
+  // Topic-change detection: if the previous user message was on a different
+  // topic (different verticals / narratives / NFT-collection / native-farming
+  // intent), DROP the entire history. The model otherwise tries to relate the
+  // new question to the previous one and ends up re-answering it.
+  const currentIntent = detectIntent(message);
+  const lastUserMessage = [...history].reverse().find((entry) => entry.role === 'user');
+  let effectiveHistory = history;
+  if (lastUserMessage) {
+    const prevIntent = detectIntent(lastUserMessage.content);
+    const sameVerticals =
+      prevIntent.verticals.length === currentIntent.verticals.length &&
+      prevIntent.verticals.every((entry) =>
+        currentIntent.verticals.some((current) => current.category === entry.category)
+      );
+    const sameNarratives =
+      prevIntent.narratives.length === currentIntent.narratives.length &&
+      prevIntent.narratives.every((entry) =>
+        currentIntent.narratives.some((current) => current.id === entry.id)
+      );
+    const sameNftIntent = prevIntent.wantsNftCollections === currentIntent.wantsNftCollections;
+    const sameNativeIntent = prevIntent.preferNative === currentIntent.preferNative;
+    if (!sameVerticals || !sameNarratives || !sameNftIntent || !sameNativeIntent) {
+      effectiveHistory = [];
+    }
+  }
 
   const seriousPrompt = [
     'You are MegaBunny Analyst, the serious research mode of MegaBunnish for the MegaETH ecosystem.',
@@ -702,6 +817,8 @@ function buildPrompt(message: string, history: AdvisorChatMessage[], contextText
     'CRITICAL: Each user message is a fresh query. Recommend ONLY projects from the CURRENT Relevant ecosystem projects section. Ignore any projects you may have mentioned in earlier replies if they are not in the current section. Never carry over recommendations across topic changes.',
     'CRITICAL: Answer ONLY the LATEST user question. Do NOT re-answer, re-summarize, or re-phrase your previous reply. Prior turns are background context, not a prompt to repeat. If the latest question is on a new topic, fully drop the previous topic.',
     'CRITICAL: When a project has an Editorial insight in the context, lean on it heavily. The insight contains high-signal opinions, distinguishing details, and keywords from the MegaBunnish editorial team that you would not otherwise know. Reuse its framing, named features, and angle in your answer instead of generic descriptions.',
+    'CRITICAL: When the user asks for apps in a narrative bucket (TCG, perp DEX, spot DEX, RWA, prediction market, gambling, etc.), name EVERY relevant project listed in the context, even those marked Live: no. Mark non-live ones explicitly (e.g. "not live yet"), but never silently drop them.',
+    'CRITICAL: A perp DEX (perpetuals, leverage, futures) is NOT the same product as a spot DEX (swap, AMM, orderbook spot). When the user asks for one, do NOT recommend the other. If the user just says "DEX", ask if they mean spot or perp, or cover both with a clear split.',
     'CRITICAL: Never refuse with phrases like "I cannot provide financial advice", "I cannot recommend", "as an AI I cannot", or "my purpose is to be neutral". This is informational MegaETH ecosystem discovery, NOT personalized investment advice. Recommend the best-fit projects from the provided context, with risk caveats when warranted, and move on.',
     'If evidence is weak, say so briefly, then still give the best grounded take you can.',
     'Use polished natural prose with complete sentences.',
@@ -740,7 +857,7 @@ function buildPrompt(message: string, history: AdvisorChatMessage[], contextText
     { role: 'system', content: systemPrompt },
     ...(modePrompt ? [{ role: 'system', content: modePrompt }] : []),
     // History first, so prior turns read as background.
-    ...history.map((entry) => ({ role: entry.role, content: entry.content })),
+    ...effectiveHistory.map((entry) => ({ role: entry.role, content: entry.content })),
     // Context block placed RIGHT BEFORE the latest user message so the model
     // anchors on data scoped to the current question, not the previous one.
     { role: 'system', content: `MegaBunnish context for the LATEST user question below (ignore any context implied by earlier turns):\n\n${contextText}` },

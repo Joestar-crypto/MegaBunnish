@@ -55,7 +55,12 @@ type IntentProfile = {
     preferNative: boolean;
     wantsNftCollections: boolean;
     wantsGeneralChainInfo: boolean;
+    narratives: NarrativeMatch[];
     keywords: string[];
+};
+type NarrativeMatch = {
+    id: string;
+    label: string;
 };
 type RankedProject = {
     project: AdvisorProject;
