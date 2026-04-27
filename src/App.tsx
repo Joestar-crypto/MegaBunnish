@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 import { ConstellationCanvas } from './components/ConstellationCanvas';
 import { FilterOrbitPanel } from './components/FilterOrbitPanel';
 import { ProjectDetailDrawer } from './components/ProjectDetailDrawer';
-import { WalletChecker } from './components/WalletChecker';
 import { KpiDashboard } from './components/KpiDashboard';
 import { EthosTrustScores } from './components/EthosTrustScores';
 import { AiAdvisorChat } from './components/AiAdvisorChat';
@@ -78,10 +77,9 @@ const AppContent = () => {
             </div>
           ) : null}
           <ProjectDetailDrawer />
-          <AiAdvisorChat isInteracting={isInteracting} />
           <div className="hud-stack">
             <EthosTrustScores isInteracting={isInteracting} />
-            <WalletChecker isInteracting={isInteracting} />
+            <AiAdvisorChat isInteracting={isInteracting} />
           </div>
         </div>
         <div className="immersive-stage__rail">

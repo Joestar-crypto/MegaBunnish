@@ -188,7 +188,7 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
   };
 
   return (
-    <>
+    <div className="ai-chat-shell">
       <button
         type="button"
         className={`ai-chat-launcher ${!isOpen && isInteracting ? 'ui-panel--hidden' : ''}`}
@@ -197,9 +197,21 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
         aria-controls="ai-advisor-panel"
       >
         <span className="ai-chat-launcher__spark" aria-hidden="true">
-          AI
+          <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <defs>
+              <linearGradient id="gemini-button-gradient" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#71a7ff" />
+                <stop offset="0.52" stopColor="#9c89ff" />
+                <stop offset="1" stopColor="#71dfd1" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M12 2.8c.52 3.04 1.26 4.92 2.3 5.96 1.05 1.04 2.92 1.78 5.96 2.3-3.04.52-4.91 1.26-5.96 2.3-1.04 1.05-1.78 2.92-2.3 5.96-.52-3.04-1.26-4.91-2.3-5.96-1.05-1.04-2.92-1.78-5.96-2.3 3.04-.52 4.91-1.26 5.96-2.3 1.04-1.04 1.78-2.92 2.3-5.96Z"
+              fill="url(#gemini-button-gradient)"
+            />
+          </svg>
         </span>
-        <span>{isOpen ? 'Close chat' : 'Ask AI'}</span>
+        <span className="ai-chat-launcher__label">{isOpen ? 'Close AI' : 'Ask AI'}</span>
       </button>
       <aside
         id="ai-advisor-panel"
@@ -318,6 +330,6 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
           </form>
         </div>
       </aside>
-    </>
+    </div>
   );
 };
