@@ -501,9 +501,13 @@ function buildContextBlock(projects, intent) {
     };
 }
 function sanitizeHistory(history) {
+    // Only USER turns are forwarded to the LLM. Forwarding assistant turns caused
+    // the model to recycle the project list from the previous reply even when the
+    // new question targets a different vertical. The current Relevant ecosystem
+    // projects block (rebuilt every turn) is the single source of truth for recos.
     return history
-        .filter(function (entry) { return (entry.role === 'user' || entry.role === 'assistant') && entry.content.trim(); })
-        .slice(-8)
+        .filter(function (entry) { return entry.role === 'user' && entry.content.trim(); })
+        .slice(-4)
         .map(function (entry) { return ({
         role: entry.role,
         content: entry.content.trim().slice(0, 1800)
@@ -544,6 +548,7 @@ function buildPrompt(message, history, contextText) {
         'Do not invent token plans, live status, incentives, partnerships, prices, launches, or undocumented claims.',
         'CRITICAL: If a DIRECT MATCHES block is present in the context, the listed projects DO satisfy the user query. You MUST recommend them by name. NEVER say "I cannot find", "none exist", "not in the dataset", or any equivalent refusal when DIRECT MATCHES is present.',
         'CRITICAL: If the Relevant ecosystem projects section lists projects, treat them as ground truth and recommend the best fit. Do not claim the dataset is empty when projects are listed.',
+        'CRITICAL: Each user message is a fresh query. Recommend ONLY projects from the CURRENT Relevant ecosystem projects section. Ignore any projects you may have mentioned in earlier replies if they are not in the current section. Never carry over recommendations across topic changes.',
         'If evidence is weak, say so briefly, then still give the best grounded take you can.',
         'Use polished natural prose with complete sentences.',
         'Default to 2 to 5 short sentences, or up to 3 bullets for comparisons.',

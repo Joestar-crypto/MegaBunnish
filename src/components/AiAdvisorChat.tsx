@@ -625,9 +625,6 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
                       {recommendationProjects.map(({ project, reason, ethosScore }) => (
                         <section key={project.id} className="ai-recommendation-card">
                           <div className="ai-recommendation-card__topline">
-                            <span className="ai-recommendation-card__quality">
-                              {project.isLive ? 'Live' : project.incentives.length ? 'Incentivized' : 'Watchlist'}
-                            </span>
                             <div className="ai-recommendation-card__badges">
                               <span className="ai-recommendation-card__score">{project.primaryCategory}</span>
                             </div>
@@ -671,10 +668,6 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
                             </div>
                           </div>
                           <p>{reason}</p>
-                          <div className="ai-recommendation-card__meta">
-                            {project.isLive ? <span>Live now</span> : null}
-                            {project.incentives.length ? <span>{project.incentives[0].title}</span> : null}
-                          </div>
                         </section>
                       ))}
                     </div>

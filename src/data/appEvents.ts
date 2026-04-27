@@ -256,5 +256,21 @@ export const APP_EVENTS: AppEvent[] = [
         end: '2026-04-23T23:59:00-05:00'
       }
     ]
+  },
+  {
+    id: 'megacorp-rrs-level-10-licenses',
+    title: 'RRS Intake — 100 Level 10 Licenses',
+    projectId: 'megacorp',
+    start: '2026-04-28T14:00:00Z',
+    end: '2026-04-28T23:59:00Z',
+    tweetUrl: 'https://x.com/MegaCorpHQ',
+    detailsUrl: 'https://megacorp.global/rrs/intake?ref=JOESTAR',
+    phases: [
+      {
+        label: 'Mint window',
+        start: '2026-04-28T14:00:00Z',
+        end: '2026-04-28T23:59:00Z'
+      }
+    ]
   }
 ];
