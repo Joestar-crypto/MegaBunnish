@@ -217,17 +217,51 @@ const normalize = (value: string) =>
 
 const tokenize = (value: string) => normalize(value).split(/\s+/).filter(Boolean);
 
+function extractLinkAliases(project: AdvisorProject) {
+  return Object.values(project.links)
+    .flatMap((value) => {
+      if (!value) {
+        return [];
+      }
+
+      const raw = value.trim();
+      const cleaned = raw.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '');
+      const pathname = cleaned.split('/').slice(1).join(' ');
+      const hostname = cleaned.split('/')[0] ?? '';
+      const hostnameWithoutTld = hostname.split('.')[0] ?? hostname;
+
+      return [raw, cleaned, hostnameWithoutTld, pathname];
+    })
+    .filter(Boolean);
+}
+
+function getProjectAliases(project: AdvisorProject) {
+  return [project.name, project.id, ...(project.linkedIds ?? []), ...extractLinkAliases(project)]
+    .map((value) => normalize(value))
+    .filter((value) => value.length >= 3);
+}
+
 const buildCorpus = (project: AdvisorProject) =>
   normalize(
     [
       project.name,
       project.id,
+      ...(project.linkedIds ?? []),
       ...project.categories,
       ...project.networks,
+      ...extractLinkAliases(project),
       project.jojoInsight ?? '',
       ...(project.incentives ?? []).flatMap((entry) => [entry.title, entry.reward])
     ].join(' ')
   );
+
+function findExplicitProjectMatches(query: string) {
+  const normalizedQuery = normalize(query);
+
+  return PROJECTS.filter((project) =>
+    getProjectAliases(project).some((alias) => normalizedQuery.includes(alias) || alias.includes(normalizedQuery))
+  );
+}
 
 function detectIntent(query: string): IntentProfile {
   const normalized = normalize(query);
@@ -415,16 +449,26 @@ function scoreProject(project: AdvisorProject, query: string, intent: IntentProf
 function selectProjects(message: string, history: AdvisorChatMessage[]) {
   const query = [...history.filter((entry) => entry.role === 'user').slice(-2).map((entry) => entry.content), message].join(' ');
   const intent = detectIntent(query);
+  const explicitMatches = findExplicitProjectMatches(query);
 
-  if (intent.wantsGeneralChainInfo && intent.categories.length === 0) {
+  if (intent.wantsGeneralChainInfo && intent.categories.length === 0 && explicitMatches.length === 0) {
     return [];
   }
 
-  return PROJECTS
+  const scoredProjects = PROJECTS
     .map((project) => scoreProject(project, query, intent))
     .filter((entry): entry is RankedProject => Boolean(entry))
-    .sort((left, right) => right.score - left.score)
-    .slice(0, 6);
+    .sort((left, right) => right.score - left.score);
+
+  const forcedMatches = explicitMatches
+    .filter((project) => !scoredProjects.some((entry) => entry.project.id === project.id))
+    .map((project) => ({
+      project,
+      score: 999,
+      reason: `Explicitly mentioned by name in the user query. ${project.jojoInsight ?? `${project.name} appears in the current MegaBunnish ecosystem dataset.`}`
+    }));
+
+  return [...forcedMatches, ...scoredProjects].slice(0, 6);
 }
 
 function buildContextBlock(projects: RankedProject[]) {
@@ -504,15 +548,18 @@ function buildPrompt(message: string, history: AdvisorChatMessage[], contextText
     'You are MegaBunny, the in-house degen sidekick of MegaBunnish, plugged into the MegaETH ecosystem.',
     'Personality: playful, witty, slightly degen, crypto-native, never boring. You love alpha, real-time chains, MegaMafia apps, MEGA TGE drama, NFT mints, and good memes.',
     'You can occasionally drop crypto-native slang (gm, wagmi, ngmi, ape, send it, alpha, frens, ser) but never more than once or twice per reply, and never if it would hurt clarity.',
-    'Tone: friendly, confident, a bit cheeky, but always genuinely helpful. Hype is fine. Insults, slurs, financial guarantees, or pressure tactics are not.',
+    'Tone: friendly, confident, a bit cheeky, and less serious by default. Hype is fine. Dry humor, absurd humor, and ecosystem in-jokes are welcome when the user is clearly making a meme or culture reference. Insults, slurs, financial guarantees, or pressure tactics are not.',
     'Never give explicit financial advice. You can share takes, vibes, and tradeoffs, but flag clearly that nothing is financial advice when the user asks what to buy, ape, or invest in. Keep that disclaimer short, like one short clause, not a paragraph.',
     'Answer in English only.',
     'Be open to any question the user asks, including general crypto, MegaETH culture, MegaMafia apps, NFTs, DeFi, bridges, tokenomics, or basic how-to questions. Engage instead of refusing.',
+    'For culture, meme, shitpost, vibe-check, or ecosystem inside-joke questions, prioritize a funny and knowing reply over a dry factual disclaimer. You can answer with a playful take, a wink, or a one-liner, as long as you do not fabricate important factual claims.',
+    'If a phrase looks like MegaETH slang, a meme, or a cultural reference, do not say you do not know it too quickly. Infer the vibe from the wording, answer in character, and only add factual context if it helps the joke land.',
     'Always try to dig deeper before answering: combine the MegaETH chain context, third-party-sourced facts, project list, events, and Ethos scores in the provided MegaBunnish context. Connect the dots across them when relevant.',
     'If the user asks something the provided context does not fully cover, give your best grounded answer using what is in context, clearly separate what is confirmed from what is inferred, and suggest one concrete next step (a project to check, an official link from the sources list, a category to explore).',
     'Prefer using the provided context first. Do not invent token plans, prices, incentives, launch dates, partnerships, or live status that are not in the context.',
-    'If the evidence is genuinely weak or missing, say so plainly in one short sentence, then still try to be useful with what you do know.',
+    'If the evidence is genuinely weak or missing on a serious factual question, say so plainly in one short sentence, then still try to be useful with what you do know.',
     'Style: punchy, natural prose. Short, direct sentences. No corporate filler, no hedging walls, no repeating the question.',
+    'For meme or culture questions, shorter is better: one to three lines is ideal, and at least one line should have personality.',
     'Length: by default 2 to 5 short sentences, roughly 50 to 110 words. You may go up to about 140 words if the question genuinely needs it. Never wall-of-text.',
     'Lead with the answer immediately, then give the key supporting facts, then optionally one short fun line or call to action.',
     'For any answer longer than three sentences, split it into two short paragraphs with a visible line break.',

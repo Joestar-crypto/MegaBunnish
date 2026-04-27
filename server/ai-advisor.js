@@ -191,15 +191,42 @@ var normalize = function (value) {
         .trim();
 };
 var tokenize = function (value) { return normalize(value).split(/\s+/).filter(Boolean); };
+function extractLinkAliases(project) {
+    return Object.values(project.links)
+        .flatMap(function (value) {
+        var _a, _b;
+        if (!value) {
+            return [];
+        }
+        var raw = value.trim();
+        var cleaned = raw.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '');
+        var pathname = cleaned.split('/').slice(1).join(' ');
+        var hostname = (_a = cleaned.split('/')[0]) !== null && _a !== void 0 ? _a : '';
+        var hostnameWithoutTld = (_b = hostname.split('.')[0]) !== null && _b !== void 0 ? _b : hostname;
+        return [raw, cleaned, hostnameWithoutTld, pathname];
+    })
+        .filter(Boolean);
+}
+function getProjectAliases(project) {
+    var _a;
+    return __spreadArray(__spreadArray([project.name, project.id], ((_a = project.linkedIds) !== null && _a !== void 0 ? _a : []), true), extractLinkAliases(project), true).map(function (value) { return normalize(value); })
+        .filter(function (value) { return value.length >= 3; });
+}
 var buildCorpus = function (project) {
-    var _a, _b;
-    return normalize(__spreadArray(__spreadArray(__spreadArray(__spreadArray([
+    var _a, _b, _c;
+    return normalize(__spreadArray(__spreadArray(__spreadArray(__spreadArray(__spreadArray(__spreadArray([
         project.name,
         project.id
-    ], project.categories, true), project.networks, true), [
-        (_a = project.jojoInsight) !== null && _a !== void 0 ? _a : ''
-    ], false), ((_b = project.incentives) !== null && _b !== void 0 ? _b : []).flatMap(function (entry) { return [entry.title, entry.reward]; }), true).join(' '));
+    ], ((_a = project.linkedIds) !== null && _a !== void 0 ? _a : []), true), project.categories, true), project.networks, true), extractLinkAliases(project), true), [
+        (_b = project.jojoInsight) !== null && _b !== void 0 ? _b : ''
+    ], false), ((_c = project.incentives) !== null && _c !== void 0 ? _c : []).flatMap(function (entry) { return [entry.title, entry.reward]; }), true).join(' '));
 };
+function findExplicitProjectMatches(query) {
+    var normalizedQuery = normalize(query);
+    return PROJECTS.filter(function (project) {
+        return getProjectAliases(project).some(function (alias) { return normalizedQuery.includes(alias) || alias.includes(normalizedQuery); });
+    });
+}
 function detectIntent(query) {
     var normalized = normalize(query);
     var categories = new Set();
@@ -371,14 +398,25 @@ function scoreProject(project, query, intent) {
 function selectProjects(message, history) {
     var query = __spreadArray(__spreadArray([], history.filter(function (entry) { return entry.role === 'user'; }).slice(-2).map(function (entry) { return entry.content; }), true), [message], false).join(' ');
     var intent = detectIntent(query);
-    if (intent.wantsGeneralChainInfo && intent.categories.length === 0) {
+    var explicitMatches = findExplicitProjectMatches(query);
+    if (intent.wantsGeneralChainInfo && intent.categories.length === 0 && explicitMatches.length === 0) {
         return [];
     }
-    return PROJECTS
+    var scoredProjects = PROJECTS
         .map(function (project) { return scoreProject(project, query, intent); })
         .filter(function (entry) { return Boolean(entry); })
-        .sort(function (left, right) { return right.score - left.score; })
-        .slice(0, 6);
+        .sort(function (left, right) { return right.score - left.score; });
+    var forcedMatches = explicitMatches
+        .filter(function (project) { return !scoredProjects.some(function (entry) { return entry.project.id === project.id; }); })
+        .map(function (project) {
+        var _a;
+        return ({
+            project: project,
+            score: 999,
+            reason: "Explicitly mentioned by name in the user query. ".concat((_a = project.jojoInsight) !== null && _a !== void 0 ? _a : "".concat(project.name, " appears in the current MegaBunnish ecosystem dataset."))
+        });
+    });
+    return __spreadArray(__spreadArray([], forcedMatches, true), scoredProjects, true).slice(0, 6);
 }
 function buildContextBlock(projects) {
     var eventIds = new Set();
@@ -448,15 +486,18 @@ function buildPrompt(message, history, contextText) {
         'You are MegaBunny, the in-house degen sidekick of MegaBunnish, plugged into the MegaETH ecosystem.',
         'Personality: playful, witty, slightly degen, crypto-native, never boring. You love alpha, real-time chains, MegaMafia apps, MEGA TGE drama, NFT mints, and good memes.',
         'You can occasionally drop crypto-native slang (gm, wagmi, ngmi, ape, send it, alpha, frens, ser) but never more than once or twice per reply, and never if it would hurt clarity.',
-        'Tone: friendly, confident, a bit cheeky, but always genuinely helpful. Hype is fine. Insults, slurs, financial guarantees, or pressure tactics are not.',
+        'Tone: friendly, confident, a bit cheeky, and less serious by default. Hype is fine. Dry humor, absurd humor, and ecosystem in-jokes are welcome when the user is clearly making a meme or culture reference. Insults, slurs, financial guarantees, or pressure tactics are not.',
         'Never give explicit financial advice. You can share takes, vibes, and tradeoffs, but flag clearly that nothing is financial advice when the user asks what to buy, ape, or invest in. Keep that disclaimer short, like one short clause, not a paragraph.',
         'Answer in English only.',
         'Be open to any question the user asks, including general crypto, MegaETH culture, MegaMafia apps, NFTs, DeFi, bridges, tokenomics, or basic how-to questions. Engage instead of refusing.',
+        'For culture, meme, shitpost, vibe-check, or ecosystem inside-joke questions, prioritize a funny and knowing reply over a dry factual disclaimer. You can answer with a playful take, a wink, or a one-liner, as long as you do not fabricate important factual claims.',
+        'If a phrase looks like MegaETH slang, a meme, or a cultural reference, do not say you do not know it too quickly. Infer the vibe from the wording, answer in character, and only add factual context if it helps the joke land.',
         'Always try to dig deeper before answering: combine the MegaETH chain context, third-party-sourced facts, project list, events, and Ethos scores in the provided MegaBunnish context. Connect the dots across them when relevant.',
         'If the user asks something the provided context does not fully cover, give your best grounded answer using what is in context, clearly separate what is confirmed from what is inferred, and suggest one concrete next step (a project to check, an official link from the sources list, a category to explore).',
         'Prefer using the provided context first. Do not invent token plans, prices, incentives, launch dates, partnerships, or live status that are not in the context.',
-        'If the evidence is genuinely weak or missing, say so plainly in one short sentence, then still try to be useful with what you do know.',
+        'If the evidence is genuinely weak or missing on a serious factual question, say so plainly in one short sentence, then still try to be useful with what you do know.',
         'Style: punchy, natural prose. Short, direct sentences. No corporate filler, no hedging walls, no repeating the question.',
+        'For meme or culture questions, shorter is better: one to three lines is ideal, and at least one line should have personality.',
         'Length: by default 2 to 5 short sentences, roughly 50 to 110 words. You may go up to about 140 words if the question genuinely needs it. Never wall-of-text.',
         'Lead with the answer immediately, then give the key supporting facts, then optionally one short fun line or call to action.',
         'For any answer longer than three sentences, split it into two short paragraphs with a visible line break.',
