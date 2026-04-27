@@ -83,6 +83,14 @@ const ETHOS_SCORE_FALLBACK = new Map(
   ETHOS_PROFILE_OVERRIDES.filter((entry) => entry.projectId).map((entry) => [entry.projectId as string, entry.score])
 );
 
+function getSessionStorage() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  return window.sessionStorage;
+}
+
 const getEthosTier = (score: number): 'untrusted' | 'questionable' | 'neutral' | 'reputable' | 'exemplary' | 'revered' => {
   if (!Number.isFinite(score)) return 'neutral';
   if (score < 800) return 'untrusted';
@@ -109,12 +117,13 @@ const DEFAULT_SESSION_GUARD_STATE: SessionGuardState = {
 };
 
 function readSessionGuardState(): SessionGuardState {
-  if (typeof window === 'undefined') {
+  const storage = getSessionStorage();
+  if (!storage) {
     return DEFAULT_SESSION_GUARD_STATE;
   }
 
   try {
-    const raw = window.localStorage.getItem(SESSION_GUARD_STORAGE_KEY);
+    const raw = storage.getItem(SESSION_GUARD_STORAGE_KEY);
     if (!raw) {
       return DEFAULT_SESSION_GUARD_STATE;
     }
@@ -135,11 +144,12 @@ function readSessionGuardState(): SessionGuardState {
 }
 
 function persistSessionGuardState(next: SessionGuardState) {
-  if (typeof window === 'undefined') {
+  const storage = getSessionStorage();
+  if (!storage) {
     return;
   }
 
-  window.localStorage.setItem(SESSION_GUARD_STORAGE_KEY, JSON.stringify(next));
+  storage.setItem(SESSION_GUARD_STORAGE_KEY, JSON.stringify(next));
 }
 
 function formatCountdown(target: number, now: number) {
@@ -189,19 +199,33 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
   const preservedScrollTopRef = useRef<number | null>(null);
 
   useEffect(() => {
-    const storedConversationId = window.localStorage.getItem(CONVERSATION_STORAGE_KEY);
+    const storage = getSessionStorage();
+    const storedConversationId = storage?.getItem(CONVERSATION_STORAGE_KEY);
     if (storedConversationId) {
       setConversationId(storedConversationId);
     }
+
+    // Legacy cleanup: older builds stored session-only chat state in
+    // localStorage, which prevented the 20-message quota from resetting on a
+    // fresh browser session.
+    window.localStorage.removeItem(CONVERSATION_STORAGE_KEY);
+    window.localStorage.removeItem(SESSION_GUARD_STORAGE_KEY);
 
     setSessionGuard(readSessionGuardState());
   }, []);
 
   useEffect(() => {
-    if (!conversationId) {
+    const storage = getSessionStorage();
+    if (!storage) {
       return;
     }
-    window.localStorage.setItem(CONVERSATION_STORAGE_KEY, conversationId);
+
+    if (!conversationId) {
+      storage.removeItem(CONVERSATION_STORAGE_KEY);
+      return;
+    }
+
+    storage.setItem(CONVERSATION_STORAGE_KEY, conversationId);
   }, [conversationId]);
 
   useEffect(() => {
