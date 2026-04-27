@@ -209,7 +209,9 @@ function extractLinkAliases(project) {
 }
 function getProjectAliases(project) {
     var _a;
-    return __spreadArray(__spreadArray([project.name, project.id], ((_a = project.linkedIds) !== null && _a !== void 0 ? _a : []), true), extractLinkAliases(project), true).map(function (value) { return normalize(value); })
+    // Only use real project identifiers (name, id, explicit linked ids) for explicit-match
+    // detection. URL parts produce false positives like "app" matching "app.aave.com".
+    return __spreadArray([project.name, project.id], ((_a = project.linkedIds) !== null && _a !== void 0 ? _a : []), true).map(function (value) { return normalize(value); })
         .filter(function (value) { return value.length >= 3; });
 }
 var buildCorpus = function (project) {
@@ -222,9 +224,9 @@ var buildCorpus = function (project) {
     ], false), ((_c = project.incentives) !== null && _c !== void 0 ? _c : []).flatMap(function (entry) { return [entry.title, entry.reward]; }), true).join(' '));
 };
 function findExplicitProjectMatches(query) {
-    var normalizedQuery = normalize(query);
+    var normalizedQuery = " ".concat(normalize(query), " ");
     return PROJECTS.filter(function (project) {
-        return getProjectAliases(project).some(function (alias) { return normalizedQuery.includes(alias) || alias.includes(normalizedQuery); });
+        return getProjectAliases(project).some(function (alias) { return normalizedQuery.includes(" ".concat(alias, " ")); });
     });
 }
 function isMemeCulturePrompt(query) {
@@ -436,7 +438,7 @@ function selectProjects(message, history) {
     var intent = detectIntent(query);
     var explicitMatches = findExplicitProjectMatches(query);
     if (intent.wantsGeneralChainInfo && intent.categories.length === 0 && explicitMatches.length === 0) {
-        return [];
+        return { ranked: [], intent: intent };
     }
     var scoredProjects = PROJECTS
         .map(function (project) { return scoreProject(project, query, intent); })
@@ -452,9 +454,9 @@ function selectProjects(message, history) {
             reason: "Explicitly mentioned by name in the user query. ".concat((_a = project.jojoInsight) !== null && _a !== void 0 ? _a : "".concat(project.name, " appears in the current MegaBunnish ecosystem dataset."))
         });
     });
-    return __spreadArray(__spreadArray([], forcedMatches, true), scoredProjects, true).slice(0, 6);
+    return { ranked: __spreadArray(__spreadArray([], forcedMatches, true), scoredProjects, true).slice(0, 6), intent: intent };
 }
-function buildContextBlock(projects) {
+function buildContextBlock(projects, intent) {
     var eventIds = new Set();
     var nowMs = Date.now();
     var lines = projects.map(function (_a) {
@@ -476,11 +478,35 @@ function buildContextBlock(projects) {
             "Why selected: ".concat(reason)
         ].join('\n');
     });
-    var sections = [
-        "MegaETH chain context:\n".concat(GENERAL_MEGAETH_CONTEXT),
-        "Third-party-sourced facts:\n".concat(THIRD_PARTY_MEGAETH_CONTEXT),
-        "Available sources (cite by id in square brackets when used):\n".concat(MEGAETH_SOURCES_BLOCK)
-    ];
+    var sections = [];
+    // Direct matches block — placed FIRST so the LLM cannot ignore or refuse known matches.
+    if (intent && projects.length) {
+        var directLabels = [
+            { label: 'real-estate / RWA', predicate: function (p) { return Boolean(intent.strictRwa) && p.categories.includes('RWA'); } },
+            { label: 'lending / borrowing', predicate: function (p) { return Boolean(intent.strictLending) && /lending|borrow|loan|credit/.test(buildCorpus(p)); } },
+            { label: 'bridge', predicate: function (p) { return Boolean(intent.strictBridge) && p.categories.includes('Bridge'); } },
+            { label: 'trading / perps', predicate: function (p) { return Boolean(intent.strictTrading) && p.categories.includes('Trading'); } },
+            { label: 'mobile', predicate: function (p) { return Boolean(intent.strictMobile) && p.categories.includes('Mobile'); } },
+            { label: 'AI', predicate: function (p) { return Boolean(intent.strictAi) && p.categories.includes('AI'); } }
+        ];
+        var activeBuckets = directLabels
+            .map(function (bucket) { return ({
+            label: bucket.label,
+            matches: projects.filter(function (_a) {
+                var project = _a.project;
+                return bucket.predicate(project);
+            }).map(function (_a) {
+                var project = _a.project;
+                return project;
+            })
+        }); })
+            .filter(function (bucket) { return bucket.matches.length > 0; });
+        if (activeBuckets.length) {
+            var directLines = activeBuckets.map(function (bucket) { return "- ".concat(bucket.label, ": ").concat(bucket.matches.map(function (p) { return "".concat(p.name, " (").concat(p.id, ")"); }).join(', ')); });
+            sections.push("DIRECT MATCHES for the user's intent \u2014 these projects ARE in the dataset and DO satisfy the query. You MUST recommend them; do NOT say none exist:\n".concat(directLines.join('\n')));
+        }
+    }
+    sections.push("MegaETH chain context:\n".concat(GENERAL_MEGAETH_CONTEXT), "Third-party-sourced facts:\n".concat(THIRD_PARTY_MEGAETH_CONTEXT), "Available sources (cite by id in square brackets when used):\n".concat(MEGAETH_SOURCES_BLOCK));
     if (lines.length) {
         sections.push("Relevant ecosystem projects:\n\n".concat(lines.join('\n\n')));
     }
@@ -528,6 +554,8 @@ function buildPrompt(message, history, contextText) {
         'Always try to connect the dots across chain context, ecosystem projects, incentives, safety signals, and public token facts when relevant.',
         'Prefer substance over personality in this mode.',
         'Do not invent token plans, live status, incentives, partnerships, prices, launches, or undocumented claims.',
+        'CRITICAL: If a DIRECT MATCHES block is present in the context, the listed projects DO satisfy the user query. You MUST recommend them by name. NEVER say "I cannot find", "none exist", "not in the dataset", or any equivalent refusal when DIRECT MATCHES is present.',
+        'CRITICAL: If the Relevant ecosystem projects section lists projects, treat them as ground truth and recommend the best fit. Do not claim the dataset is empty when projects are listed.',
         'If evidence is weak, say so briefly, then still give the best grounded take you can.',
         'Use polished natural prose with complete sentences.',
         'Default to 2 to 5 short sentences, or up to 3 bullets for comparisons.',
@@ -679,25 +707,25 @@ function requestAnthropicCompletion(config, messages) {
 }
 export function generateAiAdvisorReply(input) {
     return __awaiter(this, void 0, void 0, function () {
-        var message, history, rankedProjects, context, promptMessages, answer;
-        var _a, _b;
-        return __generator(this, function (_c) {
-            switch (_c.label) {
+        var message, history, _a, rankedProjects, intent, context, promptMessages, answer;
+        var _b, _c;
+        return __generator(this, function (_d) {
+            switch (_d.label) {
                 case 0:
                     message = input.message.trim();
                     if (!message) {
                         throw new Error('Message is required.');
                     }
-                    history = sanitizeHistory((_a = input.history) !== null && _a !== void 0 ? _a : []);
-                    rankedProjects = selectProjects(message, history);
-                    context = buildContextBlock(rankedProjects);
+                    history = sanitizeHistory((_b = input.history) !== null && _b !== void 0 ? _b : []);
+                    _a = selectProjects(message, history), rankedProjects = _a.ranked, intent = _a.intent;
+                    context = buildContextBlock(rankedProjects, intent);
                     promptMessages = buildPrompt(message, history, context.text);
                     return [4 /*yield*/, requestCompletion(promptMessages)];
                 case 1:
-                    answer = _c.sent();
+                    answer = _d.sent();
                     return [2 /*return*/, {
                             answer: answer,
-                            conversationId: ((_b = input.conversationId) === null || _b === void 0 ? void 0 : _b.trim()) || randomUUID(),
+                            conversationId: ((_c = input.conversationId) === null || _c === void 0 ? void 0 : _c.trim()) || randomUUID(),
                             recommendations: rankedProjects.slice(0, 4).map(function (_a) {
                                 var project = _a.project, reason = _a.reason;
                                 return ({
@@ -716,3 +744,10 @@ export function generateAiAdvisorReply(input) {
         });
     });
 }
+// Internal helpers exposed for local repro/test scripts only.
+export var __testables = {
+    detectIntent: detectIntent,
+    selectProjects: selectProjects,
+    buildContextBlock: buildContextBlock,
+    buildPrompt: buildPrompt
+};

@@ -237,7 +237,9 @@ function extractLinkAliases(project: AdvisorProject) {
 }
 
 function getProjectAliases(project: AdvisorProject) {
-  return [project.name, project.id, ...(project.linkedIds ?? []), ...extractLinkAliases(project)]
+  // Only use real project identifiers (name, id, explicit linked ids) for explicit-match
+  // detection. URL parts produce false positives like "app" matching "app.aave.com".
+  return [project.name, project.id, ...(project.linkedIds ?? [])]
     .map((value) => normalize(value))
     .filter((value) => value.length >= 3);
 }
@@ -257,10 +259,10 @@ const buildCorpus = (project: AdvisorProject) =>
   );
 
 function findExplicitProjectMatches(query: string) {
-  const normalizedQuery = normalize(query);
+  const normalizedQuery = ` ${normalize(query)} `;
 
   return PROJECTS.filter((project) =>
-    getProjectAliases(project).some((alias) => normalizedQuery.includes(alias) || alias.includes(normalizedQuery))
+    getProjectAliases(project).some((alias) => normalizedQuery.includes(` ${alias} `))
   );
 }
 
@@ -499,7 +501,7 @@ function selectProjects(message: string, history: AdvisorChatMessage[]) {
   const explicitMatches = findExplicitProjectMatches(query);
 
   if (intent.wantsGeneralChainInfo && intent.categories.length === 0 && explicitMatches.length === 0) {
-    return [];
+    return { ranked: [] as RankedProject[], intent };
   }
 
   const scoredProjects = PROJECTS
@@ -515,10 +517,10 @@ function selectProjects(message: string, history: AdvisorChatMessage[]) {
       reason: `Explicitly mentioned by name in the user query. ${project.jojoInsight ?? `${project.name} appears in the current MegaBunnish ecosystem dataset.`}`
     }));
 
-  return [...forcedMatches, ...scoredProjects].slice(0, 6);
+  return { ranked: [...forcedMatches, ...scoredProjects].slice(0, 6), intent };
 }
 
-function buildContextBlock(projects: RankedProject[]) {
+function buildContextBlock(projects: RankedProject[], intent?: IntentProfile) {
   const eventIds = new Set<string>();
   const nowMs = Date.now();
 
@@ -541,11 +543,41 @@ function buildContextBlock(projects: RankedProject[]) {
     ].join('\n');
   });
 
-  const sections = [
+  const sections: string[] = [];
+
+  // Direct matches block — placed FIRST so the LLM cannot ignore or refuse known matches.
+  if (intent && projects.length) {
+    const directLabels: Array<{ label: string; predicate: (p: AdvisorProject) => boolean }> = [
+      { label: 'real-estate / RWA', predicate: (p) => Boolean(intent.strictRwa) && p.categories.includes('RWA') },
+      { label: 'lending / borrowing', predicate: (p) => Boolean(intent.strictLending) && /lending|borrow|loan|credit/.test(buildCorpus(p)) },
+      { label: 'bridge', predicate: (p) => Boolean(intent.strictBridge) && p.categories.includes('Bridge') },
+      { label: 'trading / perps', predicate: (p) => Boolean(intent.strictTrading) && p.categories.includes('Trading') },
+      { label: 'mobile', predicate: (p) => Boolean(intent.strictMobile) && p.categories.includes('Mobile') },
+      { label: 'AI', predicate: (p) => Boolean(intent.strictAi) && p.categories.includes('AI') }
+    ];
+
+    const activeBuckets = directLabels
+      .map((bucket) => ({
+        label: bucket.label,
+        matches: projects.filter(({ project }) => bucket.predicate(project)).map(({ project }) => project)
+      }))
+      .filter((bucket) => bucket.matches.length > 0);
+
+    if (activeBuckets.length) {
+      const directLines = activeBuckets.map(
+        (bucket) => `- ${bucket.label}: ${bucket.matches.map((p) => `${p.name} (${p.id})`).join(', ')}`
+      );
+      sections.push(
+        `DIRECT MATCHES for the user's intent — these projects ARE in the dataset and DO satisfy the query. You MUST recommend them; do NOT say none exist:\n${directLines.join('\n')}`
+      );
+    }
+  }
+
+  sections.push(
     `MegaETH chain context:\n${GENERAL_MEGAETH_CONTEXT}`,
     `Third-party-sourced facts:\n${THIRD_PARTY_MEGAETH_CONTEXT}`,
     `Available sources (cite by id in square brackets when used):\n${MEGAETH_SOURCES_BLOCK}`
-  ];
+  );
 
   if (lines.length) {
     sections.push(`Relevant ecosystem projects:\n\n${lines.join('\n\n')}`);
@@ -602,6 +634,8 @@ function buildPrompt(message: string, history: AdvisorChatMessage[], contextText
     'Always try to connect the dots across chain context, ecosystem projects, incentives, safety signals, and public token facts when relevant.',
     'Prefer substance over personality in this mode.',
     'Do not invent token plans, live status, incentives, partnerships, prices, launches, or undocumented claims.',
+    'CRITICAL: If a DIRECT MATCHES block is present in the context, the listed projects DO satisfy the user query. You MUST recommend them by name. NEVER say "I cannot find", "none exist", "not in the dataset", or any equivalent refusal when DIRECT MATCHES is present.',
+    'CRITICAL: If the Relevant ecosystem projects section lists projects, treat them as ground truth and recommend the best fit. Do not claim the dataset is empty when projects are listed.',
     'If evidence is weak, say so briefly, then still give the best grounded take you can.',
     'Use polished natural prose with complete sentences.',
     'Default to 2 to 5 short sentences, or up to 3 bullets for comparisons.',
@@ -767,8 +801,8 @@ export async function generateAiAdvisorReply(input: {
   }
 
   const history = sanitizeHistory(input.history ?? []);
-  const rankedProjects = selectProjects(message, history);
-  const context = buildContextBlock(rankedProjects);
+  const { ranked: rankedProjects, intent } = selectProjects(message, history);
+  const context = buildContextBlock(rankedProjects, intent);
   const promptMessages = buildPrompt(message, history, context.text);
   const answer = await requestCompletion(promptMessages);
 
@@ -784,3 +818,11 @@ export async function generateAiAdvisorReply(input: {
     suggestedPrompts: DEFAULT_SUGGESTED_PROMPTS
   };
 }
+
+// Internal helpers exposed for local repro/test scripts only.
+export const __testables = {
+  detectIntent,
+  selectProjects,
+  buildContextBlock,
+  buildPrompt
+};
