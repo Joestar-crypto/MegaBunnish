@@ -84,11 +84,81 @@ var GENERAL_MEGAETH_CONTEXT = [
     'MegaETH is presented in its official docs as a high-performance Ethereum L2 and the first real-time blockchain.',
     'Official site claims include 100,000+ transactions per second, 10+ Ggas per second, and sub-10 ms block times.',
     'Official docs describe mini-blocks every ~10 ms for fast confirmations and standard EVM blocks every ~1 second for Ethereum compatibility.',
+    'Mini-blocks are MegaETH-specific, while EVM blocks stay standard Ethereum format so normal wallets, indexers, and toolchains still work.',
+    'Docs say each transaction appears in exactly one mini-block and one EVM block, with mini-blocks mainly improving latency.',
+    'MegaETH docs say applications can subscribe to mini-blocks through a Realtime API for millisecond-level updates.',
     'Architecture docs say the sequencer executes transactions, streams mini-block results to RPC nodes, and settles to Ethereum L1.',
+    'Docs describe globally distributed RPC nodes, including lightweight replica nodes and full nodes that re-execute blocks independently.',
     'MegaETH docs say block data is posted via EigenDA and disputes are resolved on Ethereum using the OP Stack fault-proof framework, with Kailua mentioned as the ZK fraud-proof system.',
+    'Official developer docs describe MegaEVM as fully compatible with Ethereum smart contracts, but note some differences such as a dual gas model.',
+    'The formal spec says MegaETH adds a dual gas model, multidimensional resource limits, gas detention, dynamic storage pricing, and system contracts for oracle storage, timestamps, deployment, and runtime controls.',
+    'The formal spec says transactions that do not touch MegaETH-specific features behave identically to Optimism-compatible EVM semantics unless explicitly overridden.',
+    'Official docs warn that standard Ethereum toolchains may underestimate gas on MegaETH, so gas estimation should use a MegaETH RPC endpoint.',
+    'Official docs say managed RPC providers can expose higher-throughput and debug methods such as debug_traceTransaction.',
+    'Official docs describe the canonical bridge as the preferred path for bridging ETH from Ethereum to MegaETH.',
+    'The developer docs list the Ethereum mainnet side of the canonical bridge at 0x0CA3A2FBC3D770b578223FBB6b062fa875a2eE75.',
+    'Official connect docs say public RPC access exists but is rate-limited, and they point users to uptime.megaeth.com for live network status.',
+    'Official connect docs reference Blockscout and Etherscan explorers for MegaETH mainnet.',
     'MegaETH docs emphasize real-time UX for trading, gaming, live feeds, and apps that need millisecond-level responsiveness.',
+    'The research article says MegaETH focuses on node specialization with sequencers, provers, full nodes, and replica nodes rather than a one-size-fits-all node design.',
+    'The research article says replica nodes apply streamed state diffs without re-executing transactions, while full nodes re-execute blocks and provers validate blocks asynchronously.',
+    'The research article frames MegaETH as a performance-centric design that centralizes block production while keeping validation trustless and decentralized through specialized roles.',
+    'The research article discusses RAM-heavy sequencer machines, low-cost prover nodes, lighter replica nodes, and more capable full nodes as part of that specialization model.',
+    'The research article says MegaETH was designed to support real-time workloads such as high-frequency trading, gaming, autonomous worlds, and other fast-feedback applications.',
+    'Official site describes MegaMafia as an early-stage founder collective building new apps that showcase what MegaETH unlocks.',
+    'The public sale article says the MEGA public sale on Sonar used a ceiling valuation of $999M.',
+    'The public sale article says oversubscribed sales use a U-shaped allocation model intended to balance broad distribution with contributor priority.',
+    'The public sale article says at least 5,000 participants receive baseline allocations starting at $2,650 in that oversubscription framework.',
+    'The public sale article says additional tokens on mainnet are reserved for people who attempted to participate in the Sonar, Echo, and Fluffle sales.',
+    'The public sale article says MegaETH wants non-insider investors to become the single largest stakeholder group, larger than the VCs and the team.',
+    'The public sale article explicitly positions MEGA holders, users, and users who also become investors as distinct stakeholder groups.',
+    'The public sale article mentions prior fundraising from investors such as Dragonfly and Vitalik Buterin, alongside more than 3,000 Echo users.',
+    'The token page currently shows a MEGA TGE page and app KPI framing, but the loaded public page fragment does not provide a full token allocation table or supply breakdown.',
+    'The current official pages loaded here do not provide a verified total token supply number, detailed vesting schedule, or full token allocation percentages.',
+    'If asked about tokenomics, answer with the published sale mechanics and explicitly say that total supply, allocation percentages, and vesting details are not specified in the currently loaded official context.',
+    'The USDm launch article says USDm is a native stablecoin on MegaETH issued through Ethena infrastructure and designed to align incentives across the network.',
+    'The USDm article says reserve yield is intended to help cover sequencer operating costs so gas can be priced at cost rather than with an added sequencer margin.',
+    'The USDm article says USDm v1 starts on Ethena USDtb rails, while USDT0 and cUSD remain supported as first-class stablecoins on MegaETH.',
+    'The user FAQ says RPC links return 405 in browsers because they expect POST requests from wallets or tools rather than GET requests from browsers.',
+    'The user FAQ says the testnet faucet is capped at 0.005 testnet ETH per user every 24 hours and remains testnet-only after mainnet.',
+    'Official token page references MEGA TGE, but the currently loaded public context does not provide a verified token supply number.',
     'The current MegaBunnish context does not provide a verified numeric token supply. If asked for supply, say the current context does not specify it.'
 ].join('\n');
+var MEGAETH_SOURCES = [
+    { id: 'megaeth-site', label: 'MegaETH official site', url: 'https://www.megaeth.com/' },
+    { id: 'megaeth-docs', label: 'MegaETH docs', url: 'https://docs.megaeth.com/' },
+    { id: 'megaeth-spec', label: 'MegaETH spec', url: 'https://docs.megaeth.com/spec/' },
+    { id: 'megaeth-research', label: 'MegaETH research', url: 'https://www.megaeth.com/research' },
+    { id: 'megaeth-faq', label: 'MegaETH user FAQ', url: 'https://docs.megaeth.com/user-guide/faq' },
+    { id: 'public-sale', label: 'MegaETH public sale article', url: 'https://www.megaeth.com/blog-news/the-megaeth-public-sale-a-reminder-to-stand-on-business' },
+    { id: 'usdm', label: 'MegaETH USDm article', url: 'https://www.megaeth.com/blog-news/megaeth-introduces-usdm' },
+    { id: 'salt', label: 'MegaETH SALT article', url: 'https://www.megaeth.com/blog-news/endgame-how-salt-breaks-the-bottleneck-thats-been-strangling-blockchains' },
+    { id: 'endgame', label: 'MegaETH Endgame article', url: 'https://www.megaeth.com/blog-news/endgame-how-megaeth-bridges-throughput-and-decentralization' },
+    { id: 'chainlink-scale', label: 'MegaETH joins Chainlink SCALE', url: 'https://www.megaeth.com/blog-news/megaeth-x-chainlink-scale' },
+    { id: 'last-mile', label: 'MegaETH The Last Mile article', url: 'https://www.megaeth.com/blog-news/the-last-mile' },
+    { id: 'token-page', label: 'MEGA token page', url: 'https://www.megaeth.com/token' },
+    { id: 'coingecko', label: 'CoinGecko MEGA listing', url: 'https://www.coingecko.com/en/coins/megaeth' },
+    { id: 'cryptorank', label: 'CryptoRank MegaETH funding', url: 'https://cryptorank.io/ico/megaeth' },
+    { id: 'messari', label: 'Messari MegaETH profile', url: 'https://messari.io/project/megaeth' },
+    { id: 'blockscout', label: 'MegaETH Blockscout explorer', url: 'https://megaeth.blockscout.com/' },
+    { id: 'github', label: 'MegaETH Labs GitHub', url: 'https://github.com/megaeth-labs' }
+];
+var THIRD_PARTY_MEGAETH_CONTEXT = [
+    'Messari profile [messari] describes MegaETH as a real-time, EVM-compatible L2 focused on low latency, high throughput, and node specialization separating sequencer and full-node roles.',
+    'Messari profile [messari] lists Yilong Li and Lei Yang as MegaETH founders.',
+    'Messari profile [messari] reports total disclosed fundraising of about $93.2M across 4 rounds, with the latest disclosed round being $50M in October 2025 and the first round being an Enterprise Seed in June 2024.',
+    'CryptoRank [cryptorank] reports the MegaETH ICO ended on Oct 30, 2025 and raised about $107.68M, with public sale roughly 30% and private/funding rounds roughly 70% of the total raise.',
+    'CryptoRank [cryptorank] points to the Sonar sale page at token.megaeth.com as the public sale interface.',
+    'CoinGecko [coingecko] lists the MEGA token contract address on MegaETH as 0x28b7e77f82b25b95953825f1e3ea0e36c1c29861 and references Blockscout as the chain explorer.',
+    'CoinGecko [coingecko] notes the most active observed trading pair has been MEGA/USDm on a MegaETH DEX pool.',
+    'The Chainlink SCALE article [chainlink-scale] says MegaETH joined Chainlink SCALE with Chainlink live at MegaETH mainnet launch, exposing access to Aave, GMX and roughly $14B in flagship DeFi assets including Lido wstETH and Lombard BTC.b and LBTC.',
+    'The SALT article [salt] introduces SALT (Small Authentication Large Trie) as a state architecture that keeps the entire authentication structure in RAM to eliminate disk I/O during state access.',
+    'The Endgame article [endgame] says MegaETH targets stateless validation so anyone can verify blocks with low specs, reinforced by Pi Squared semantic validation.',
+    'The Last Mile article [last-mile] frames real-time infrastructure as the missing last mile in crypto UX.',
+    'The Blockscout explorer [blockscout] is the canonical block explorer linked from MegaETH official surfaces.',
+    'The MegaETH Labs GitHub [github] hosts the official MegaETH client and tooling repositories.'
+].join('\n');
+var MEGAETH_SOURCES_BLOCK = MEGAETH_SOURCES.map(function (source) { return "[".concat(source.id, "] ").concat(source.label, " - ").concat(source.url); }).join('\n');
 var AiAdvisorConfigError = /** @class */ (function (_super) {
     __extends(AiAdvisorConfigError, _super);
     function AiAdvisorConfigError() {
@@ -323,7 +393,11 @@ function buildContextBlock(projects) {
             "Why selected: ".concat(reason)
         ].join('\n');
     });
-    var sections = ["MegaETH chain context:\n".concat(GENERAL_MEGAETH_CONTEXT)];
+    var sections = [
+        "MegaETH chain context:\n".concat(GENERAL_MEGAETH_CONTEXT),
+        "Third-party-sourced facts:\n".concat(THIRD_PARTY_MEGAETH_CONTEXT),
+        "Available sources (cite by id in square brackets when used):\n".concat(MEGAETH_SOURCES_BLOCK)
+    ];
     if (lines.length) {
         sections.push("Relevant ecosystem projects:\n\n".concat(lines.join('\n\n')));
     }
@@ -368,16 +442,21 @@ function buildPrompt(message, history, contextText) {
         'Never invent incentives, launches, token plans, live status, or opinions not grounded in the provided data.',
         'If the evidence is weak, say that directly.',
         'Write in polished, natural prose with complete sentences.',
+        'Be extremely concise by default.',
         'Use short, direct sentences that go straight to the point.',
-        'Do not answer with compressed fragments, note dumps, telegraphic phrasing, or long clause chains.',
-        'Lead with a clear conclusion, then explain the ranking or answer in well-written sentences.',
-        'For any answer longer than three sentences, split the response into two or three short paragraphs with visible line breaks.',
-        'Prefer short paragraphs of one to three sentences each.',
-        'For comparison questions, mention the top options first and explain why each one fits in one or two complete sentences.',
+        'Default to 2 to 4 short sentences total unless the user explicitly asks for depth.',
+        'Target roughly 40 to 90 words for most answers.',
+        'Do not answer with compressed fragments, note dumps, telegraphic phrasing, long clause chains, or filler.',
+        'Do not restate the question.',
+        'Lead with the answer immediately, then give only the key supporting facts.',
+        'For any answer longer than three sentences, split it into two very short paragraphs with visible line breaks.',
+        'For comparison questions, use at most 3 bullets, and keep each bullet to one short sentence.',
         'When the user asks about safety, trust, reliability, or beginner-friendly choices, explicitly factor Ethos trust scores into the comparison, but do not rely on Ethos alone.',
         'When recommending projects, explain the distinction between explicit fit and broader fallback options when relevant.',
         'You are not limited to recommending apps. You can also answer general questions about MegaETH itself when the provided context covers them.',
-        'Keep answers concise but useful, usually one short paragraph plus up to three bullet points if needed.'
+        'For token, ICO, public sale, TGE, or tokenomics questions, clearly separate disclosed facts from undisclosed details.',
+        'When you rely on a specific external source from the provided sources list, append a final line in the exact format: Sources: [id1], [id2]. Use only ids from the provided sources list. Do not invent ids or URLs. Omit the line entirely when no external source was used.',
+        'If the context does not contain a fact, say that briefly instead of speculating.'
     ].join(' ');
     var messages = __spreadArray(__spreadArray([
         { role: 'system', content: systemPrompt },
@@ -417,7 +496,8 @@ function requestOpenAiCompatibleCompletion(config, messages) {
                             headers: headers,
                             body: JSON.stringify({
                                 model: config.model,
-                                temperature: 0.2,
+                                temperature: 0.1,
+                                max_tokens: 220,
                                 messages: messages
                             })
                         })];
@@ -471,8 +551,8 @@ function requestAnthropicCompletion(config, messages) {
                             },
                             body: JSON.stringify({
                                 model: config.model,
-                                max_tokens: 700,
-                                temperature: 0.2,
+                                max_tokens: 220,
+                                temperature: 0.1,
                                 system: systemPrompt,
                                 messages: userAssistantMessages.map(function (entry) { return ({
                                     role: entry.role,
