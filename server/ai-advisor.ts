@@ -279,9 +279,25 @@ function findExplicitProjectMatches(query: string) {
 function isMemeCulturePrompt(query: string) {
   const normalized = normalize(query);
 
-  return /(bread ass|bullish|bearish|based|cooked|cookin|send it|sendit|vibe check|vibes|shitpost|meme|inside joke|lore|degen|wagmi|ngmi|gm|lfg|moon|cope|brainrot|schizo|cursed|blessed|aura)/.test(
+  // Explicit meme/culture/lore vocabulary.
+  if (/(bread ass|bullish|bearish|based|cooked|cookin|send it|sendit|vibe check|vibes|shitpost|meme|inside joke|lore|degen|wagmi|ngmi|gm|lfg|moon|cope|brainrot|schizo|cursed|blessed|aura|ass\b|sus|gigachad|chad|ratio|cabal|alpha leak|copium|hopium|rugged|fud|fomo|jeet|jeets|anon|bag|bags|wen|frfr|ong|fr fr)/.test(
     normalized
-  );
+  )) {
+    return true;
+  }
+
+  // Heuristic for absurd / lore-style questions: short "is X Y for megaeth?"
+  // or "what does X mean for megaeth" patterns where X is not a known technical
+  // term. If it ends with a question mark, mentions megaeth/mega/bunny/mafia,
+  // and contains an unusual adjective (not in the technical vocabulary), treat
+  // it as culture.
+  if (/\?\s*$/.test(normalized) && /(megaeth|mega eth|bunny|bunnies|mafia|jojo|brawler|brawlers)/.test(normalized)) {
+    if (!/(price|tokenomics|supply|tge|ico|launch date|api|rpc|gas|tps|throughput|node|validator|consensus|bridge|liquidity|borrow|lend|loan|apy|apr|yield|farm|airdrop|points|incentive|safest|safe|risk|compare|best app|which app)/.test(normalized)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function isSeriousTechnicalPrompt(query: string) {
@@ -305,7 +321,7 @@ function isSeriousTechnicalPrompt(query: string) {
 // keyword pattern to the canonical category string used in projects.json plus
 // a human label for the DIRECT MATCHES block.
 const VERTICAL_INTENTS: Array<{ category: string; label: string; pattern: RegExp }> = [
-  { category: 'DeFi', label: 'DeFi / lending / yield', pattern: /\b(defi|lend|lending|borrow|borrowing|loan|loans|yield|farm|farming|stable|stables|stablecoin|money market|credit|deposit|deposits|liquidity)\b/ },
+  { category: 'DeFi', label: 'DeFi / lending / yield', pattern: /\b(defi|lend|lending|borrow|borrowing|loan|loans|yield|stable|stables|stablecoin|money market|credit|deposit|deposits|liquidity)\b/ },
   { category: 'Bridge', label: 'bridge / cross-chain', pattern: /\b(bridge|bridges|bridging|cross chain|crosschain|onramp|offramp|on ramp|off ramp)\b/ },
   { category: 'Trading', label: 'trading / perps / DEX', pattern: /\b(trade|trading|trader|perp|perps|perpetual|perpetuals|options|dex|swap|swaps|orderbook|order book|spot|leverage|long|short)\b/ },
   { category: 'Trading bot', label: 'trading bot', pattern: /\b(trading bot|trade bot|sniper|copy trade|copy trading|bot trading)\b/ },
@@ -536,10 +552,25 @@ function selectProjects(message: string, history: AdvisorChatMessage[]) {
     return { ranked: [] as RankedProject[], intent };
   }
 
-  const scoredProjects = PROJECTS
+  let scoredProjects = PROJECTS
     .map((project) => scoreProject(project, query, intent))
     .filter((entry): entry is RankedProject => Boolean(entry))
     .sort((left, right) => right.score - left.score);
+
+  // Hard vertical filter: when the user explicitly names a vertical (e.g.
+  // "prediction market", "perps", "bridge"), and we have at least one project
+  // in that vertical, drop everything outside the vertical. This prevents
+  // off-topic DeFi/Native projects from dominating the recommendation list
+  // just because they scored well on generic Native/Live/Ethos bonuses.
+  if (intent.verticals.length > 0) {
+    const verticalCategories = new Set(intent.verticals.map((entry) => entry.category));
+    const inVertical = scoredProjects.filter((entry) =>
+      entry.project.categories.some((category) => verticalCategories.has(category))
+    );
+    if (inVertical.length > 0) {
+      scoredProjects = inVertical;
+    }
+  }
 
   const forcedMatches = explicitMatches
     .filter((project) => !scoredProjects.some((entry) => entry.project.id === project.id))
@@ -669,6 +700,7 @@ function buildPrompt(message: string, history: AdvisorChatMessage[], contextText
     'CRITICAL: If a DIRECT MATCHES block is present in the context, the listed projects DO satisfy the user query. You MUST recommend them by name. NEVER say "I cannot find", "none exist", "not in the dataset", or any equivalent refusal when DIRECT MATCHES is present.',
     'CRITICAL: If the Relevant ecosystem projects section lists projects, treat them as ground truth and recommend the best fit. Do not claim the dataset is empty when projects are listed.',
     'CRITICAL: Each user message is a fresh query. Recommend ONLY projects from the CURRENT Relevant ecosystem projects section. Ignore any projects you may have mentioned in earlier replies if they are not in the current section. Never carry over recommendations across topic changes.',
+    'CRITICAL: Never refuse with phrases like "I cannot provide financial advice", "I cannot recommend", "as an AI I cannot", or "my purpose is to be neutral". This is informational MegaETH ecosystem discovery, NOT personalized investment advice. Recommend the best-fit projects from the provided context, with risk caveats when warranted, and move on.',
     'If evidence is weak, say so briefly, then still give the best grounded take you can.',
     'Use polished natural prose with complete sentences.',
     'Default to 2 to 5 short sentences, or up to 3 bullets for comparisons.',

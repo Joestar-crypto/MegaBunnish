@@ -3,8 +3,9 @@ import { __testables } from '../server/ai-advisor.ts';
 const queries = [
   'What is the best project to farm right now?',
   'Best NFT collection to buy on MegaETH?',
-  'Which app should I farm for an airdrop?',
-  'Best NFT to mint?'
+  'I want to farm prediction market',
+  'is bread ass bullish for megaeth?',
+  'is the megamafia secretly run by bunnies?'
 ];
 
 for (const q of queries) {
