@@ -48,13 +48,16 @@ export type AdvisorReply = {
   suggestedPrompts: string[];
 };
 
+type VerticalMatch = {
+  category: string;
+  label: string;
+};
+
 type IntentProfile = {
   categories: string[];
+  verticals: VerticalMatch[];
+  // Strict bonuses kept for the two verticals that need extra subtype scoring.
   strictLending: boolean;
-  strictBridge: boolean;
-  strictTrading: boolean;
-  strictMobile: boolean;
-  strictAi: boolean;
   strictRwa: boolean;
   preferLive: boolean;
   preferIncentives: boolean;
@@ -280,10 +283,7 @@ function isSeriousTechnicalPrompt(query: string) {
 
   return (
     intent.strictLending ||
-    intent.strictBridge ||
-    intent.strictTrading ||
-    intent.strictMobile ||
-    intent.strictAi ||
+    intent.verticals.length > 0 ||
     intent.preferSafety ||
     intent.preferBeginnerFriendly ||
     intent.preferIncentives ||
@@ -294,29 +294,37 @@ function isSeriousTechnicalPrompt(query: string) {
   );
 }
 
+// Vertical = a project category the user is asking about. Each entry maps a
+// keyword pattern to the canonical category string used in projects.json plus
+// a human label for the DIRECT MATCHES block.
+const VERTICAL_INTENTS: Array<{ category: string; label: string; pattern: RegExp }> = [
+  { category: 'DeFi', label: 'DeFi / lending / yield', pattern: /\b(defi|lend|lending|borrow|borrowing|loan|loans|yield|farm|farming|stable|stables|stablecoin|money market|credit|deposit|deposits|liquidity)\b/ },
+  { category: 'Bridge', label: 'bridge / cross-chain', pattern: /\b(bridge|bridges|bridging|cross chain|crosschain|onramp|offramp|on ramp|off ramp)\b/ },
+  { category: 'Trading', label: 'trading / perps / DEX', pattern: /\b(trade|trading|trader|perp|perps|perpetual|perpetuals|options|dex|swap|swaps|orderbook|order book|spot|leverage|long|short)\b/ },
+  { category: 'Trading bot', label: 'trading bot', pattern: /\b(trading bot|trade bot|sniper|copy trade|copy trading|bot trading)\b/ },
+  { category: 'Mobile', label: 'mobile app', pattern: /\b(mobile|iphone|ios|android|app store|play store)\b/ },
+  { category: 'AI', label: 'AI / agents', pattern: /\b(ai|llm|llms|agent|agents|autonomous|chatbot|copilot)\b/ },
+  { category: 'RWA', label: 'real-estate / RWA', pattern: /\b(rwa|rwas|real world asset|real world assets|real estate|property|properties|housing|mortgage|rental|commercial real estate|residential real estate|immobilier)\b/ },
+  { category: 'NFT', label: 'NFT / collectibles', pattern: /\b(nft|nfts|mint|minting|collectible|collectibles|pfp|pfps|jpeg|jpegs)\b/ },
+  { category: 'Gaming', label: 'gaming', pattern: /\b(game|games|gaming|gamefi|game fi|play to earn|p2e|tcg|rpg|fps|mmo|esports|playable)\b/ },
+  { category: 'Launchpad', label: 'launchpad / token sale', pattern: /\b(launchpad|launch pad|ido|ico|token sale|public sale|presale|pre sale|private sale|fair launch)\b/ },
+  { category: 'Gambling', label: 'gambling / casino', pattern: /\b(gambling|gamble|casino|bet|betting|sportsbook|roulette|poker|blackjack|slots)\b/ },
+  { category: 'Tools', label: 'developer / power-user tools', pattern: /\b(tool|tools|tooling|sdk|api|infra|infrastructure|explorer|indexer|analytics|dashboard|portfolio tracker|wallet tracker)\b/ },
+  { category: 'Social', label: 'social / SocialFi', pattern: /\b(social|socialfi|social fi|community|chat|messaging|friend tech|friend.tech|profile|reputation network)\b/ },
+  { category: 'Prediction Market', label: 'prediction market', pattern: /\b(prediction|prediction market|prediction markets|polymarket|forecast|forecasting|odds|betting market|event market|event markets)\b/ },
+  { category: 'Depin', label: 'DePIN / physical infra', pattern: /\b(depin|de pin|physical infrastructure|hardware network|hardware nodes)\b/ },
+  { category: 'Meme', label: 'meme coin / culture', pattern: /\b(meme|memecoin|meme coin|memecoins|shitcoin|shitcoins|degen coin|culture coin)\b/ }
+];
+
 function detectIntent(query: string): IntentProfile {
   const normalized = normalize(query);
-  const categories = new Set<string>();
   const wantsGeneralChainInfo = /(megaeth|chain|network|mainnet|l2|ethereum|throughput|tps|ggas|latency|block ?time|mini block|miniblock|realtime|real time|architecture|sequencer|settlement|eigenda|op stack|kailua|supply|token|tge|capacity|capabilities)/.test(normalized);
 
-  if (/\b(lend|lending|borrow|borrowing|loan|loans|yield|farm|farming|stable|stables|stablecoin|money market|credit)\b/.test(normalized)) {
-    categories.add('DeFi');
-  }
-  if (/\b(bridge|bridges|bridging|transfer|onramp|offramp|on ramp|off ramp)\b/.test(normalized)) {
-    categories.add('Bridge');
-  }
-  if (/\b(trade|trading|trader|perp|perps|perpetual|options|dex|swap|swaps|market making)\b/.test(normalized)) {
-    categories.add('Trading');
-  }
-  if (/\b(mobile|iphone|ios|android|app store|play store)\b/.test(normalized)) {
-    categories.add('Mobile');
-  }
-  if (/\b(ai|llm|llms|agent|agents|autonomous|chatbot|copilot)\b/.test(normalized)) {
-    categories.add('AI');
-  }
-  if (/\b(rwa|rwas|real world asset|real world assets|real estate|property|properties|housing|mortgage|rental|commercial real estate|residential real estate|immobilier)\b/.test(normalized)) {
-    categories.add('RWA');
-  }
+  const verticals: VerticalMatch[] = VERTICAL_INTENTS
+    .filter((entry) => entry.pattern.test(normalized))
+    .map((entry) => ({ category: entry.category, label: entry.label }));
+
+  const categories = new Set<string>(verticals.map((entry) => entry.category));
 
   if (!categories.size && !wantsGeneralChainInfo) {
     categories.add('DeFi');
@@ -324,12 +332,9 @@ function detectIntent(query: string): IntentProfile {
 
   return {
     categories: Array.from(categories),
+    verticals,
     strictLending: /\b(lend|lending|borrow|borrowing|loan|loans|credit)\b/.test(normalized),
-    strictBridge: /\b(bridge|bridges|bridging|onramp|offramp|on ramp|off ramp)\b/.test(normalized),
-    strictTrading: /\b(trade|trading|trader|perp|perps|perpetual|options|dex|swap|swaps)\b/.test(normalized),
-    strictMobile: /\b(mobile|iphone|ios|android)\b/.test(normalized),
-    strictAi: /\b(ai|llm|llms|agent|agents|autonomous|chatbot|copilot)\b/.test(normalized),
-    strictRwa: /\b(rwa|rwas|real world asset|real world assets|real estate|property|properties|housing|mortgage|rental|commercial real estate|residential real estate|immobilier)\b/.test(normalized),
+    strictRwa: verticals.some((entry) => entry.category === 'RWA'),
     preferLive: /(live|now|active|today|current|right now)/.test(normalized),
     preferIncentives: /(farm|yield|points|reward|incentive)/.test(normalized),
     preferSafety: /(safe|safest|safety|secure|securest|trusted|trust|reliable|risk|risky)/.test(normalized),
@@ -340,36 +345,28 @@ function detectIntent(query: string): IntentProfile {
 }
 
 function buildReason(project: AdvisorProject, corpus: string, intent: IntentProfile, event: AppEvent | null) {
-  const ethos = ETHOS_BY_PROJECT_ID.get(project.id);
-  const ethosNote = ethos
-    ? ` Ethos trust score: ${ethos.score}${ethos.tier ? ` (${ethos.tier})` : ''}.`
-    : '';
+  // Note: Ethos score is intentionally NOT included here. It is rendered as a
+  // colored badge on the recommendation card, so duplicating it in the prose
+  // is noisy.
 
   if (intent.strictLending && /lending|borrow|loan|credit/.test(corpus)) {
-    return (project.jojoInsight ?? 'Explicitly positioned around lending and borrowing in the current MegaBunnish data.') + ethosNote;
+    return project.jojoInsight ?? 'Explicitly positioned around lending and borrowing in the current MegaBunnish data.';
   }
-  if (intent.strictBridge && project.categories.includes('Bridge')) {
-    return (project.jojoInsight ?? 'Bridge-focused project in the MegaETH ecosystem dataset.') + ethosNote;
+
+  // Generic vertical match: if the user asked for a vertical and this project
+  // belongs to it, surface its insight directly.
+  const matchedVertical = intent.verticals.find((entry) => project.categories.includes(entry.category));
+  if (matchedVertical) {
+    return project.jojoInsight ?? `${matchedVertical.label} project in the current MegaETH ecosystem dataset.`;
   }
-  if (intent.strictTrading && project.categories.includes('Trading')) {
-    return (project.jojoInsight ?? 'Trading-focused project with a clear product thesis in the dataset.') + ethosNote;
-  }
-  if (intent.strictMobile && project.categories.includes('Mobile')) {
-    return (project.jojoInsight ?? 'Mobile-oriented product in the current MegaETH ecosystem list.') + ethosNote;
-  }
-  if (intent.strictAi && project.categories.includes('AI')) {
-    return (project.jojoInsight ?? 'AI project with a differentiated angle in the current dataset.') + ethosNote;
-  }
-  if (intent.strictRwa && project.categories.includes('RWA')) {
-    return (project.jojoInsight ?? 'RWA project in the current MegaETH dataset.') + ethosNote;
-  }
+
   if (project.incentives?.length) {
-    return `Visible incentive: ${project.incentives[0].title}.${ethosNote}`;
+    return `Visible incentive: ${project.incentives[0].title}.`;
   }
   if (event) {
-    return `Relevant event: ${event.title}.${ethosNote}`;
+    return `Relevant event: ${event.title}.`;
   }
-  return (project.jojoInsight ?? `${project.name} is a relevant ${project.categories[0] ?? 'ecosystem'} project in the current site data.`) + ethosNote;
+  return project.jojoInsight ?? `${project.name} is a relevant ${project.categories[0] ?? 'ecosystem'} project in the current site data.`;
 }
 
 function findBestEvent(projectId: string, nowMs: number) {
@@ -433,30 +430,23 @@ function scoreProject(project: AdvisorProject, query: string, intent: IntentProf
     }
   }
 
-  if (intent.strictBridge) {
-    score += project.categories.includes('Bridge') ? 36 : -18;
-  }
-
-  if (intent.strictTrading) {
-    score += project.categories.includes('Trading') ? 32 : -14;
-  }
-
-  if (intent.strictMobile) {
-    score += project.categories.includes('Mobile') ? 28 : -12;
-  }
-
-  if (intent.strictAi) {
-    score += project.categories.includes('AI') ? 28 : -12;
+  // Generic vertical scoring — every vertical the user mentioned applies a
+  // category bonus or a malus for off-vertical projects.
+  if (intent.verticals.length) {
+    const matchesAnyVertical = intent.verticals.some((entry) => project.categories.includes(entry.category));
+    if (matchesAnyVertical) {
+      score += 30;
+    } else if (!intent.strictLending) {
+      // Lending already handled above with its own DeFi fallback.
+      score -= 16;
+    }
   }
 
   if (intent.strictRwa) {
     if (project.categories.includes('RWA')) {
-      score += 34;
       if (/real estate|property|rental|mortgage|housing|credit/.test(corpus)) {
         score += 22;
       }
-    } else {
-      score -= 18;
     }
   }
 
@@ -551,20 +541,13 @@ function buildContextBlock(projects: RankedProject[], intent?: IntentProfile) {
   const sections: string[] = [];
 
   // Direct matches block — placed FIRST so the LLM cannot ignore or refuse known matches.
-  if (intent && projects.length) {
-    const directLabels: Array<{ label: string; predicate: (p: AdvisorProject) => boolean }> = [
-      { label: 'real-estate / RWA', predicate: (p) => Boolean(intent.strictRwa) && p.categories.includes('RWA') },
-      { label: 'lending / borrowing', predicate: (p) => Boolean(intent.strictLending) && /lending|borrow|loan|credit/.test(buildCorpus(p)) },
-      { label: 'bridge', predicate: (p) => Boolean(intent.strictBridge) && p.categories.includes('Bridge') },
-      { label: 'trading / perps', predicate: (p) => Boolean(intent.strictTrading) && p.categories.includes('Trading') },
-      { label: 'mobile', predicate: (p) => Boolean(intent.strictMobile) && p.categories.includes('Mobile') },
-      { label: 'AI', predicate: (p) => Boolean(intent.strictAi) && p.categories.includes('AI') }
-    ];
-
-    const activeBuckets = directLabels
-      .map((bucket) => ({
-        label: bucket.label,
-        matches: projects.filter(({ project }) => bucket.predicate(project)).map(({ project }) => project)
+  if (intent && projects.length && intent.verticals.length) {
+    const activeBuckets = intent.verticals
+      .map((vertical) => ({
+        label: vertical.label,
+        matches: projects
+          .filter(({ project }) => project.categories.includes(vertical.category))
+          .map(({ project }) => project)
       }))
       .filter((bucket) => bucket.matches.length > 0);
 

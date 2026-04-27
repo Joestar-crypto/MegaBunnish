@@ -39,13 +39,14 @@ export type AdvisorReply = {
     sourceEventIds: string[];
     suggestedPrompts: string[];
 };
+type VerticalMatch = {
+    category: string;
+    label: string;
+};
 type IntentProfile = {
     categories: string[];
+    verticals: VerticalMatch[];
     strictLending: boolean;
-    strictBridge: boolean;
-    strictTrading: boolean;
-    strictMobile: boolean;
-    strictAi: boolean;
     strictRwa: boolean;
     preferLive: boolean;
     preferIncentives: boolean;

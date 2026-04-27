@@ -2036,10 +2036,52 @@ select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.28rem;
-  color: rgba(244, 246, 255, 0.78);
+  gap: 0.32rem;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
   font-size: 0.78rem;
+  font-weight: 600;
   line-height: 1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, rgba(113, 167, 255, 0.22), rgba(113, 167, 255, 0.08));
+  color: #f1f8ff;
+}
+
+.ai-recommendation-card__ethos-inline--untrusted {
+  background: linear-gradient(135deg, #7a0215, #ff2e49);
+  border-color: #ff6a80;
+  color: #fff5f7;
+  box-shadow: 0 0 0 1px rgba(255, 82, 120, 0.35);
+}
+
+.ai-recommendation-card__ethos-inline--questionable {
+  background: linear-gradient(135deg, #b67200, #ffb11f);
+  border-color: #ffc857;
+  color: #2b1600;
+}
+
+.ai-recommendation-card__ethos-inline--neutral {
+  background: linear-gradient(135deg, #f8f7f0, #ffffff);
+  border-color: #ffffff;
+  color: #0e142b;
+}
+
+.ai-recommendation-card__ethos-inline--reputable {
+  background: linear-gradient(135deg, #8ab0ff, #bdd4ff);
+  border-color: #dfe9ff;
+  color: #03102d;
+}
+
+.ai-recommendation-card__ethos-inline--exemplary {
+  background: linear-gradient(135deg, #1c86ff, #46b2ff);
+  border-color: #72c8ff;
+  color: #f1f8ff;
+}
+
+.ai-recommendation-card__ethos-inline--revered {
+  background: linear-gradient(135deg, #172d66, #3049ad);
+  border-color: #4f6fe1;
+  color: #e6edff;
 }
 
 .ai-recommendation-card__ethos-inline img {
@@ -2047,6 +2089,8 @@ select {
   height: 0.95rem;
   border-radius: 50%;
   flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 1px;
 }
 
 .ai-recommendation-card__x-link {

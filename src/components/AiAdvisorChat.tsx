@@ -83,6 +83,16 @@ const ETHOS_SCORE_FALLBACK = new Map(
   ETHOS_PROFILE_OVERRIDES.filter((entry) => entry.projectId).map((entry) => [entry.projectId as string, entry.score])
 );
 
+const getEthosTier = (score: number): 'untrusted' | 'questionable' | 'neutral' | 'reputable' | 'exemplary' | 'revered' => {
+  if (!Number.isFinite(score)) return 'neutral';
+  if (score < 800) return 'untrusted';
+  if (score < 1200) return 'questionable';
+  if (score < 1400) return 'neutral';
+  if (score < 1600) return 'reputable';
+  if (score < 1800) return 'exemplary';
+  return 'revered';
+};
+
 const INITIAL_MESSAGE: ChatMessage = {
   id: 'assistant-intro',
   role: 'assistant',
@@ -619,9 +629,6 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
                               {project.isLive ? 'Live' : project.incentives.length ? 'Incentivized' : 'Watchlist'}
                             </span>
                             <div className="ai-recommendation-card__badges">
-                              {typeof ethosScore === 'number' ? (
-                                <span className="ai-recommendation-card__ethos">Ethos {ethosScore}</span>
-                              ) : null}
                               <span className="ai-recommendation-card__score">{project.primaryCategory}</span>
                             </div>
                           </div>
@@ -639,7 +646,10 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
                               <div className="ai-recommendation-card__heading-row">
                                 <strong>{project.name}</strong>
                                 {typeof ethosScore === 'number' ? (
-                                  <span className="ai-recommendation-card__ethos-inline" title={`Ethos trust score ${ethosScore}`}>
+                                  <span
+                                    className={`ai-recommendation-card__ethos-inline ai-recommendation-card__ethos-inline--${getEthosTier(ethosScore)}`}
+                                    title={`Ethos trust score ${ethosScore}`}
+                                  >
                                     <img src="/logos/Ethos.webp" alt="" aria-hidden="true" />
                                     <span>{ethosScore}</span>
                                   </span>

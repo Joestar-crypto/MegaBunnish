@@ -237,49 +237,49 @@ function isSeriousTechnicalPrompt(query) {
     var intent = detectIntent(query);
     var normalized = normalize(query);
     return (intent.strictLending ||
-        intent.strictBridge ||
-        intent.strictTrading ||
-        intent.strictMobile ||
-        intent.strictAi ||
+        intent.verticals.length > 0 ||
         intent.preferSafety ||
         intent.preferBeginnerFriendly ||
         intent.preferIncentives ||
         intent.wantsGeneralChainInfo ||
         /(farm|farming|points|yield|apy|apr|incentive|rewards|borrow|loan|bridge|liquidity|lp|perp|perps|risk|safest|compare|best app|which app|tokenomics|supply|tge|valuation|unlock|vesting)/.test(normalized));
 }
+// Vertical = a project category the user is asking about. Each entry maps a
+// keyword pattern to the canonical category string used in projects.json plus
+// a human label for the DIRECT MATCHES block.
+var VERTICAL_INTENTS = [
+    { category: 'DeFi', label: 'DeFi / lending / yield', pattern: /\b(defi|lend|lending|borrow|borrowing|loan|loans|yield|farm|farming|stable|stables|stablecoin|money market|credit|deposit|deposits|liquidity)\b/ },
+    { category: 'Bridge', label: 'bridge / cross-chain', pattern: /\b(bridge|bridges|bridging|cross chain|crosschain|onramp|offramp|on ramp|off ramp)\b/ },
+    { category: 'Trading', label: 'trading / perps / DEX', pattern: /\b(trade|trading|trader|perp|perps|perpetual|perpetuals|options|dex|swap|swaps|orderbook|order book|spot|leverage|long|short)\b/ },
+    { category: 'Trading bot', label: 'trading bot', pattern: /\b(trading bot|trade bot|sniper|copy trade|copy trading|bot trading)\b/ },
+    { category: 'Mobile', label: 'mobile app', pattern: /\b(mobile|iphone|ios|android|app store|play store)\b/ },
+    { category: 'AI', label: 'AI / agents', pattern: /\b(ai|llm|llms|agent|agents|autonomous|chatbot|copilot)\b/ },
+    { category: 'RWA', label: 'real-estate / RWA', pattern: /\b(rwa|rwas|real world asset|real world assets|real estate|property|properties|housing|mortgage|rental|commercial real estate|residential real estate|immobilier)\b/ },
+    { category: 'NFT', label: 'NFT / collectibles', pattern: /\b(nft|nfts|mint|minting|collectible|collectibles|pfp|pfps|jpeg|jpegs)\b/ },
+    { category: 'Gaming', label: 'gaming', pattern: /\b(game|games|gaming|gamefi|game fi|play to earn|p2e|tcg|rpg|fps|mmo|esports|playable)\b/ },
+    { category: 'Launchpad', label: 'launchpad / token sale', pattern: /\b(launchpad|launch pad|ido|ico|token sale|public sale|presale|pre sale|private sale|fair launch)\b/ },
+    { category: 'Gambling', label: 'gambling / casino', pattern: /\b(gambling|gamble|casino|bet|betting|sportsbook|roulette|poker|blackjack|slots)\b/ },
+    { category: 'Tools', label: 'developer / power-user tools', pattern: /\b(tool|tools|tooling|sdk|api|infra|infrastructure|explorer|indexer|analytics|dashboard|portfolio tracker|wallet tracker)\b/ },
+    { category: 'Social', label: 'social / SocialFi', pattern: /\b(social|socialfi|social fi|community|chat|messaging|friend tech|friend.tech|profile|reputation network)\b/ },
+    { category: 'Prediction Market', label: 'prediction market', pattern: /\b(prediction|prediction market|prediction markets|polymarket|forecast|forecasting|odds|betting market|event market|event markets)\b/ },
+    { category: 'Depin', label: 'DePIN / physical infra', pattern: /\b(depin|de pin|physical infrastructure|hardware network|hardware nodes)\b/ },
+    { category: 'Meme', label: 'meme coin / culture', pattern: /\b(meme|memecoin|meme coin|memecoins|shitcoin|shitcoins|degen coin|culture coin)\b/ }
+];
 function detectIntent(query) {
     var normalized = normalize(query);
-    var categories = new Set();
     var wantsGeneralChainInfo = /(megaeth|chain|network|mainnet|l2|ethereum|throughput|tps|ggas|latency|block ?time|mini block|miniblock|realtime|real time|architecture|sequencer|settlement|eigenda|op stack|kailua|supply|token|tge|capacity|capabilities)/.test(normalized);
-    if (/\b(lend|lending|borrow|borrowing|loan|loans|yield|farm|farming|stable|stables|stablecoin|money market|credit)\b/.test(normalized)) {
-        categories.add('DeFi');
-    }
-    if (/\b(bridge|bridges|bridging|transfer|onramp|offramp|on ramp|off ramp)\b/.test(normalized)) {
-        categories.add('Bridge');
-    }
-    if (/\b(trade|trading|trader|perp|perps|perpetual|options|dex|swap|swaps|market making)\b/.test(normalized)) {
-        categories.add('Trading');
-    }
-    if (/\b(mobile|iphone|ios|android|app store|play store)\b/.test(normalized)) {
-        categories.add('Mobile');
-    }
-    if (/\b(ai|llm|llms|agent|agents|autonomous|chatbot|copilot)\b/.test(normalized)) {
-        categories.add('AI');
-    }
-    if (/\b(rwa|rwas|real world asset|real world assets|real estate|property|properties|housing|mortgage|rental|commercial real estate|residential real estate|immobilier)\b/.test(normalized)) {
-        categories.add('RWA');
-    }
+    var verticals = VERTICAL_INTENTS
+        .filter(function (entry) { return entry.pattern.test(normalized); })
+        .map(function (entry) { return ({ category: entry.category, label: entry.label }); });
+    var categories = new Set(verticals.map(function (entry) { return entry.category; }));
     if (!categories.size && !wantsGeneralChainInfo) {
         categories.add('DeFi');
     }
     return {
         categories: Array.from(categories),
+        verticals: verticals,
         strictLending: /\b(lend|lending|borrow|borrowing|loan|loans|credit)\b/.test(normalized),
-        strictBridge: /\b(bridge|bridges|bridging|onramp|offramp|on ramp|off ramp)\b/.test(normalized),
-        strictTrading: /\b(trade|trading|trader|perp|perps|perpetual|options|dex|swap|swaps)\b/.test(normalized),
-        strictMobile: /\b(mobile|iphone|ios|android)\b/.test(normalized),
-        strictAi: /\b(ai|llm|llms|agent|agents|autonomous|chatbot|copilot)\b/.test(normalized),
-        strictRwa: /\b(rwa|rwas|real world asset|real world assets|real estate|property|properties|housing|mortgage|rental|commercial real estate|residential real estate|immobilier)\b/.test(normalized),
+        strictRwa: verticals.some(function (entry) { return entry.category === 'RWA'; }),
         preferLive: /(live|now|active|today|current|right now)/.test(normalized),
         preferIncentives: /(farm|yield|points|reward|incentive)/.test(normalized),
         preferSafety: /(safe|safest|safety|secure|securest|trusted|trust|reliable|risk|risky)/.test(normalized),
@@ -289,36 +289,26 @@ function detectIntent(query) {
     };
 }
 function buildReason(project, corpus, intent, event) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-    var ethos = ETHOS_BY_PROJECT_ID.get(project.id);
-    var ethosNote = ethos
-        ? " Ethos trust score: ".concat(ethos.score).concat(ethos.tier ? " (".concat(ethos.tier, ")") : '', ".")
-        : '';
+    // Note: Ethos score is intentionally NOT included here. It is rendered as a
+    // colored badge on the recommendation card, so duplicating it in the prose
+    // is noisy.
+    var _a, _b, _c, _d, _e;
     if (intent.strictLending && /lending|borrow|loan|credit/.test(corpus)) {
-        return ((_a = project.jojoInsight) !== null && _a !== void 0 ? _a : 'Explicitly positioned around lending and borrowing in the current MegaBunnish data.') + ethosNote;
+        return (_a = project.jojoInsight) !== null && _a !== void 0 ? _a : 'Explicitly positioned around lending and borrowing in the current MegaBunnish data.';
     }
-    if (intent.strictBridge && project.categories.includes('Bridge')) {
-        return ((_b = project.jojoInsight) !== null && _b !== void 0 ? _b : 'Bridge-focused project in the MegaETH ecosystem dataset.') + ethosNote;
+    // Generic vertical match: if the user asked for a vertical and this project
+    // belongs to it, surface its insight directly.
+    var matchedVertical = intent.verticals.find(function (entry) { return project.categories.includes(entry.category); });
+    if (matchedVertical) {
+        return (_b = project.jojoInsight) !== null && _b !== void 0 ? _b : "".concat(matchedVertical.label, " project in the current MegaETH ecosystem dataset.");
     }
-    if (intent.strictTrading && project.categories.includes('Trading')) {
-        return ((_c = project.jojoInsight) !== null && _c !== void 0 ? _c : 'Trading-focused project with a clear product thesis in the dataset.') + ethosNote;
-    }
-    if (intent.strictMobile && project.categories.includes('Mobile')) {
-        return ((_d = project.jojoInsight) !== null && _d !== void 0 ? _d : 'Mobile-oriented product in the current MegaETH ecosystem list.') + ethosNote;
-    }
-    if (intent.strictAi && project.categories.includes('AI')) {
-        return ((_e = project.jojoInsight) !== null && _e !== void 0 ? _e : 'AI project with a differentiated angle in the current dataset.') + ethosNote;
-    }
-    if (intent.strictRwa && project.categories.includes('RWA')) {
-        return ((_f = project.jojoInsight) !== null && _f !== void 0 ? _f : 'RWA project in the current MegaETH dataset.') + ethosNote;
-    }
-    if ((_g = project.incentives) === null || _g === void 0 ? void 0 : _g.length) {
-        return "Visible incentive: ".concat(project.incentives[0].title, ".").concat(ethosNote);
+    if ((_c = project.incentives) === null || _c === void 0 ? void 0 : _c.length) {
+        return "Visible incentive: ".concat(project.incentives[0].title, ".");
     }
     if (event) {
-        return "Relevant event: ".concat(event.title, ".").concat(ethosNote);
+        return "Relevant event: ".concat(event.title, ".");
     }
-    return ((_h = project.jojoInsight) !== null && _h !== void 0 ? _h : "".concat(project.name, " is a relevant ").concat((_j = project.categories[0]) !== null && _j !== void 0 ? _j : 'ecosystem', " project in the current site data.")) + ethosNote;
+    return (_d = project.jojoInsight) !== null && _d !== void 0 ? _d : "".concat(project.name, " is a relevant ").concat((_e = project.categories[0]) !== null && _e !== void 0 ? _e : 'ecosystem', " project in the current site data.");
 }
 function findBestEvent(projectId, nowMs) {
     var _a, _b;
@@ -376,27 +366,23 @@ function scoreProject(project, query, intent) {
             score -= 20;
         }
     }
-    if (intent.strictBridge) {
-        score += project.categories.includes('Bridge') ? 36 : -18;
-    }
-    if (intent.strictTrading) {
-        score += project.categories.includes('Trading') ? 32 : -14;
-    }
-    if (intent.strictMobile) {
-        score += project.categories.includes('Mobile') ? 28 : -12;
-    }
-    if (intent.strictAi) {
-        score += project.categories.includes('AI') ? 28 : -12;
+    // Generic vertical scoring — every vertical the user mentioned applies a
+    // category bonus or a malus for off-vertical projects.
+    if (intent.verticals.length) {
+        var matchesAnyVertical = intent.verticals.some(function (entry) { return project.categories.includes(entry.category); });
+        if (matchesAnyVertical) {
+            score += 30;
+        }
+        else if (!intent.strictLending) {
+            // Lending already handled above with its own DeFi fallback.
+            score -= 16;
+        }
     }
     if (intent.strictRwa) {
         if (project.categories.includes('RWA')) {
-            score += 34;
             if (/real estate|property|rental|mortgage|housing|credit/.test(corpus)) {
                 score += 22;
             }
-        }
-        else {
-            score -= 18;
         }
     }
     if (intent.preferLive && !project.isLive && !((_c = project.incentives) === null || _c === void 0 ? void 0 : _c.length) && !event) {
@@ -485,22 +471,16 @@ function buildContextBlock(projects, intent) {
     });
     var sections = [];
     // Direct matches block — placed FIRST so the LLM cannot ignore or refuse known matches.
-    if (intent && projects.length) {
-        var directLabels = [
-            { label: 'real-estate / RWA', predicate: function (p) { return Boolean(intent.strictRwa) && p.categories.includes('RWA'); } },
-            { label: 'lending / borrowing', predicate: function (p) { return Boolean(intent.strictLending) && /lending|borrow|loan|credit/.test(buildCorpus(p)); } },
-            { label: 'bridge', predicate: function (p) { return Boolean(intent.strictBridge) && p.categories.includes('Bridge'); } },
-            { label: 'trading / perps', predicate: function (p) { return Boolean(intent.strictTrading) && p.categories.includes('Trading'); } },
-            { label: 'mobile', predicate: function (p) { return Boolean(intent.strictMobile) && p.categories.includes('Mobile'); } },
-            { label: 'AI', predicate: function (p) { return Boolean(intent.strictAi) && p.categories.includes('AI'); } }
-        ];
-        var activeBuckets = directLabels
-            .map(function (bucket) { return ({
-            label: bucket.label,
-            matches: projects.filter(function (_a) {
+    if (intent && projects.length && intent.verticals.length) {
+        var activeBuckets = intent.verticals
+            .map(function (vertical) { return ({
+            label: vertical.label,
+            matches: projects
+                .filter(function (_a) {
                 var project = _a.project;
-                return bucket.predicate(project);
-            }).map(function (_a) {
+                return project.categories.includes(vertical.category);
+            })
+                .map(function (_a) {
                 var project = _a.project;
                 return project;
             })
