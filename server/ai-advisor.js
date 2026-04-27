@@ -570,10 +570,11 @@ function selectProjects(message, history) {
         }
         // When narratives are present, drop the generic scored list entirely.
         // The narrative match IS the answer — don't dilute it with off-narrative
-        // projects that scored well on Native/Live bonuses.
+        // projects that scored well on Native/Live bonuses, and don't list the
+        // same project twice (forced + scored).
         if (narrativeForced.length > 0) {
             scoredProjects = scoredProjects.filter(function (entry) {
-                return narrativeForced.some(function (forced) { return forced.project.id === entry.project.id; });
+                return !narrativeForced.some(function (forced) { return forced.project.id === entry.project.id; });
             });
         }
     }
