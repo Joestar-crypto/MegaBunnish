@@ -14,7 +14,8 @@
       "site": "https://cap.app/",
       "twitter": "https://x.com/capmoney_"
     },
-    "logo": "/logos/CapMoney.webp"
+    "logo": "/logos/CapMoney.webp",
+    "isLive": true
   },
   {
     "id": "euphoria",
@@ -149,7 +150,8 @@
     ],
     "linkedIds": [
       "bad-bunnz"
-    ]
+    ],
+    "isLive": true
   },
   {
     "id": "bunnzpaw",
@@ -248,7 +250,8 @@
       "site": "https://lemonade.social/",
       "twitter": "https://x.com/lemonation_xyz"
     },
-    "logo": "/logos/Lemonade.webp"
+    "logo": "/logos/Lemonade.webp",
+    "isLive": true
   },
   {
     "id": "dorado",
@@ -357,7 +360,7 @@
       "discord": "https://discord.com/invite/aave"
     },
     "logo": "/logos/Aave.webp",
-    "isLive": false
+    "isLive": true
   },
   {
     "id": "aurion",
@@ -432,7 +435,7 @@
       "twitter": "https://x.com/stompdotgg"
     },
     "logo": "/logos/Stomp.webp",
-    "isLive": false
+    "isLive": true
   },
   {
     "id": "rainmaker",
@@ -450,7 +453,7 @@
       "discord": "https://discord.com/invite/rainmakrxyz"
     },
     "logo": "/logos/RainMaker.webp",
-    "isLive": false
+    "isLive": true
   },
   {
     "id": "realtime",
@@ -468,7 +471,8 @@
       "discord": "https://discord.com/invite/realtime-exchange",
       "telegram": "https://t.me/realtime_exchange"
     },
-    "logo": "/logos/RealTime.webp"
+    "logo": "/logos/RealTime.webp",
+    "isLive": true
   },
   {
     "id": "kumbaya",
@@ -540,7 +544,7 @@
       "twitter": "https://x.com/getubitel"
     },
     "logo": "/logos/Ubitel.webp",
-    "isLive": false
+    "isLive": true
   },
   {
     "id": "hunch",
@@ -627,7 +631,8 @@
       "site": "https://www.mtrkr.xyz/",
       "twitter": "https://x.com/mtrkr_xyz"
     },
-    "logo": "/logos/MTRKR.webp"
+    "logo": "/logos/MTRKR.webp",
+    "isLive": true
   },
   {
     "id": "mevx",
@@ -777,7 +782,8 @@
       "twitter": "https://x.com/BasedTradingBot",
       "telegram": "https://t.me/based_eth_bot?start=r_Joestarcrypto"
     },
-    "logo": "/logos/Based.webp"
+    "logo": "/logos/Based.webp",
+    "isLive": true
   },
   {
     "id": "glitchy-bunnies",
@@ -830,7 +836,7 @@
     "linkedIds": [
       "megalio"
     ],
-    "isLive": false
+    "isLive": true
   },
   {
     "id": "lora-finance",
@@ -863,7 +869,8 @@
       "twitter": "https://x.com/leveragesir",
       "discord": "https://discord.com/invite/M2SRBDPUR2"
     },
-    "logo": "/logos/LeverageSir.webp"
+    "logo": "/logos/LeverageSir.webp",
+    "isLive": true
   },
   {
     "id": "supernova",
@@ -882,7 +889,7 @@
       "twitter": "https://x.com/SupernovaLabs_"
     },
     "logo": "/logos/Supernova.webp",
-    "isLive": false
+    "isLive": true
   },
   {
     "id": "nunchi",
@@ -951,7 +958,7 @@
       "discord": "https://discord.com/invite/rfgMebUeV4"
     },
     "logo": "/logos/SectorOne.webp",
-    "isLive": false
+    "isLive": true
   },
   {
     "id": "valhalla",
@@ -1000,7 +1007,7 @@
       "twitter": "https://x.com/Tulpea_org"
     },
     "logo": "/logos/Tulpea.webp",
-    "isLive": false,
+    "isLive": true,
     "jojoInsight": "Tulpea is the clearest real-estate-flavored RWA app in the current MegaETH set. Their site pitches undercollateralized lending backed by real-world assets and explicitly shows rental real-estate investment and smart-collateralized real-estate credit use cases."
   },
   {
@@ -1018,7 +1025,8 @@
       "discord": "https://discord.com/invite/gains-network",
       "telegram": "https://t.me/GainsNetwork"
     },
-    "logo": "/logos/Gains.webp"
+    "logo": "/logos/Gains.webp",
+    "isLive": true
   },
   {
     "id": "gmx",
@@ -1034,7 +1042,8 @@
       "twitter": "https://x.com/GMX_IO",
       "discord": "https://discord.com/invite/H5PeQru3Aa"
     },
-    "logo": "/logos/Gmx.webp"
+    "logo": "/logos/Gmx.webp",
+    "isLive": true
   },
   {
     "id": "ren",
@@ -1065,7 +1074,8 @@
       "twitter": "https://x.com/warpexchange",
       "discord": "https://discord.com/invite/E7sZCw2gMS"
     },
-    "logo": "/logos/WrapX.webp"
+    "logo": "/logos/WrapX.webp",
+    "isLive": true
   },
   {
     "id": "1perday",
@@ -1115,7 +1125,8 @@
       "site": "https://itstheseason.xyz/?ref=FX8WPK",
       "twitter": "https://x.com/megatruther"
     },
-    "logo": "/logos/ITS.webp"
+    "logo": "/logos/ITS.webp",
+    "isLive": true
   },
   {
     "id": "huntertales",
@@ -1131,7 +1142,8 @@
       "twitter": "https://x.com/playhuntertales",
       "discord": "https://discord.com/invite/playhuntertales"
     },
-    "logo": "/logos/HunterTales.webp"
+    "logo": "/logos/HunterTales.webp",
+    "isLive": true
   },
   {
     "id": "dead-bit-nation",
@@ -1185,7 +1197,8 @@
     "logo": "/logos/Odds.webp",
     "linkedIds": [
       "megarebel"
-    ]
+    ],
+    "isLive": true
   },
   {
     "id": "gearbox",
@@ -1234,7 +1247,8 @@
       "twitter": "https://x.com/rarible",
       "telegram": "https://t.me/+U6KEojWy3ntjYTM0"
     },
-    "logo": "/logos/Rarible.webp"
+    "logo": "/logos/Rarible.webp",
+    "isLive": true
   },
   {
     "id": "smasher",
@@ -1249,7 +1263,8 @@
       "site": "https://smasher.fun/",
       "twitter": "https://x.com/smasherdotfun"
     },
-    "logo": "/logos/Smasher.webp"
+    "logo": "/logos/Smasher.webp",
+    "isLive": true
   },
   {
     "id": "megabeers",
@@ -1282,7 +1297,8 @@
       "site": "https://www.joinsurvivors.com/",
       "twitter": "https://x.com/JoinSurvivors"
     },
-    "logo": "/logos/Survivors.webp"
+    "logo": "/logos/Survivors.webp",
+    "isLive": true
   },
   {
     "id": "miniminds",
@@ -1364,7 +1380,8 @@
       "discord": "https://discord.com/invite/opensea",
       "telegram": "https://t.me/officialopensea"
     },
-    "logo": "/logos/Opensea.webp"
+    "logo": "/logos/Opensea.webp",
+    "isLive": true
   },
   {
     "id": "clutch",
@@ -1415,7 +1432,7 @@
       "twitter": "https://x.com/OffshoreOnMega"
     },
     "logo": "/logos/Offshore.webp",
-    "isLive": false
+    "isLive": true
   },
   {
     "id": "syscall",
@@ -1450,7 +1467,8 @@
     "logo": "/logos/Warren.webp",
     "linkedIds": [
       "pulse"
-    ]
+    ],
+    "isLive": true
   },
   {
     "id": "megacorp",
@@ -1466,7 +1484,8 @@
       "site": "https://megacorp.global/",
       "twitter": "https://x.com/MegaCorpHQ"
     },
-    "logo": "/logos/Megacorp.webp"
+    "logo": "/logos/Megacorp.webp",
+    "isLive": true
   },
   {
     "id": "meridian",
@@ -1483,7 +1502,8 @@
       "telegram": "https://t.me/mrdnfinance",
       "twitter": "https://x.com/mrdn_finance"
     },
-    "logo": "/logos/Meridian.webp"
+    "logo": "/logos/Meridian.webp",
+    "isLive": true
   },
   {
     "id": "skrrtlords",
@@ -1518,7 +1538,8 @@
       "twitter": "https://x.com/_canonic",
       "discord": "https://discord.com/invite/nQrzzDSdzB"
     },
-    "logo": "/logos/Canonic.webp"
+    "logo": "/logos/Canonic.webp",
+    "isLive": true
   },
   {
     "id": "gocash",
@@ -1570,7 +1591,8 @@
       "site": "https://crypts.ai/",
       "twitter": "https://x.com/AiCrypts"
     },
-    "logo": "/logos/CryptsAI.webp"
+    "logo": "/logos/CryptsAI.webp",
+    "isLive": true
   },
   {
     "id": "mania",
@@ -1587,7 +1609,8 @@
       "site": "https://www.mania.fun/",
       "twitter": "https://x.com/ManiaDotFun"
     },
-    "logo": "/logos/Mania.webp"
+    "logo": "/logos/Mania.webp",
+    "isLive": true
   },
   {
     "id": "alzena",
@@ -1620,7 +1643,8 @@
       "twitter": "https://x.com/pumpparty",
       "telegram": "https://t.me/+kh4RQgAcmZAzYWQx"
     },
-    "logo": "/logos/Pumpparty.webp"
+    "logo": "/logos/Pumpparty.webp",
+    "isLive": true
   },
   {
     "id": "wink-realm",
@@ -1653,7 +1677,8 @@
       "site": "https://dotmega.domains/"
     },
     "logo": "/logos/MegaDomains.webp",
-    "jojoInsight": "Cooked by the best bread in the world, MegaDomains lets you own .mega domains, this could become very useful for the eco later on"
+    "jojoInsight": "Cooked by the best bread in the world, MegaDomains lets you own .mega domains, this could become very useful for the eco later on",
+    "isLive": true
   },
   {
     "id": "mega-punk",
@@ -1688,7 +1713,8 @@
       "discord": "https://discord.com/invite/fVFRJwu6bv"
     },
     "logo": "/logos/Bungee.webp",
-    "jojoInsight": "Bungee is probably your cheapest bridge option, real chads ngl"
+    "jojoInsight": "Bungee is probably your cheapest bridge option, real chads ngl",
+    "isLive": true
   },
   {
     "id": "avail",
@@ -1705,7 +1731,8 @@
       "telegram": "https://t.me/AvailCommunity"
     },
     "logo": "/logos/Avail.webp",
-    "jojoInsight": "Another Bridge for Megaeth, never tried tbh so can't comment on that one"
+    "jojoInsight": "Another Bridge for Megaeth, never tried tbh so can't comment on that one",
+    "isLive": true
   },
   {
     "id": "jumper",
@@ -1721,7 +1748,8 @@
       "site": "https://jumper.exchange/fr"
     },
     "logo": "/logos/Jumper.webp",
-    "jojoInsight": "Everyone knows Jumper, I don't know if it's the cheapest option but it's definitely the easiest one for most"
+    "jojoInsight": "Everyone knows Jumper, I don't know if it's the cheapest option but it's definitely the easiest one for most",
+    "isLive": true
   },
   {
     "id": "backed",
@@ -1793,7 +1821,8 @@
       "discord": "https://discord.com/invite/gAF4Ru8TTf"
     },
     "logo": "/logos/Ferdy.webp",
-    "jojoInsight": "Used to be a quite successful gambling app on Avax, now expanding to MegaETH. Not much to say."
+    "jojoInsight": "Used to be a quite successful gambling app on Avax, now expanding to MegaETH. Not much to say.",
+    "isLive": true
   },
   {
     "id": "megablobz",
@@ -1916,7 +1945,8 @@
       "twitter": "https://x.com/NxTerminal"
     },
     "logo": "/logos/NXTerminal.webp",
-    "jojoInsight": "Pretty cool game where you mint an autonomous agent with random traits that earns $NXT. $NXT is used to maintain agents and keep developing. Very cool experience, I recommend."
+    "jojoInsight": "Pretty cool game where you mint an autonomous agent with random traits that earns $NXT. $NXT is used to maintain agents and keep developing. Very cool experience, I recommend.",
+    "isLive": true
   },
   {
     "id": "chisino",
@@ -1933,7 +1963,8 @@
       "twitter": "https://x.com/trychisino"
     },
     "logo": "/logos/Chisino.webp",
-    "jojoInsight": "Branded as the no-loss gaming app on MegaETH, the focus is to be the most rewarding casino. Very interesting."
+    "jojoInsight": "Branded as the no-loss gaming app on MegaETH, the focus is to be the most rewarding casino. Very interesting.",
+    "isLive": true
   },
   {
     "id": "aori",
@@ -1950,7 +1981,8 @@
       "discord": "https://discord.com/invite/ZaqwZZ2wSX"
     },
     "logo": "/logos/Aori.webp",
-    "jojoInsight": "Aori has been the best bridge for MegaETH and is now handling the 1 to 1 bridge for USDm. Give them some love!"
+    "jojoInsight": "Aori has been the best bridge for MegaETH and is now handling the 1 to 1 bridge for USDm. Give them some love!",
+    "isLive": true
   },
   {
     "id": "nextrare",
