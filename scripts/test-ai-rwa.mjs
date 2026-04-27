@@ -44,3 +44,5 @@ console.log();
 const ctx = buildContextBlock(ranked, intent2);
 console.log('--- CONTEXT (first 1500 chars) ---');
 console.log(ctx.text.slice(0, 1500));
+
+
