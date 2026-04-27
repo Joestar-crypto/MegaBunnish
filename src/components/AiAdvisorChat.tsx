@@ -125,10 +125,29 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
         })
       });
 
-      const payload = (await response.json()) as AdvisorResponse;
+      const responseText = await response.text();
+      let payload: AdvisorResponse = {};
+
+      if (responseText) {
+        try {
+          payload = JSON.parse(responseText) as AdvisorResponse;
+        } catch {
+          throw new Error(
+            response.ok
+              ? 'The AI advisor returned an invalid response.'
+              : `The AI advisor request failed with status ${response.status}.`
+          );
+        }
+      }
+
       const answer = payload.answer;
       if (!response.ok || !answer) {
-        throw new Error(payload.error || 'The AI advisor could not answer right now.');
+        throw new Error(
+          payload.error ||
+            (response.ok
+              ? 'The AI advisor could not answer right now.'
+              : `The AI advisor request failed with status ${response.status}.`)
+        );
       }
 
       if (payload.conversationId) {
