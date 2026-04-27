@@ -55,6 +55,7 @@ type IntentProfile = {
   strictTrading: boolean;
   strictMobile: boolean;
   strictAi: boolean;
+  strictRwa: boolean;
   preferLive: boolean;
   preferIncentives: boolean;
   preferSafety: boolean;
@@ -311,6 +312,9 @@ function detectIntent(query: string): IntentProfile {
   if (/(ai|agent|agents|autonomous)/.test(normalized)) {
     categories.add('AI');
   }
+  if (/(rwa|real world asset|real world assets|real estate|property|properties|housing|mortgage|rental|commercial real estate|residential real estate|immobilier)/.test(normalized)) {
+    categories.add('RWA');
+  }
 
   if (!categories.size && !wantsGeneralChainInfo) {
     categories.add('DeFi');
@@ -323,6 +327,7 @@ function detectIntent(query: string): IntentProfile {
     strictTrading: /(trade|trading|perp|perps|options|dex|swap)/.test(normalized),
     strictMobile: /(mobile|iphone|android)/.test(normalized),
     strictAi: /(ai|agent|agents|autonomous)/.test(normalized),
+    strictRwa: /(rwa|real world asset|real world assets|real estate|property|properties|housing|mortgage|rental|commercial real estate|residential real estate|immobilier)/.test(normalized),
     preferLive: /(live|now|active|today|current|right now)/.test(normalized),
     preferIncentives: /(farm|yield|points|reward|incentive)/.test(normalized),
     preferSafety: /(safe|safest|safety|secure|securest|trusted|trust|reliable|risk|risky)/.test(normalized),
@@ -352,6 +357,9 @@ function buildReason(project: AdvisorProject, corpus: string, intent: IntentProf
   }
   if (intent.strictAi && project.categories.includes('AI')) {
     return (project.jojoInsight ?? 'AI project with a differentiated angle in the current dataset.') + ethosNote;
+  }
+  if (intent.strictRwa && project.categories.includes('RWA')) {
+    return (project.jojoInsight ?? 'RWA project in the current MegaETH dataset.') + ethosNote;
   }
   if (project.incentives?.length) {
     return `Visible incentive: ${project.incentives[0].title}.${ethosNote}`;
@@ -437,6 +445,17 @@ function scoreProject(project: AdvisorProject, query: string, intent: IntentProf
 
   if (intent.strictAi) {
     score += project.categories.includes('AI') ? 28 : -12;
+  }
+
+  if (intent.strictRwa) {
+    if (project.categories.includes('RWA')) {
+      score += 34;
+      if (/real estate|property|rental|mortgage|housing|credit/.test(corpus)) {
+        score += 22;
+      }
+    } else {
+      score -= 18;
+    }
   }
 
   if (intent.preferLive && !project.isLive && !(project.incentives?.length) && !event) {

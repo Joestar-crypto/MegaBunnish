@@ -208,7 +208,8 @@
       "twitter": "https://x.com/brix_money",
       "telegram": "https://t.me/BrixDotMoney"
     },
-    "logo": "/logos/Brix.webp"
+    "logo": "/logos/Brix.webp",
+    "jojoInsight": "Brix is a macro/RWA app on MegaETH focused on tokenized emerging market assets, with iTRY and wiTRY tied to Turkish lira money market funds. Strong RWA angle, but not the cleanest match if you want specifically rental or real-estate exposure."
   },
   {
     "id": "blitzo",
@@ -998,7 +999,8 @@
       "twitter": "https://x.com/Tulpea_org"
     },
     "logo": "/logos/Tulpea.webp",
-    "isLive": true
+    "isLive": true,
+    "jojoInsight": "Tulpea is the clearest real-estate-flavored RWA app in the current MegaETH set. Their site pitches undercollateralized lending backed by real-world assets and explicitly shows rental real-estate investment and smart-collateralized real-estate credit use cases."
   },
   {
     "id": "gains",

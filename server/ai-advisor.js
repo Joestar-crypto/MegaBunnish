@@ -264,6 +264,9 @@ function detectIntent(query) {
     if (/(ai|agent|agents|autonomous)/.test(normalized)) {
         categories.add('AI');
     }
+    if (/(rwa|real world asset|real world assets|real estate|property|properties|housing|mortgage|rental|commercial real estate|residential real estate|immobilier)/.test(normalized)) {
+        categories.add('RWA');
+    }
     if (!categories.size && !wantsGeneralChainInfo) {
         categories.add('DeFi');
     }
@@ -274,6 +277,7 @@ function detectIntent(query) {
         strictTrading: /(trade|trading|perp|perps|options|dex|swap)/.test(normalized),
         strictMobile: /(mobile|iphone|android)/.test(normalized),
         strictAi: /(ai|agent|agents|autonomous)/.test(normalized),
+        strictRwa: /(rwa|real world asset|real world assets|real estate|property|properties|housing|mortgage|rental|commercial real estate|residential real estate|immobilier)/.test(normalized),
         preferLive: /(live|now|active|today|current|right now)/.test(normalized),
         preferIncentives: /(farm|yield|points|reward|incentive)/.test(normalized),
         preferSafety: /(safe|safest|safety|secure|securest|trusted|trust|reliable|risk|risky)/.test(normalized),
@@ -283,7 +287,7 @@ function detectIntent(query) {
     };
 }
 function buildReason(project, corpus, intent, event) {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
     var ethos = ETHOS_BY_PROJECT_ID.get(project.id);
     var ethosNote = ethos
         ? " Ethos trust score: ".concat(ethos.score).concat(ethos.tier ? " (".concat(ethos.tier, ")") : '', ".")
@@ -303,13 +307,16 @@ function buildReason(project, corpus, intent, event) {
     if (intent.strictAi && project.categories.includes('AI')) {
         return ((_e = project.jojoInsight) !== null && _e !== void 0 ? _e : 'AI project with a differentiated angle in the current dataset.') + ethosNote;
     }
-    if ((_f = project.incentives) === null || _f === void 0 ? void 0 : _f.length) {
+    if (intent.strictRwa && project.categories.includes('RWA')) {
+        return ((_f = project.jojoInsight) !== null && _f !== void 0 ? _f : 'RWA project in the current MegaETH dataset.') + ethosNote;
+    }
+    if ((_g = project.incentives) === null || _g === void 0 ? void 0 : _g.length) {
         return "Visible incentive: ".concat(project.incentives[0].title, ".").concat(ethosNote);
     }
     if (event) {
         return "Relevant event: ".concat(event.title, ".").concat(ethosNote);
     }
-    return ((_g = project.jojoInsight) !== null && _g !== void 0 ? _g : "".concat(project.name, " is a relevant ").concat((_h = project.categories[0]) !== null && _h !== void 0 ? _h : 'ecosystem', " project in the current site data.")) + ethosNote;
+    return ((_h = project.jojoInsight) !== null && _h !== void 0 ? _h : "".concat(project.name, " is a relevant ").concat((_j = project.categories[0]) !== null && _j !== void 0 ? _j : 'ecosystem', " project in the current site data.")) + ethosNote;
 }
 function findBestEvent(projectId, nowMs) {
     var _a, _b;
@@ -378,6 +385,17 @@ function scoreProject(project, query, intent) {
     }
     if (intent.strictAi) {
         score += project.categories.includes('AI') ? 28 : -12;
+    }
+    if (intent.strictRwa) {
+        if (project.categories.includes('RWA')) {
+            score += 34;
+            if (/real estate|property|rental|mortgage|housing|credit/.test(corpus)) {
+                score += 22;
+            }
+        }
+        else {
+            score -= 18;
+        }
     }
     if (intent.preferLive && !project.isLive && !((_c = project.incentives) === null || _c === void 0 ? void 0 : _c.length) && !event) {
         score -= 8;
