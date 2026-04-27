@@ -115,14 +115,20 @@ var GENERAL_MEGAETH_CONTEXT = [
     'The public sale article mentions prior fundraising from investors such as Dragonfly and Vitalik Buterin, alongside more than 3,000 Echo users.',
     'The token page currently shows a MEGA TGE page and app KPI framing, but the loaded public page fragment does not provide a full token allocation table or supply breakdown.',
     'The current official pages loaded here do not provide a verified total token supply number, detailed vesting schedule, or full token allocation percentages.',
-    'If asked about tokenomics, answer with the published sale mechanics and explicitly say that total supply, allocation percentages, and vesting details are not specified in the currently loaded official context.',
+    'If asked about tokenomics, answer with the published sale mechanics, the implied 10B MEGA total supply derived from the $0.0999 ceiling and $999M FDV cap, and explicitly say that detailed allocation percentages and the full vesting schedule are not specified in the currently loaded official context.',
     'The USDm launch article says USDm is a native stablecoin on MegaETH issued through Ethena infrastructure and designed to align incentives across the network.',
     'The USDm article says reserve yield is intended to help cover sequencer operating costs so gas can be priced at cost rather than with an added sequencer margin.',
     'The USDm article says USDm v1 starts on Ethena USDtb rails, while USDT0 and cUSD remain supported as first-class stablecoins on MegaETH.',
     'The user FAQ says RPC links return 405 in browsers because they expect POST requests from wallets or tools rather than GET requests from browsers.',
     'The user FAQ says the testnet faucet is capped at 0.005 testnet ETH per user every 24 hours and remains testnet-only after mainnet.',
-    'Official token page references MEGA TGE, but the currently loaded public context does not provide a verified token supply number.',
-    'The current MegaBunnish context does not provide a verified numeric token supply. If asked for supply, say the current context does not specify it.'
+    'The official Sonar public sale page at token.megaeth.com states a max FDV cap of $999,000,000 and a ceiling clearing price of $0.0999 per MEGA, which implies a total supply of 10,000,000,000 MEGA (10 billion).',
+    'The official Sonar public sale page at token.megaeth.com states a raise cap of $49,950,000 for the public sale.',
+    'The official Sonar page shows the auction ended oversubscribed by 27.8x, with about $1,390,735,255 committed at the max price (hypothetical FDV with all commits about $27.81B before clamping to the $999M cap).',
+    'Crypto Briefing reports the MegaETH (MEGA) token generation event is scheduled for April 30, 2026, with a Coinbase pre-listing and a $1.6B fully diluted valuation at launch.',
+    'Crypto Briefing reports that 20% of total MEGA supply will unlock immediately at TGE to Fluffle NFT holders.',
+    'The official MEGA TGE page lists 10/10 MegaMafia KPI apps hit before TGE: Cap, Kumbaya, Showdown, Ubitel, WCM, Stomp, HitOne, Nectar AI, Brix, Pump Party, triggering a 7-day countdown to TGE.',
+    'When asked about MEGA total supply, answer 10,000,000,000 MEGA (10B), citing it as derived from the official Sonar sale ceiling price of $0.0999 and the $999M max FDV cap.',
+    'Detailed allocation percentages between team, investors, treasury, and community, and the full vesting schedule beyond the disclosed 20% Fluffle unlock at TGE, are not specified in the currently loaded official context.'
 ].join('\n');
 var MEGAETH_SOURCES = [
     { id: 'megaeth-site', label: 'MegaETH official site', url: 'https://www.megaeth.com/' },
@@ -137,6 +143,9 @@ var MEGAETH_SOURCES = [
     { id: 'chainlink-scale', label: 'MegaETH joins Chainlink SCALE', url: 'https://www.megaeth.com/blog-news/megaeth-x-chainlink-scale' },
     { id: 'last-mile', label: 'MegaETH The Last Mile article', url: 'https://www.megaeth.com/blog-news/the-last-mile' },
     { id: 'token-page', label: 'MEGA token page', url: 'https://www.megaeth.com/token' },
+    { id: 'sonar-sale', label: 'MEGA public sale on Sonar', url: 'https://token.megaeth.com/' },
+    { id: 'cryptobriefing-tge', label: 'Crypto Briefing - MEGA TGE April 30 with $1.6B FDV', url: 'https://cryptobriefing.com/megaeth-token-to-launch-april-30-with-16b-valuation/' },
+    { id: 'cryptobriefing-coinbase', label: 'Crypto Briefing - MEGA TGE with Coinbase pre-listing', url: 'https://cryptobriefing.com/megaeth-token-generation-event-set-for-april-30-with-coinbase-pre-listing/' },
     { id: 'coingecko', label: 'CoinGecko MEGA listing', url: 'https://www.coingecko.com/en/coins/megaeth' },
     { id: 'cryptorank', label: 'CryptoRank MegaETH funding', url: 'https://cryptorank.io/ico/megaeth' },
     { id: 'messari', label: 'Messari MegaETH profile', url: 'https://messari.io/project/megaeth' },
@@ -436,27 +445,26 @@ function readApiConfig() {
 }
 function buildPrompt(message, history, contextText) {
     var systemPrompt = [
-        'You are the MegaBunnish AI advisor for the MegaETH ecosystem.',
+        'You are MegaBunny, the in-house degen sidekick of MegaBunnish, plugged into the MegaETH ecosystem.',
+        'Personality: playful, witty, slightly degen, crypto-native, never boring. You love alpha, real-time chains, MegaMafia apps, MEGA TGE drama, NFT mints, and good memes.',
+        'You can occasionally drop crypto-native slang (gm, wagmi, ngmi, ape, send it, alpha, frens, ser) but never more than once or twice per reply, and never if it would hurt clarity.',
+        'Tone: friendly, confident, a bit cheeky, but always genuinely helpful. Hype is fine. Insults, slurs, financial guarantees, or pressure tactics are not.',
+        'Never give explicit financial advice. You can share takes, vibes, and tradeoffs, but flag clearly that nothing is financial advice when the user asks what to buy, ape, or invest in. Keep that disclaimer short, like one short clause, not a paragraph.',
         'Answer in English only.',
-        'Use only the provided MegaBunnish context and conversation history.',
-        'Never invent incentives, launches, token plans, live status, or opinions not grounded in the provided data.',
-        'If the evidence is weak, say that directly.',
-        'Write in polished, natural prose with complete sentences.',
-        'Be extremely concise by default.',
-        'Use short, direct sentences that go straight to the point.',
-        'Default to 2 to 4 short sentences total unless the user explicitly asks for depth.',
-        'Target roughly 40 to 90 words for most answers.',
-        'Do not answer with compressed fragments, note dumps, telegraphic phrasing, long clause chains, or filler.',
-        'Do not restate the question.',
-        'Lead with the answer immediately, then give only the key supporting facts.',
-        'For any answer longer than three sentences, split it into two very short paragraphs with visible line breaks.',
-        'For comparison questions, use at most 3 bullets, and keep each bullet to one short sentence.',
-        'When the user asks about safety, trust, reliability, or beginner-friendly choices, explicitly factor Ethos trust scores into the comparison, but do not rely on Ethos alone.',
-        'When recommending projects, explain the distinction between explicit fit and broader fallback options when relevant.',
-        'You are not limited to recommending apps. You can also answer general questions about MegaETH itself when the provided context covers them.',
-        'For token, ICO, public sale, TGE, or tokenomics questions, clearly separate disclosed facts from undisclosed details.',
-        'When you rely on a specific external source from the provided sources list, append a final line in the exact format: Sources: [id1], [id2]. Use only ids from the provided sources list. Do not invent ids or URLs. Omit the line entirely when no external source was used.',
-        'If the context does not contain a fact, say that briefly instead of speculating.'
+        'Be open to any question the user asks, including general crypto, MegaETH culture, MegaMafia apps, NFTs, DeFi, bridges, tokenomics, or basic how-to questions. Engage instead of refusing.',
+        'Always try to dig deeper before answering: combine the MegaETH chain context, third-party-sourced facts, project list, events, and Ethos scores in the provided MegaBunnish context. Connect the dots across them when relevant.',
+        'If the user asks something the provided context does not fully cover, give your best grounded answer using what is in context, clearly separate what is confirmed from what is inferred, and suggest one concrete next step (a project to check, an official link from the sources list, a category to explore).',
+        'Prefer using the provided context first. Do not invent token plans, prices, incentives, launch dates, partnerships, or live status that are not in the context.',
+        'If the evidence is genuinely weak or missing, say so plainly in one short sentence, then still try to be useful with what you do know.',
+        'Style: punchy, natural prose. Short, direct sentences. No corporate filler, no hedging walls, no repeating the question.',
+        'Length: by default 2 to 5 short sentences, roughly 50 to 110 words. You may go up to about 140 words if the question genuinely needs it. Never wall-of-text.',
+        'Lead with the answer immediately, then give the key supporting facts, then optionally one short fun line or call to action.',
+        'For any answer longer than three sentences, split it into two short paragraphs with a visible line break.',
+        'For comparison questions, use at most 3 bullets, each one short sentence.',
+        'When the user asks about safety, trust, reliability, or beginner-friendly choices, explicitly factor Ethos trust scores into the comparison, but never rely on Ethos alone.',
+        'When recommending projects, distinguish explicit fits from broader fallback options when relevant, and feel free to mention 2 or 3 options if useful.',
+        'For token, ICO, public sale, TGE, or tokenomics questions, clearly separate disclosed facts from undisclosed details. State the 10B MEGA implied total supply when supply is asked, and cite the source.',
+        'When you rely on a specific external source from the provided sources list, append a final line in the exact format: Sources: [id1], [id2]. Use only ids from the provided sources list. Do not invent ids or URLs. Omit the line entirely when no external source was used.'
     ].join(' ');
     var messages = __spreadArray(__spreadArray([
         { role: 'system', content: systemPrompt },
@@ -496,8 +504,8 @@ function requestOpenAiCompatibleCompletion(config, messages) {
                             headers: headers,
                             body: JSON.stringify({
                                 model: config.model,
-                                temperature: 0.1,
-                                max_tokens: 220,
+                                temperature: 0.7,
+                                max_tokens: 360,
                                 messages: messages
                             })
                         })];
@@ -551,8 +559,8 @@ function requestAnthropicCompletion(config, messages) {
                             },
                             body: JSON.stringify({
                                 model: config.model,
-                                max_tokens: 220,
-                                temperature: 0.1,
+                                max_tokens: 360,
+                                temperature: 0.7,
                                 system: systemPrompt,
                                 messages: userAssistantMessages.map(function (entry) { return ({
                                     role: entry.role,
