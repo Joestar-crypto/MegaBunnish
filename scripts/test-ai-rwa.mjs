@@ -10,7 +10,7 @@ const advisor = await import('../server/ai-advisor.ts');
 
 const internals = advisor.__testables ?? null;
 
-const prompt = "I'm looking for a RWA app on real estate";
+const prompt = "where can i put my money to work";
 
 console.log('--- PROMPT ---');
 console.log(prompt);
@@ -44,5 +44,6 @@ console.log();
 const ctx = buildContextBlock(ranked, intent2);
 console.log('--- CONTEXT (first 1500 chars) ---');
 console.log(ctx.text.slice(0, 1500));
+
 
 

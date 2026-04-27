@@ -299,22 +299,22 @@ function detectIntent(query: string): IntentProfile {
   const categories = new Set<string>();
   const wantsGeneralChainInfo = /(megaeth|chain|network|mainnet|l2|ethereum|throughput|tps|ggas|latency|block ?time|mini block|miniblock|realtime|real time|architecture|sequencer|settlement|eigenda|op stack|kailua|supply|token|tge|capacity|capabilities)/.test(normalized);
 
-  if (/(lend|lending|borrow|loan|yield|farm|stable|money market|credit)/.test(normalized)) {
+  if (/\b(lend|lending|borrow|borrowing|loan|loans|yield|farm|farming|stable|stables|stablecoin|money market|credit)\b/.test(normalized)) {
     categories.add('DeFi');
   }
-  if (/(bridge|bridg|transfer|onramp|offramp)/.test(normalized)) {
+  if (/\b(bridge|bridges|bridging|transfer|onramp|offramp|on ramp|off ramp)\b/.test(normalized)) {
     categories.add('Bridge');
   }
-  if (/(trade|trading|perp|perps|options|dex|swap|market making)/.test(normalized)) {
+  if (/\b(trade|trading|trader|perp|perps|perpetual|options|dex|swap|swaps|market making)\b/.test(normalized)) {
     categories.add('Trading');
   }
-  if (/(mobile|iphone|android|app store|play store)/.test(normalized)) {
+  if (/\b(mobile|iphone|ios|android|app store|play store)\b/.test(normalized)) {
     categories.add('Mobile');
   }
-  if (/(ai|agent|agents|autonomous)/.test(normalized)) {
+  if (/\b(ai|llm|llms|agent|agents|autonomous|chatbot|copilot)\b/.test(normalized)) {
     categories.add('AI');
   }
-  if (/(rwa|real world asset|real world assets|real estate|property|properties|housing|mortgage|rental|commercial real estate|residential real estate|immobilier)/.test(normalized)) {
+  if (/\b(rwa|rwas|real world asset|real world assets|real estate|property|properties|housing|mortgage|rental|commercial real estate|residential real estate|immobilier)\b/.test(normalized)) {
     categories.add('RWA');
   }
 
@@ -324,12 +324,12 @@ function detectIntent(query: string): IntentProfile {
 
   return {
     categories: Array.from(categories),
-    strictLending: /(lend|lending|borrow|loan|credit)/.test(normalized),
-    strictBridge: /(bridge|bridg|transfer|onramp|offramp)/.test(normalized),
-    strictTrading: /(trade|trading|perp|perps|options|dex|swap)/.test(normalized),
-    strictMobile: /(mobile|iphone|android)/.test(normalized),
-    strictAi: /(ai|agent|agents|autonomous)/.test(normalized),
-    strictRwa: /(rwa|real world asset|real world assets|real estate|property|properties|housing|mortgage|rental|commercial real estate|residential real estate|immobilier)/.test(normalized),
+    strictLending: /\b(lend|lending|borrow|borrowing|loan|loans|credit)\b/.test(normalized),
+    strictBridge: /\b(bridge|bridges|bridging|onramp|offramp|on ramp|off ramp)\b/.test(normalized),
+    strictTrading: /\b(trade|trading|trader|perp|perps|perpetual|options|dex|swap|swaps)\b/.test(normalized),
+    strictMobile: /\b(mobile|iphone|ios|android)\b/.test(normalized),
+    strictAi: /\b(ai|llm|llms|agent|agents|autonomous|chatbot|copilot)\b/.test(normalized),
+    strictRwa: /\b(rwa|rwas|real world asset|real world assets|real estate|property|properties|housing|mortgage|rental|commercial real estate|residential real estate|immobilier)\b/.test(normalized),
     preferLive: /(live|now|active|today|current|right now)/.test(normalized),
     preferIncentives: /(farm|yield|points|reward|incentive)/.test(normalized),
     preferSafety: /(safe|safest|safety|secure|securest|trusted|trust|reliable|risk|risky)/.test(normalized),
@@ -496,7 +496,12 @@ function scoreProject(project: AdvisorProject, query: string, intent: IntentProf
 }
 
 function selectProjects(message: string, history: AdvisorChatMessage[]) {
-  const query = [...history.filter((entry) => entry.role === 'user').slice(-2).map((entry) => entry.content), message].join(' ');
+  // Intent and project ranking are based on the CURRENT message only.
+  // Folding prior user messages into the query caused topic-bleed (e.g. an earlier
+  // "ai" question forcing every follow-up to be ranked as AI). The LLM still sees
+  // the full history via the messages array, so context is preserved.
+  void history;
+  const query = message;
   const intent = detectIntent(query);
   const explicitMatches = findExplicitProjectMatches(query);
 
@@ -623,7 +628,10 @@ function readApiConfig(): ProviderConfig {
 }
 
 function buildPrompt(message: string, history: AdvisorChatMessage[], contextText: string) {
-  const routingQuery = [...history.filter((entry) => entry.role === 'user').slice(-2).map((entry) => entry.content), message].join(' ');
+  // Persona routing is based on the current message only, for the same reason as
+  // intent detection: prior messages must not flip the persona on follow-ups.
+  void history;
+  const routingQuery = message;
   const memeMode = isMemeCulturePrompt(routingQuery) && !isSeriousTechnicalPrompt(routingQuery);
 
   const seriousPrompt = [
