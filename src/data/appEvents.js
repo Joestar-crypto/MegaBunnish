@@ -244,7 +244,7 @@ export var APP_EVENTS = [
     },
     {
         id: 'megacorp-rrs-level-10-licenses',
-        title: 'RRS Intake — 100 Level 10 Licenses',
+        title: 'Mint Licenses',
         projectId: 'megacorp',
         start: '2026-04-28T14:00:00Z',
         end: '2026-04-28T23:59:00Z',
@@ -254,6 +254,21 @@ export var APP_EVENTS = [
             {
                 label: 'Mint window',
                 start: '2026-04-28T14:00:00Z',
+                end: '2026-04-28T23:59:00Z'
+            }
+        ]
+    },
+    {
+        id: 'tulpea-vault-phase-2',
+        title: 'Vault phase 2',
+        projectId: 'tulpea',
+        start: '2026-04-28T00:00:00Z',
+        end: '2026-04-28T23:59:00Z',
+        tweetUrl: 'https://x.com/Tulpea_org/status/2048543339340087454?s=20',
+        phases: [
+            {
+                label: 'Vault phase 2 opens',
+                start: '2026-04-28T00:00:00Z',
                 end: '2026-04-28T23:59:00Z'
             }
         ]

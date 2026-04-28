@@ -54,6 +54,7 @@ type SessionGuardState = {
   lastSentAt: number;
   lastMessage: string;
   cooldownUntil: number;
+  dayKey: string;
 };
 
 const API_URL =
@@ -61,7 +62,7 @@ const API_URL =
   (import.meta.env.DEV ? 'http://localhost:3000/api/ai-chat' : '/api/ai-chat');
 const CONVERSATION_STORAGE_KEY = 'megabunnish-ai-conversation-id';
 const SESSION_GUARD_STORAGE_KEY = 'megabunnish-ai-session-guard';
-const SESSION_MESSAGE_LIMIT = 20;
+const SESSION_MESSAGE_LIMIT = 30;
 const WINDOW_MESSAGE_LIMIT = 10;
 const WINDOW_MS = 10 * 60 * 1000;
 const RAPID_FIRE_LIMIT = 5;
@@ -113,8 +114,13 @@ const DEFAULT_SESSION_GUARD_STATE: SessionGuardState = {
   sentTimestamps: [],
   lastSentAt: 0,
   lastMessage: '',
-  cooldownUntil: 0
+  cooldownUntil: 0,
+  dayKey: ''
 };
+
+function getCurrentDayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
 
 function readSessionGuardState(): SessionGuardState {
   const storage = getSessionStorage();
@@ -129,14 +135,18 @@ function readSessionGuardState(): SessionGuardState {
     }
 
     const parsed = JSON.parse(raw) as Partial<SessionGuardState>;
+    const today = getCurrentDayKey();
+    const storedDayKey = typeof parsed.dayKey === 'string' ? parsed.dayKey : '';
+    const isSameDay = storedDayKey === today;
     return {
-      totalSent: Number(parsed.totalSent ?? 0) || 0,
+      totalSent: isSameDay ? Number(parsed.totalSent ?? 0) || 0 : 0,
       sentTimestamps: Array.isArray(parsed.sentTimestamps)
         ? parsed.sentTimestamps.filter((value): value is number => typeof value === 'number')
         : [],
       lastSentAt: Number(parsed.lastSentAt ?? 0) || 0,
       lastMessage: typeof parsed.lastMessage === 'string' ? parsed.lastMessage : '',
-      cooldownUntil: Number(parsed.cooldownUntil ?? 0) || 0
+      cooldownUntil: Number(parsed.cooldownUntil ?? 0) || 0,
+      dayKey: today
     };
   } catch {
     return DEFAULT_SESSION_GUARD_STATE;
@@ -206,8 +216,8 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
     }
 
     // Legacy cleanup: older builds stored session-only chat state in
-    // localStorage, which prevented the 20-message quota from resetting on a
-    // fresh browser session.
+    // localStorage, which prevented the daily message quota from resetting on
+    // a fresh browser session.
     window.localStorage.removeItem(CONVERSATION_STORAGE_KEY);
     window.localStorage.removeItem(SESSION_GUARD_STORAGE_KEY);
 
@@ -386,7 +396,7 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
     }
 
     if (sessionGuard.totalSent >= SESSION_MESSAGE_LIMIT) {
-      pushLocalAssistantMessage('You have used all 20 messages for this session. Start a fresh session later and we can keep going.');
+      pushLocalAssistantMessage(`You have used all ${SESSION_MESSAGE_LIMIT} messages for today. Come back tomorrow to keep going.`);
       return;
     }
 
@@ -416,7 +426,8 @@ export const AiAdvisorChat = ({ isInteracting = false }: AiAdvisorChatProps) => 
       sentTimestamps: [...sessionGuard.sentTimestamps, now].filter((timestamp) => now - timestamp < WINDOW_MS),
       lastSentAt: now,
       lastMessage: message,
-      cooldownUntil: 0
+      cooldownUntil: 0,
+      dayKey: getCurrentDayKey()
     };
 
     // Local protection layer: session quota, rolling windows, duplicate blocking, and cooldowns.

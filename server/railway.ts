@@ -3,6 +3,7 @@ import aiChatHandler from '../api/ai-chat';
 import aiAdvisorHandler from '../api/ai-advisor';
 import subscriptionsHandler from '../api/event-alert-subscriptions';
 import sendEventAlertsHandler from '../api/send-event-alerts';
+import publicIndexHandler, { handlePublicRequest } from '../api/public';
 
 type ApiRequest = {
   method?: string;
@@ -184,6 +185,14 @@ async function routeRequest(request: IncomingMessage, response: ServerResponse) 
     return;
   }
 
+  const publicResource = pathname === '/api/public/projects'
+    ? 'projects'
+    : pathname === '/api/public/events'
+      ? 'events'
+    : pathname === '/api/public/ecosystem'
+      ? 'ecosystem'
+      : null;
+
   const handler: ApiHandler | null = pathname === '/api/event-alert-subscriptions'
     ? subscriptionsHandler
     : pathname === '/api/ai-chat'
@@ -192,6 +201,10 @@ async function routeRequest(request: IncomingMessage, response: ServerResponse) 
       ? aiAdvisorHandler
     : pathname === '/api/send-event-alerts'
       ? sendEventAlertsHandler
+    : pathname === '/api/public'
+      ? publicIndexHandler
+    : publicResource
+      ? (async (req, res) => handlePublicRequest(publicResource, req, res))
       : null;
 
   if (!handler) {
