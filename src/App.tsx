@@ -52,6 +52,14 @@ const AppContent = () => {
                   <img src="/logos/Jojo2.webp" alt="" />
                 </span>
               </a>
+              <a
+                className="hero-overlay__docs-link"
+                href="/docs/index.html"
+                target="_blank"
+                rel="noreferrer noopener"
+              >
+                Docs &amp; API
+              </a>
             </div>
           </div>
           <button

@@ -245,6 +245,32 @@ select {
   display: block;
 }
 
+.hero-overlay__docs-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  margin-left: 0.6rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(231, 233, 255, 0.55);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.hero-overlay__docs-link:hover {
+  color: #ffd84d;
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .hero-overlay__docs-link {
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+    margin-top: 0.3rem;
+    margin-left: 0.35rem;
+  }
+}
+
 @media (max-width: 480px) {
   .hero-overlay__credit {
     font-size: 0.55rem;

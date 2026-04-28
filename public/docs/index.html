@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MegaBunnish — Docs &amp; API</title>
+    <meta
+      name="description"
+      content="Documentation for MegaBunnish: the MegaETH ecosystem explorer, its data model, and the public read-only API."
+    />
+    <link rel="icon" href="/icon(2).webp" />
+    <style>
+      :root {
+        --bg: #05060f;
+        --bg-elev: #0c1024;
+        --bg-code: #0a0d1f;
+        --border: rgba(231, 233, 255, 0.12);
+        --border-strong: rgba(231, 233, 255, 0.22);
+        --text: #e7e9ff;
+        --text-muted: rgba(231, 233, 255, 0.65);
+        --text-faint: rgba(231, 233, 255, 0.45);
+        --accent: #ffd84d;
+        --accent-soft: rgba(255, 216, 77, 0.18);
+        --link: #9ec5ff;
+        --code-text: #f0e6c8;
+        --pill: rgba(231, 233, 255, 0.08);
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        background:
+          radial-gradient(circle at 15% -10%, rgba(255, 216, 77, 0.08), transparent 45%),
+          radial-gradient(circle at 90% 10%, rgba(99, 130, 255, 0.08), transparent 50%),
+          var(--bg);
+        color: var(--text);
+        font-family: 'Inter', 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 16px;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+      }
+      a { color: var(--link); text-decoration: none; }
+      a:hover { color: var(--accent); text-decoration: underline; }
+
+      .docs-shell {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        gap: 3rem;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 3rem 2rem 6rem;
+      }
+
+      /* --- Sidebar --- */
+      .docs-sidebar {
+        position: sticky;
+        top: 2rem;
+        align-self: start;
+        max-height: calc(100vh - 4rem);
+        overflow-y: auto;
+        padding-right: 0.5rem;
+        border-right: 1px solid var(--border);
+      }
+      .docs-sidebar__brand {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 1.4rem;
+        padding-bottom: 1.2rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .docs-sidebar__brand img { width: 32px; height: 32px; border-radius: 8px; }
+      .docs-sidebar__brand strong {
+        font-size: 0.95rem;
+        letter-spacing: 0.04em;
+      }
+      .docs-sidebar__brand span {
+        display: block;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: var(--text-faint);
+      }
+      .docs-sidebar nav { display: flex; flex-direction: column; gap: 0.15rem; }
+      .docs-sidebar h4 {
+        font-size: 0.7rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--text-faint);
+        margin: 1.4rem 0 0.4rem;
+        padding: 0 0.5rem;
+      }
+      .docs-sidebar a {
+        display: block;
+        padding: 0.35rem 0.6rem;
+        border-radius: 6px;
+        color: var(--text-muted);
+        font-size: 0.88rem;
+        line-height: 1.35;
+        border-left: 2px solid transparent;
+      }
+      .docs-sidebar a:hover {
+        background: var(--pill);
+        color: var(--text);
+        text-decoration: none;
+      }
+      .docs-sidebar a.is-sub {
+        padding-left: 1.4rem;
+        font-size: 0.82rem;
+        color: var(--text-faint);
+      }
+      .docs-sidebar__back {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 2rem;
+        padding: 0.4rem 0.6rem;
+        border-radius: 6px;
+        color: var(--text-faint);
+        font-size: 0.78rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      /* --- Main content --- */
+      .docs-main { min-width: 0; }
+
+      .docs-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.7rem;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        margin-bottom: 1.2rem;
+      }
+      .docs-main h1 {
+        font-size: clamp(1.9rem, 3.5vw, 2.6rem);
+        line-height: 1.15;
+        margin: 0 0 0.6rem;
+        letter-spacing: -0.01em;
+      }
+      .docs-main h1 + p { color: var(--text-muted); font-size: 1.05rem; }
+      .docs-main h2 {
+        margin-top: 3.5rem;
+        padding-top: 1.6rem;
+        border-top: 1px solid var(--border);
+        font-size: 1.55rem;
+        letter-spacing: -0.005em;
+      }
+      .docs-main h3 {
+        margin-top: 2.4rem;
+        font-size: 1.18rem;
+        color: var(--text);
+      }
+      .docs-main h4 {
+        margin-top: 1.8rem;
+        font-size: 1rem;
+        color: var(--text);
+        text-transform: none;
+        letter-spacing: 0;
+      }
+      .docs-main p, .docs-main li { color: var(--text-muted); }
+      .docs-main strong { color: var(--text); font-weight: 600; }
+      .docs-main ul, .docs-main ol { padding-left: 1.4rem; }
+      .docs-main li { margin: 0.3rem 0; }
+      .docs-main hr { border: none; border-top: 1px solid var(--border); margin: 3rem 0; }
+
+      /* --- Code --- */
+      code {
+        font-family: 'JetBrains Mono', 'Fira Code', 'SFMono-Regular', ui-monospace, monospace;
+        font-size: 0.85em;
+      }
+      :not(pre) > code {
+        padding: 0.12rem 0.4rem;
+        border-radius: 4px;
+        background: var(--bg-code);
+        border: 1px solid var(--border);
+        color: var(--code-text);
+      }
+      pre {
+        background: var(--bg-code);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1rem 1.1rem;
+        overflow-x: auto;
+        margin: 1rem 0 1.4rem;
+        font-size: 0.85rem;
+        line-height: 1.55;
+      }
+      pre code { color: var(--code-text); background: transparent; padding: 0; border: 0; }
+
+      /* --- Tables --- */
+      .docs-main table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.2rem 0 1.6rem;
+        font-size: 0.9rem;
+      }
+      .docs-main th, .docs-main td {
+        padding: 0.6rem 0.8rem;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+      }
+      .docs-main th {
+        color: var(--text);
+        font-weight: 600;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: rgba(231, 233, 255, 0.04);
+      }
+      .docs-main tr:hover td { background: rgba(231, 233, 255, 0.025); }
+
+      /* --- Callout --- */
+      .docs-callout {
+        border-left: 3px solid var(--accent);
+        background: rgba(255, 216, 77, 0.06);
+        padding: 0.85rem 1.1rem;
+        border-radius: 0 8px 8px 0;
+        margin: 1.4rem 0;
+        color: var(--text);
+        font-size: 0.92rem;
+      }
+
+      /* --- Endpoint header --- */
+      .endpoint {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-top: 2rem;
+        padding: 0.45rem 0.85rem;
+        border-radius: 8px;
+        background: var(--bg-elev);
+        border: 1px solid var(--border-strong);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.92rem;
+      }
+      .endpoint .verb {
+        padding: 0.1rem 0.5rem;
+        border-radius: 4px;
+        background: rgba(99, 200, 130, 0.18);
+        color: #6ce3a4;
+        font-weight: 700;
+        font-size: 0.75rem;
+        letter-spacing: 0.06em;
+      }
+      .endpoint .path { color: var(--accent); }
+
+      @media (max-width: 920px) {
+        .docs-shell { grid-template-columns: 1fr; gap: 1.5rem; padding: 2rem 1.2rem 4rem; }
+        .docs-sidebar {
+          position: static;
+          max-height: none;
+          border-right: 0;
+          border-bottom: 1px solid var(--border);
+          padding-bottom: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="docs-shell">
+      <aside class="docs-sidebar">
+        <a href="/" class="docs-sidebar__brand">
+          <img src="/icon(2).webp" alt="" />
+          <div>
+            <span>MegaBunnish</span>
+            <strong>Docs &amp; API</strong>
+          </div>
+        </a>
+        <nav>
+          <h4>Part 1 — MegaETH</h4>
+          <a href="#what-is-megaeth">What is MegaETH?</a>
+          <a href="#what-is-megabunnish">What is MegaBunnish?</a>
+          <a href="#data-model">Data model</a>
+          <a href="#project-shape" class="is-sub">Project shape</a>
+          <a href="#categories" class="is-sub">Categories</a>
+          <a href="#event-shape" class="is-sub">Event shape</a>
+          <a href="#architecture">Architecture</a>
+
+          <h4>Part 2 — Public API</h4>
+          <a href="#api-overview">Overview</a>
+          <a href="#base-urls">Base URLs</a>
+          <a href="#conventions">Conventions</a>
+          <a href="#endpoint-index">GET /api/public</a>
+          <a href="#endpoint-projects">GET /projects</a>
+          <a href="#endpoint-events">GET /events</a>
+          <a href="#endpoint-ecosystem">GET /ecosystem</a>
+          <a href="#client-snippets">Client snippets</a>
+          <a href="#rate-limits">Rate limits &amp; caching</a>
+          <a href="#versioning">Versioning</a>
+        </nav>
+        <a class="docs-sidebar__back" href="/">← Back to constellation</a>
+      </aside>
+
+      <main class="docs-main">
+        <span class="docs-eyebrow">MegaBunnish · v1</span>
+        <h1>MegaETH &amp; MegaBunnish — Documentation</h1>
+        <p>
+          Everything you need to understand the MegaETH ecosystem as MegaBunnish
+          tracks it, plus a stable read-only HTTP API so you can reuse the same
+          catalog in your own apps, bots and dashboards.
+        </p>
+
+        <div class="docs-callout">
+          This page is split in two: <strong>Part 1</strong> covers the chain
+          and the MegaBunnish data model; <strong>Part 2</strong> documents the
+          public API endpoints, query parameters, response shapes and client
+          snippets.
+        </div>
+
+        <hr />
+
+        <h2 id="part-1">Part 1 — MegaETH</h2>
+
+        <h3 id="what-is-megaeth">What is MegaETH?</h3>
+        <p>
+          MegaETH is a real-time Ethereum L2 designed for sub-10 ms block times
+          and very high throughput while staying fully EVM-compatible. The goal
+          is to make on-chain UX feel as responsive as a centralized backend so
+          that consumer apps — trading, gaming, social, prediction markets —
+          can run "natively on-chain" instead of relying on off-chain
+          sequencers or batched UX shortcuts.
+        </p>
+        <p>Key properties relevant to apps and integrators:</p>
+        <ul>
+          <li><strong>EVM equivalence.</strong> Standard Solidity contracts, JSON-RPC and tooling (Foundry, Hardhat, viem, ethers, wagmi) work as-is.</li>
+          <li><strong>Real-time blocks.</strong> Targeted ~10 ms mini-blocks with frequent state diffs published to subscribers, allowing UIs to stream state updates instead of polling.</li>
+          <li><strong>L2 security.</strong> Settlement and data availability anchored to Ethereum L1.</li>
+          <li><strong>Chain ID.</strong> <code>6342</code> — verify on the official MegaETH docs before sending real value.</li>
+        </ul>
+        <p>
+          Because the chain optimizes for low latency, the ecosystem skews
+          toward apps where milliseconds matter: perps, on-chain order books,
+          prediction markets, mobile trading, real-time games, and on-chain
+          social.
+        </p>
+
+        <h3 id="what-is-megabunnish">What is MegaBunnish?</h3>
+        <p>
+          MegaBunnish is a 2D constellation explorer for the MegaETH ecosystem.
+          It renders every tracked project as a node, grouped by primitive
+          (DeFi, NFT, Gaming, RWA, Social, Meme, DePIN, AI, Tools…), and lets
+          users:
+        </p>
+        <ul>
+          <li>pan around the canvas to discover apps,</li>
+          <li>filter by category or by curated tags such as <strong>Megamafia</strong>, <strong>Jojo</strong> and <strong>Native</strong>,</li>
+          <li>open a detail drawer per project with links and active incentives,</li>
+          <li>subscribe an email address to upcoming <strong>event alerts</strong>,</li>
+          <li>check a wallet against the constellation via the <strong>Wallet Checker</strong> to surface contract interactions and NFT holdings (e.g. BadBunnz beads).</li>
+        </ul>
+
+        <h3 id="data-model">Data model</h3>
+        <p>All ecosystem data lives in two source files:</p>
+        <ul>
+          <li><code>src/data/projects.json</code> — the catalog of projects.</li>
+          <li><code>src/data/appEvents.ts</code> — scheduled events (mints, presales, tournaments, deploy windows…).</li>
+        </ul>
+
+        <h4 id="project-shape">Project shape</h4>
+<pre><code>{
+  "id": "cap-money",
+  "name": "Cap Money",
+  "categories": ["Megamafia", "DeFi", "Native"],
+  "networks": ["MegaETH"],
+  "links": {
+    "site": "https://cap.app/",
+    "twitter": "https://x.com/capmoney_"
+  },
+  "logo": "/logos/CapMoney.webp",
+  "isLive": true,
+  "incentives": [
+    {
+      "id": "example-incentive",
+      "title": "Cosmetic SBT for early users",
+      "reward": "Cosmetic SBT",
+      "expiresAt": "2026-02-13T23:59:00-05:00"
+    }
+  ]
+}</code></pre>
+
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>id</code></td><td>string</td><td>Stable kebab-case slug, used as the public API key.</td></tr>
+            <tr><td><code>name</code></td><td>string</td><td>Display name.</td></tr>
+            <tr><td><code>categories</code></td><td>string[]</td><td>Free-form taxonomy. See list below.</td></tr>
+            <tr><td><code>networks</code></td><td>string[]</td><td>Currently always <code>["MegaETH"]</code>.</td></tr>
+            <tr><td><code>links</code></td><td>object</td><td>Any of <code>site</code>, <code>docs</code>, <code>twitter</code>, <code>discord</code>, <code>telegram</code>, <code>github</code>.</td></tr>
+            <tr><td><code>logo</code></td><td>string</td><td>Path served from <code>public/logos/</code>.</td></tr>
+            <tr><td><code>isLive</code></td><td>boolean</td><td><code>true</code> once the app is reachable on MegaETH.</td></tr>
+            <tr><td><code>incentives</code></td><td>array</td><td>Optional. Expired entries are filtered server-side.</td></tr>
+          </tbody>
+        </table>
+
+        <h4 id="categories">Categories in use</h4>
+        <p>
+          <code>Megamafia</code>, <code>Jojo</code>, <code>Native</code>,
+          <code>DeFi</code>, <code>Trading</code>, <code>Trading bot</code>,
+          <code>Mobile</code>, <code>Prediction Market</code>,
+          <code>Gaming</code>, <code>NFT</code>, <code>RWA</code>,
+          <code>Launchpad</code>, <code>Social</code>, <code>Gambling</code>,
+          <code>Meme</code>, <code>Depin</code>, <code>AI</code>,
+          <code>Tools</code>, <code>Bridge</code>.
+        </p>
+        <p>Two of these are curated tags rather than primitives:</p>
+        <ul>
+          <li><strong>Megamafia</strong> — apps included in the official MegaETH builder cohort.</li>
+          <li><strong>Jojo</strong> — a sub-cohort tracked by the community.</li>
+        </ul>
+
+        <h4 id="event-shape">Event shape</h4>
+        <p>Events drive both the UI panel and the email alerts:</p>
+<pre><code>{
+  id: 'offshore-presale',
+  title: 'Presale Open',
+  projectId: 'offshore',
+  start: '2026-02-14T12:00:00-05:00',
+  end:   '2026-02-19T16:00:00-05:00',
+  tweetUrl: 'https://x.com/OffshoreOnMega',
+  detailsUrl: 'https://offshoreprotocol.fun?ref=139',
+  phases: [
+    { label: 'Presale Open', start: '...', end: '...' }
+  ]
+}</code></pre>
+        <p><code>projectId</code> always matches an entry in <code>projects.json</code>.</p>
+
+        <h3 id="architecture">Architecture overview</h3>
+        <table>
+          <thead><tr><th>Layer</th><th>Path</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>Frontend (Vite + React)</td><td><code>src/</code></td><td>Canvas, panels, wallet checker.</td></tr>
+            <tr><td>Static catalog</td><td><code>src/data/</code></td><td><code>projects.json</code>, <code>appEvents.ts</code>.</td></tr>
+            <tr><td>AI advisor</td><td><code>server/ai-advisor.ts</code>, <code>api/ai-chat.ts</code></td><td>RAG-style chat grounded on the catalog.</td></tr>
+            <tr><td>Event alerts</td><td><code>functions/api/event-alert-subscriptions.ts</code></td><td>Subscribe + send via Resend.</td></tr>
+            <tr><td>Public API</td><td><code>api/_public.ts</code>, <code>functions/api/public/</code></td><td>Read-only ecosystem endpoints.</td></tr>
+            <tr><td>Node entrypoint</td><td><code>server/railway.ts</code></td><td>HTTP server used in non-Cloudflare deployments.</td></tr>
+            <tr><td>Cloudflare Pages</td><td><code>functions/</code></td><td>Routes used by the Pages deployment.</td></tr>
+          </tbody>
+        </table>
+
+        <hr />
+
+        <h2 id="part-2">Part 2 — Public API</h2>
+
+        <h3 id="api-overview">Overview</h3>
+        <p>
+          The public API exposes a stable, read-only JSON view of the
+          MegaBunnish catalog so external developers can:
+        </p>
+        <ul>
+          <li>power their own MegaETH dashboards or directories,</li>
+          <li>check whether a project they care about is live,</li>
+          <li>subscribe to the upcoming-events feed for bots and Discord notifiers,</li>
+          <li>avoid scraping the website or duplicating the data manually.</li>
+        </ul>
+
+        <h3 id="base-urls">Base URLs</h3>
+        <ul>
+          <li><strong>Production (Cloudflare Pages):</strong> <code>https://megabunnish.com/api/public</code></li>
+          <li><strong>Local dev (Node server via <code>npm run alerts:server</code>):</strong> <code>http://localhost:3000/api/public</code></li>
+        </ul>
+
+        <h3 id="conventions">Conventions</h3>
+        <ul>
+          <li>All endpoints are <code>GET</code> (and <code>OPTIONS</code> for CORS preflight).</li>
+          <li>Every response is <code>application/json; charset=utf-8</code>.</li>
+          <li>Responses are CORS-open (<code>Access-Control-Allow-Origin: *</code>) and cacheable: <code>public, max-age=60, s-maxage=300, stale-while-revalidate=600</code>.</li>
+          <li>No authentication. Treat the data as public and best-effort.</li>
+          <li>Errors use <code>{ "error": "&lt;message&gt;" }</code> with a non-2xx status.</li>
+        </ul>
+
+        <h3 id="endpoint-index">Index endpoint</h3>
+        <div class="endpoint"><span class="verb">GET</span><span class="path">/api/public</span></div>
+        <p>Returns a small index describing the available endpoints. Useful as a liveness probe.</p>
+<pre><code>{
+  "name": "MegaBunnish public API",
+  "version": 1,
+  "endpoints": {
+    "projects": "/api/public/projects",
+    "events": "/api/public/events",
+    "ecosystem": "/api/public/ecosystem"
+  }
+}</code></pre>
+
+        <h3 id="endpoint-projects">Projects</h3>
+        <div class="endpoint"><span class="verb">GET</span><span class="path">/api/public/projects</span></div>
+        <p>Returns the full project catalog (currently 116 entries) with expired incentives already filtered out.</p>
+
+        <h4>Query parameters</h4>
+        <table>
+          <thead><tr><th>Param</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>id</code></td><td>string</td><td>Return a single project by its slug.</td></tr>
+            <tr><td><code>category</code></td><td>string</td><td>Case-insensitive match against a category.</td></tr>
+            <tr><td><code>network</code></td><td>string</td><td>Case-insensitive match against a network. Mostly <code>MegaETH</code>.</td></tr>
+            <tr><td><code>live</code></td><td>bool (<code>true</code>/<code>false</code>/<code>1</code>/<code>0</code>)</td><td>Filter by <code>isLive</code>.</td></tr>
+            <tr><td><code>q</code></td><td>string</td><td>Substring search in <code>name</code> and <code>id</code>.</td></tr>
+          </tbody>
+        </table>
+
+        <h4>Response</h4>
+<pre><code>{
+  "count": 12,
+  "total": 116,
+  "projects": [
+    {
+      "id": "cap-money",
+      "name": "Cap Money",
+      "categories": ["Megamafia", "DeFi", "Native"],
+      "networks": ["MegaETH"],
+      "links": { "site": "https://cap.app/", "twitter": "https://x.com/capmoney_" },
+      "logo": "/logos/CapMoney.webp",
+      "isLive": true,
+      "incentives": []
+    }
+  ]
+}</code></pre>
+
+        <h4>Examples</h4>
+<pre><code># All projects
+curl https://megabunnish.com/api/public/projects
+
+# Only live DeFi apps
+curl "https://megabunnish.com/api/public/projects?category=DeFi&amp;live=true"
+
+# A single project by slug
+curl "https://megabunnish.com/api/public/projects?id=cap-money"
+
+# Free-text search
+curl "https://megabunnish.com/api/public/projects?q=trade"</code></pre>
+
+        <h3 id="endpoint-events">Events</h3>
+        <div class="endpoint"><span class="verb">GET</span><span class="path">/api/public/events</span></div>
+        <p>Returns the scheduled events feed, sorted by start time ascending.</p>
+
+        <h4>Query parameters</h4>
+        <table>
+          <thead><tr><th>Param</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>projectId</code></td><td>string</td><td>Filter to a single project.</td></tr>
+            <tr><td><code>upcoming</code></td><td>bool</td><td>Keep only events whose end (or start) is ≥ now.</td></tr>
+            <tr><td><code>past</code></td><td>bool</td><td>Keep only events whose end (or start) is &lt; now.</td></tr>
+          </tbody>
+        </table>
+
+        <h4>Response</h4>
+<pre><code>{
+  "count": 3,
+  "total": 24,
+  "events": [
+    {
+      "id": "offshore-presale",
+      "title": "Presale Open",
+      "projectId": "offshore",
+      "start": "2026-02-14T12:00:00-05:00",
+      "end":   "2026-02-19T16:00:00-05:00",
+      "tweetUrl":   "https://x.com/OffshoreOnMega",
+      "detailsUrl": "https://offshoreprotocol.fun?ref=139",
+      "phases": [
+        { "label": "Presale Open", "start": "...", "end": "..." }
+      ]
+    }
+  ]
+}</code></pre>
+
+        <h4>Examples</h4>
+<pre><code># Everything upcoming
+curl "https://megabunnish.com/api/public/events?upcoming=true"
+
+# Events for a specific project
+curl "https://megabunnish.com/api/public/events?projectId=offshore"</code></pre>
+
+        <h3 id="endpoint-ecosystem">Ecosystem summary</h3>
+        <div class="endpoint"><span class="verb">GET</span><span class="path">/api/public/ecosystem</span></div>
+        <p>A lightweight summary of the ecosystem — useful for stat widgets and quick health checks.</p>
+<pre><code>{
+  "chain": "MegaETH",
+  "chainId": 6342,
+  "projects": { "total": 116, "live": 17, "activeIncentives": 4 },
+  "events":   { "total": 24,  "upcoming": 6 },
+  "categories": { "Native": 88, "Megamafia": 41, "DeFi": 27, "...": "..." },
+  "networks":   { "MegaETH": 116 },
+  "generatedAt": "2026-04-28T10:15:00.000Z"
+}</code></pre>
+
+        <h3 id="client-snippets">Client snippets</h3>
+
+        <h4>TypeScript / <code>fetch</code></h4>
+<pre><code>type PublicProject = {
+  id: string;
+  name: string;
+  categories: string[];
+  networks: string[];
+  links: Record&lt;string, string&gt;;
+  logo?: string;
+  isLive: boolean;
+  incentives: { id: string; title: string; reward?: string; expiresAt?: string }[];
+};
+
+const response = await fetch(
+  'https://megabunnish.com/api/public/projects?live=true&amp;category=DeFi'
+);
+const { projects } = (await response.json()) as { projects: PublicProject[] };</code></pre>
+
+        <h4>Python</h4>
+<pre><code>import requests
+
+data = requests.get(
+    'https://megabunnish.com/api/public/events',
+    params={'upcoming': 'true'},
+    timeout=10,
+).json()
+
+for event in data['events']:
+    print(event['start'], '-', event['title'])</code></pre>
+
+        <h3 id="rate-limits">Rate limits and caching</h3>
+        <p>There is no hard rate limit, but please:</p>
+        <ul>
+          <li>respect the <code>Cache-Control</code> header (5 min shared cache),</li>
+          <li>send a meaningful <code>User-Agent</code>,</li>
+          <li>avoid hammering the endpoints from the browser on every keystroke — debounce filter inputs.</li>
+        </ul>
+        <p>If you need higher freshness or a webhook-style stream, open an issue rather than polling at sub-second intervals.</p>
+
+        <h3 id="versioning">Versioning and stability</h3>
+        <p>
+          The shape documented here is <strong>v1</strong> and matches the JSON
+          returned by the index endpoint (<code>"version": 1</code>).
+          Backwards-incompatible changes will ship under a new path
+          (<code>/api/public/v2/...</code>) so existing integrations keep
+          working.
+        </p>
+        <p>
+          The data itself (slugs, categories, event IDs) is curated and may
+          change. Treat <code>id</code> as stable; treat <code>categories</code>
+          as a best-effort taxonomy that can evolve.
+        </p>
+      </main>
+    </div>
+  </body>
+</html>
