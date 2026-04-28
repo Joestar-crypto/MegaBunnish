@@ -791,7 +791,9 @@ const deriveProjectView = (
     ? computeLayout(toRawProjectSet(categoryFilteredPool)).projects
     : cloneProjects(filteredPool);
   const visible = shouldRelayoutForCategories ? pool : filterProjectsByCategory(pool, categories);
-  return { pool, visible, counts: deriveCategoryCounts(pool) };
+  // Counts must reflect *all* categories before the active-category filter is applied,
+  // otherwise non-selected categories all show 0 in the menu.
+  return { pool, visible, counts: deriveCategoryCounts(filteredPool) };
 };
 
 const computeCameraFocus = (

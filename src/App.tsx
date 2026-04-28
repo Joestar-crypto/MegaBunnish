@@ -5,11 +5,14 @@ import { ProjectDetailDrawer } from './components/ProjectDetailDrawer';
 import { KpiDashboard } from './components/KpiDashboard';
 import { EthosTrustScores } from './components/EthosTrustScores';
 import { AiAdvisorChat } from './components/AiAdvisorChat';
+import { Globe3DView } from './components/Globe3DView';
 import { ConstellationProvider, useConstellation } from './state/constellation';
 
 const AppContent = () => {
   const [isInteracting, setIsInteracting] = useState(false);
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+  // EXPERIMENTAL 3D mode toggle. Remove with the Globe3DView feature.
+  const [is3D, setIs3D] = useState(false);
   const { resetCamera, filters } = useConstellation();
   const showJojoBanner = filters.jojo;
 
@@ -30,10 +33,17 @@ const AppContent = () => {
       <div className="immersive-stage">
         <div className="immersive-stage__canvas">
           <div className="immersive-stage__background">
-            <ConstellationCanvas
-              onInteractionStart={handleInteractionStart}
-              onInteractionEnd={handleInteractionEnd}
-            />
+            {is3D ? (
+              <Globe3DView
+                onInteractionStart={handleInteractionStart}
+                onInteractionEnd={handleInteractionEnd}
+              />
+            ) : (
+              <ConstellationCanvas
+                onInteractionStart={handleInteractionStart}
+                onInteractionEnd={handleInteractionEnd}
+              />
+            )}
           </div>
           <div className={`hero-overlay ${isInteracting ? 'hero-overlay--hidden' : ''}`}>
             <div className="hero-overlay__content">
@@ -69,6 +79,16 @@ const AppContent = () => {
             aria-label="Reset camera view"
           >
             Reset
+          </button>
+          {/* EXPERIMENTAL 3D toggle — remove with the Globe3DView feature. */}
+          <button
+            type="button"
+            className={`view-mode-toggle ${isInteracting ? 'ui-panel--hidden' : ''} ${is3D ? 'is-active' : ''}`}
+            onClick={() => setIs3D((v) => !v)}
+            aria-pressed={is3D}
+            aria-label={is3D ? 'Switch to 2D constellation' : 'Switch to 3D globes'}
+          >
+            {is3D ? '2D' : '3D'}
           </button>
           {showJojoBanner ? (
             <div

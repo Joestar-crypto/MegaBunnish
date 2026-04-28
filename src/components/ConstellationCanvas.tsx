@@ -4,6 +4,7 @@ import { APP_EVENTS } from '../data/appEvents';
 import { INTERACTION_CONTRACT_MAP, NFT_CONTRACT_MAP } from '../data/contractDirectory';
 import { ConstellationProject, HighlightVariant } from '../types';
 import { getCategoryColor } from '../utils/colors';
+import { ensureImage, imageCache } from '../utils/imageCache';
 
 const highlightStyles: Record<HighlightVariant, { stroke: string; glow: string; halo: string }> = {
   badbunnz: {
@@ -570,20 +571,17 @@ const buildWalletOrbitCounts = (
   return counts;
 };
 
+// Module-level so the cache survives 2D ↔ 3D toggles. Otherwise unmounting the
+// canvas drops every decoded <img> and the next mount briefly shows letter
+// placeholders for a few frames while the browser re-decodes.
 const useImageCache = (projects: ConstellationProject[]) => {
-  const cache = useMemo(() => new Map<string, HTMLImageElement>(), []);
-
   useEffect(() => {
     projects.forEach((project) => {
-      if (!cache.has(project.logo)) {
-        const image = new Image();
-        image.src = project.logo;
-        cache.set(project.logo, image);
-      }
+      ensureImage(project.logo);
     });
-  }, [cache, projects]);
+  }, [projects]);
 
-  return cache;
+  return imageCache;
 };
 
 const generateStars = (maxStars: number) =>
