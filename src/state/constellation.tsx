@@ -32,7 +32,7 @@ export const CORE_CATEGORIES = [
   'Meme'
 ] as const;
 
-const SPECIAL_CATEGORIES = ['Megamafia', 'Native', 'Jojo', 'Mobile'] as const;
+const SPECIAL_CATEGORIES = ['Megamafia', 'Native', 'Jojo', 'Mobile', 'Incentivized'] as const;
 
 type CoreCategory = (typeof CORE_CATEGORIES)[number];
 type SpecialCategory = (typeof SPECIAL_CATEGORIES)[number];
@@ -83,6 +83,8 @@ const CATEGORY_ALIASES: Record<string, CanonicalCategory> = {
   jojo: 'Jojo',
   mobile: 'Mobile',
   native: 'Native',
+  incentivized: 'Incentivized',
+  incentivised: 'Incentivized',
   bridge: 'Bridge',
   rwa: 'RWA',
   'r.w.a': 'RWA',
@@ -105,7 +107,13 @@ const canonicalizeCategory = (label: string): CanonicalCategory | null => {
   return null;
 };
 
-const SPECIAL_DEFAULTS: SpecialFilters = { megamafia: false, jojo: false, mobile: false, native: false };
+const SPECIAL_DEFAULTS: SpecialFilters = {
+  megamafia: false,
+  jojo: false,
+  mobile: false,
+  native: false,
+  incentivized: false
+};
 
 const JOJO_PROFILE_LOOKUP = JOJO_PROFILES.reduce<Record<string, JojoProfile>>((acc, profile) => {
   acc[profile.id] = profile;
@@ -150,6 +158,10 @@ const toCategoryMeta = (labels: string[]): ProjectCategoryMeta => {
       traits.mobile = true;
       return;
     }
+    if (canonical === 'Incentivized') {
+      traits.incentivized = true;
+      return;
+    }
     if (!categories.includes(canonical)) {
       categories.push(canonical);
     }
@@ -167,7 +179,13 @@ const applySpecialFilters = (
   filters: SpecialFilters,
   jojoProfileId: string
 ) => {
-  if (!filters.megamafia && !filters.jojo && !filters.mobile && !filters.native) {
+  if (
+    !filters.megamafia &&
+    !filters.jojo &&
+    !filters.mobile &&
+    !filters.native &&
+    !filters.incentivized
+  ) {
     return projects;
   }
   return projects.filter((project) => {
@@ -189,12 +207,15 @@ const applySpecialFilters = (
     if (filters.native && !project.traits.native) {
       return false;
     }
+    if (filters.incentivized && !project.traits.incentivized) {
+      return false;
+    }
     return true;
   });
 };
 
 const shouldAggregateFilters = (filters: SpecialFilters) =>
-  filters.megamafia || filters.jojo || filters.mobile || filters.native;
+  filters.megamafia || filters.jojo || filters.mobile || filters.native || filters.incentivized;
 
 const cloneProject = (project: ConstellationProject): ConstellationProject => ({
   ...project,
@@ -214,7 +235,9 @@ const toRawProjectSnapshot = (project: ConstellationProject): RawProject => ({
   logo: project.logo,
   isLive: project.isLive,
   incentives: project.incentives.length ? [...project.incentives] : undefined,
-  linkedIds: project.linkedIds.length ? [...project.linkedIds] : undefined
+  linkedIds: project.linkedIds.length ? [...project.linkedIds] : undefined,
+  incentivizedWave: project.incentivizedWave,
+  terminalMissions: project.terminalMissions?.length ? [...project.terminalMissions] : undefined
 });
 
 const toRawProjectSet = (projects: ConstellationProject[]) => projects.map(toRawProjectSnapshot);

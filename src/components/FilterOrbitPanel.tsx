@@ -90,7 +90,8 @@ const buildTraitClassName = (key: SpecialFilterKey, isActive: boolean) => {
 const SPECIAL_FILTER_ACTIVE_THEME: Partial<Record<SpecialFilterKey, { background: string; color: string }>> = {
   megamafia: { background: '#ffffff', color: '#111217' },
   jojo: { background: '#fff533', color: '#1f1f1f' },
-  native: { background: '#e0d9d9', color: '#1a1a1a' }
+  native: { background: '#e0d9d9', color: '#1a1a1a' },
+  incentivized: { background: '#62f6c4', color: '#05060f' }
 };
 
 type TraitStyleBundle = { button?: CSSProperties; icon?: CSSProperties };
@@ -118,7 +119,8 @@ const SPECIAL_FILTERS: SpecialFilterDefinition[] = [
     hint: 'Personal farming list',
     iconSrc: '/logos/Jojo2.webp'
   },
-  { key: 'native', label: 'Native', hint: 'Core native', iconSrc: '/logos/MegaETH.webp', Icon: NativeCoreIcon }
+  { key: 'native', label: 'Native', hint: 'Core native', iconSrc: '/logos/MegaETH.webp', Icon: NativeCoreIcon },
+  { key: 'incentivized', label: 'Incentivized', hint: 'Wave 1 rewards', iconSrc: '/logos/Terminal.ico' }
 ];
 
 type FilterOrbitPanelProps = {

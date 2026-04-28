@@ -196,7 +196,12 @@ const DEFAULT_SUGGESTED_PROMPTS = [
   'Compare the safest DeFi options for a new user.',
   'Which bridge should I use to move into MegaETH?',
   'Which mobile-first app should I try first?',
-  'How does MegaETH differ from a typical Ethereum L2?'
+  'How does MegaETH differ from a typical Ethereum L2?',
+  'Which incentivized Wave 1 apps on Terminal should I farm first?',
+  'How do Terminal points and boosters actually work?',
+  'Should I pledge to an NFT clan this week, and how do I pick one?',
+  'How do I maximise my Terminal multiplier with weekly app selection?',
+  'Which boosters can I still unlock after TGE?'
 ];
 
 const GENERAL_MEGAETH_CONTEXT = [
@@ -270,7 +275,12 @@ const MEGAETH_SOURCES: Array<{ id: string; label: string; url: string }> = [
   { id: 'cryptorank', label: 'CryptoRank MegaETH funding', url: 'https://cryptorank.io/ico/megaeth' },
   { id: 'messari', label: 'Messari MegaETH profile', url: 'https://messari.io/project/megaeth' },
   { id: 'blockscout', label: 'MegaETH Blockscout explorer', url: 'https://megaeth.blockscout.com/' },
-  { id: 'github', label: 'MegaETH Labs GitHub', url: 'https://github.com/megaeth-labs' }
+  { id: 'github', label: 'MegaETH Labs GitHub', url: 'https://github.com/megaeth-labs' },
+  { id: 'terminal', label: 'MegaETH Terminal', url: 'https://terminal.megaeth.com/' },
+  { id: 'terminal-guide', label: 'MegaETH Terminal Guide', url: 'https://terminal.megaeth.com/guide' },
+  { id: 'terminal-boosters', label: 'MegaETH Terminal Boosters', url: 'https://terminal.megaeth.com/boosters' },
+  { id: 'terminal-clan', label: 'MegaETH Terminal NFT Clans', url: 'https://terminal.megaeth.com/nft-clan' },
+  { id: 'terminal-leaderboard', label: 'MegaETH Terminal Leaderboard', url: 'https://terminal.megaeth.com/leaderboard' }
 ];
 
 const THIRD_PARTY_MEGAETH_CONTEXT = [
@@ -286,7 +296,20 @@ const THIRD_PARTY_MEGAETH_CONTEXT = [
   'The Endgame article [endgame] says MegaETH targets stateless validation so anyone can verify blocks with low specs, reinforced by Pi Squared semantic validation.',
   'The Last Mile article [last-mile] frames real-time infrastructure as the missing last mile in crypto UX.',
   'The Blockscout explorer [blockscout] is the canonical block explorer linked from MegaETH official surfaces.',
-  'The MegaETH Labs GitHub [github] hosts the official MegaETH client and tooling repositories.'
+  'The MegaETH Labs GitHub [github] hosts the official MegaETH client and tooling repositories.',
+  'MegaETH Terminal [terminal] is the official engagement and rewards hub at terminal.megaeth.com where users connect wallets, explore live ecosystem apps on a frontier map, earn points, stack boosters, and pledge to NFT clans.',
+  'Terminal Season 1 [terminal-guide] runs from 28 April to 23 June 2026 (8 weeks); rewards are distributed at season end to eligible participants subject to KYC and sanctions screening.',
+  'Terminal points [terminal-guide] are non-transferrable, do not represent ownership, and explicitly do not guarantee any token allocation or airdrop; they are an engagement signal only and the Foundation has full discretion over future rewards.',
+  'Terminal points [terminal-guide] run on a weekly cadence: activity is cut off Tuesday 12:00am UTC and balances drop over the following day; calculation factors in app activity, boosters held, and weekly app selection.',
+  'Wallet Cluster [terminal-guide]: the first wallet you connect becomes your Main Wallet; additional sub wallets share the same profile and stack booster eligibility across all addresses; one wallet can only belong to one profile at a time.',
+  'Apps section [terminal-guide]: apps are live products on the Terminal map (USDm sinks, consumer DeFi, novel assets, real-time experiences); not every app currently gives points and some are time-limited; an app starts as "Discovered" then flips to "Explored" once you earn points from it.',
+  'Boosters [terminal-boosters]: amplify base points into a multiplier that ONLY applies to your weekly selected apps; activity outside your selection earns at base rate; booster changes can take up to 15 minutes to update.',
+  'Boosters are awarded based on retroactive and proactive ecosystem alignment, not in-program farming. The 7 unlockable boosters are: Conviction (secured allocation in The Conviction Round), Fluffle Friend (secured a Fluffle NFT spot), Fluffle (minted The Fluffle NFT), Committed Alignment (sustained long-term positioning), The People (participated in The People\'s Round on Echo), Day One (explored The Rabbithole before Terminal launch), and Man of Culture (participation in culturally significant onchain collections).',
+  'Weekly App Selection [terminal-guide]: each week, pick up to 3 apps to activate your booster multiplier stack on; selection resets Tuesday 12:00am UTC alongside the point cut-off; once made, the selection is locked for 7 days.',
+  'NFT Clan Pledging [terminal-clan]: any participant can pledge to a clan each week if they pass anti-sybil filters; as a clan reaches more pledge milestones, holders of that clan NFT get a higher booster; users can stack up to 3 NFTs from the same collection to maximise the boost. Picking a new clan removes the old pledge. Clan selection resets Tuesday 12:00am UTC.',
+  'Leaderboard [terminal-leaderboard] has two views: Season ranking (total points since season start) and Weekly ranking (points from the most recent weekly update only).',
+  'Wave 1 incentivized apps live on Terminal right now (verified from terminal.megaeth.com): Hit.One (arcade-finance leveraged trades with USDm), ITS / itstheseason.xyz (booster-pack TCG by megatruther), Kumbaya (DEX + launchpad with LP, swap, and token-launch missions), Monster / mnstr.xyz (Pokemon-card-style packs with USDm and an 85% sell-back guarantee), NextRare (mobile gacha trading-card app), TopStrike (real-time football player-card trading market with matchday prizes).',
+  'Wave 2 of Terminal incentivized apps opens approximately 1 day 20 hours after 28 April 2026 and is not yet publicly listed; the app list and missions for Wave 2 are unknown until that release.'
 ].join('\n');
 
 const MEGAETH_SOURCES_BLOCK = MEGAETH_SOURCES.map(
@@ -382,7 +405,7 @@ function isMemeCulturePrompt(query: string) {
   // megaeth/mega/bunny/mafia/jojo/brawler and does NOT include any strong
   // technical vocabulary is treated as culture.
   if (looksLikeQuestion && /(megaeth|mega eth|bunny|bunnies|mafia|jojo|brawler|brawlers|megabunnish)/.test(normalized)) {
-    if (!/(price|tokenomics|supply|tge|ico|launch date|api|rpc|gas|tps|throughput|node|validator|consensus|bridge|liquidity|borrow|lend|loan|apy|apr|yield|farm|airdrop|points|incentive|safest|safe|risk|compare|best app|which app|recommend|recommendation)/.test(normalized)) {
+    if (!/(price|tokenomics|supply|tge|ico|launch date|api|rpc|gas|tps|throughput|node|validator|consensus|bridge|liquidity|borrow|lend|loan|apy|apr|yield|farm|airdrop|points|incentive|safest|safe|risk|compare|best app|which app|recommend|recommendation|terminal|booster|wave|clan|pledge|multiplier|leaderboard)/.test(normalized)) {
       return true;
     }
   }
@@ -392,7 +415,7 @@ function isMemeCulturePrompt(query: string) {
   if (
     looksLikeQuestion &&
     /^(is |are |does |do |can |could |would |should |why |what if |what would |how come |how is )/.test(normalized) &&
-    !/(price|tokenomics|supply|tge|ico|launch|api|rpc|gas|tps|throughput|node|validator|consensus|bridge|liquidity|borrow|lend|loan|apy|apr|yield|farm|airdrop|points|incentive|safest|safe|risk|compare|best app|which app|recommend|recommendation|protocol|smart contract|token)/.test(normalized)
+    !/(price|tokenomics|supply|tge|ico|launch|api|rpc|gas|tps|throughput|node|validator|consensus|bridge|liquidity|borrow|lend|loan|apy|apr|yield|farm|airdrop|points|incentive|safest|safe|risk|compare|best app|which app|recommend|recommendation|protocol|smart contract|token|terminal|booster|wave|clan|pledge|multiplier|leaderboard)/.test(normalized)
   ) {
     return true;
   }
@@ -414,7 +437,7 @@ function isSeriousTechnicalPrompt(query: string) {
     intent.preferSafety ||
     intent.preferBeginnerFriendly ||
     intent.preferIncentives ||
-    /(\bfarm\b|\bfarming\b|\bpoints\b|\byield\b|\bapy\b|\bapr\b|\bincentive\b|\brewards\b|\bborrow\b|\bloan\b|\bbridge\b|\bliquidity\b|\blp\b|\bperp\b|\bperps\b|\brisk\b|\bsafest\b|\bcompare\b|\bbest app\b|\bwhich app\b|\btokenomics\b|\bsupply\b|\btge\b|\bvaluation\b|\bunlock\b|\bvesting\b|\bprotocol\b|\brpc\b|\btps\b)/.test(
+    /(\bfarm\b|\bfarming\b|\bpoints\b|\byield\b|\bapy\b|\bapr\b|\bincentive\b|\brewards\b|\bborrow\b|\bloan\b|\bbridge\b|\bliquidity\b|\blp\b|\bperp\b|\bperps\b|\brisk\b|\bsafest\b|\bcompare\b|\bbest app\b|\bwhich app\b|\btokenomics\b|\bsupply\b|\btge\b|\bvaluation\b|\bunlock\b|\bvesting\b|\bprotocol\b|\brpc\b|\btps\b|\bterminal\b|\bbooster\b|\bboosters\b|\bclan\b|\bclans\b|\bpledge\b|\bwave\b|\bweekly selection\b|\bmultiplier\b|\bsybil\b|\bfluffle\b|\bconviction\b|\bleaderboard\b)/.test(
       normalized
     )
   );
@@ -444,7 +467,7 @@ const VERTICAL_INTENTS: Array<{ category: string; label: string; pattern: RegExp
 
 function detectIntent(query: string): IntentProfile {
   const normalized = normalize(query);
-  const wantsGeneralChainInfo = /(megaeth|chain|network|mainnet|l2|ethereum|throughput|tps|ggas|latency|block ?time|mini block|miniblock|realtime|real time|architecture|sequencer|settlement|eigenda|op stack|kailua|supply|token|tge|capacity|capabilities)/.test(normalized);
+  const wantsGeneralChainInfo = /(megaeth|chain|network|mainnet|l2|ethereum|throughput|tps|ggas|latency|block ?time|mini block|miniblock|realtime|real time|architecture|sequencer|settlement|eigenda|op stack|kailua|supply|token|tge|capacity|capabilities|terminal|booster|boosters|clan|clans|pledge|wave|weekly selection|multiplier|fluffle|conviction|leaderboard|season)/.test(normalized);
 
   const verticals: VerticalMatch[] = VERTICAL_INTENTS
     .filter((entry) => entry.pattern.test(normalized))
@@ -466,12 +489,12 @@ function detectIntent(query: string): IntentProfile {
     strictLending: /\b(lend|lending|borrow|borrowing|loan|loans|credit)\b/.test(normalized),
     strictRwa: verticals.some((entry) => entry.category === 'RWA'),
     preferLive: /(live|now|active|today|current|right now)/.test(normalized),
-    preferIncentives: /(farm|yield|points|reward|incentive)/.test(normalized),
+    preferIncentives: /(farm|yield|points|reward|incentive|terminal|booster|wave|multiplier|clan|pledge)/.test(normalized),
     preferSafety: /(safe|safest|safety|secure|securest|trusted|trust|reliable|risk|risky)/.test(normalized),
     preferBeginnerFriendly: /(new user|beginner|first time|first-time|starter|easy|simple)/.test(normalized),
     // Farming / airdrop / points hunting is far more rewarding on MegaETH-native
     // projects without a live token. Prefer Native, penalize non-Native.
-    preferNative: /\b(farm|farming|airdrop|airdrops|points|incentive|incentives|reward|rewards|allocation|eligibility|grind|grinding|sybil)\b/.test(normalized),
+    preferNative: /\b(farm|farming|airdrop|airdrops|points|incentive|incentives|reward|rewards|allocation|eligibility|grind|grinding|sybil|terminal|booster|boosters|wave|clan|clans|pledge|multiplier)\b/.test(normalized),
     // "Best NFT collection to buy/mint" should return mintable collections,
     // not marketplaces. Detect a collection-buying intent specifically.
     wantsNftCollections: /\b(nft|nfts|pfp|pfps|jpeg|jpegs|collectible|collectibles)\b/.test(normalized) && /\b(collection|collections|mint|minting|buy|cop|cope|hold|flip|invest|cheapest|floor)\b/.test(normalized),

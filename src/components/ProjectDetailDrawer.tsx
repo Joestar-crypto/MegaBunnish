@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { APP_EVENTS, type AppEvent } from '../data/appEvents';
 import { useConstellation } from '../state/constellation';
 import { getCategoryColor } from '../utils/colors';
-import { EthosReviewModal } from './EthosReviewWidget';
 
 const SOCIAL_LINKS: { key: 'site' | 'twitter' | 'discord' | 'telegram' | 'nft'; label: string; icon: string }[] = [
   { key: 'site', label: 'Website', icon: '/logos/Website.webp' },
@@ -824,7 +823,6 @@ const JojoOracle = ({
 
 export const ProjectDetailDrawer = () => {
   const [nowTick, setNowTick] = useState(() => Date.now());
-  const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const {
     selectedProjectId,
     selectProject,
@@ -907,10 +905,6 @@ export const ProjectDetailDrawer = () => {
     : null;
 
   const isVisible = Boolean(project);
-
-  useEffect(() => {
-    setReviewModalOpen(false);
-  }, [selectedProjectId]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -1002,26 +996,32 @@ export const ProjectDetailDrawer = () => {
               </div>
             </section>
           ) : null}
-          {extractTwitterHandleFromUrl(project.links?.twitter) ? (
+          <JojoOracle projectId={project.id} onNavigate={selectProject} fallbackInsight={project.jojoInsight} />
+          {project.terminalMissions?.length ? (
             <section>
-              <button
-                type="button"
-                className="ethos-review-trigger"
-                onClick={() => setReviewModalOpen(true)}
-              >
-                <img src="/logos/Ethos.webp" alt="" aria-hidden="true" className="ethos-review-trigger__icon" />
-                Review on Ethos
-              </button>
+              <h3 className="terminal-missions__heading">
+                <img src="/logos/Terminal.ico" alt="" aria-hidden="true" className="terminal-missions__heading-icon" />
+                Terminal Missions
+              </h3>
+              <ul className="terminal-missions">
+                {project.terminalMissions.map((mission, i) => {
+                  const emojis = ['🎯', '⚡', '🚀', '💎', '🔥', '🌟'];
+                  const emoji = emojis[i % emojis.length];
+                  return (
+                    <li key={i} className="terminal-mission">
+                      <span className="terminal-mission__emoji" aria-hidden="true">{emoji}</span>
+                      <div className="terminal-mission__body">
+                        <p className="terminal-mission__text">{mission.description}</p>
+                        <a className="terminal-mission__cta" href={mission.link} target="_blank" rel="noreferrer noopener">
+                          Start mission →
+                        </a>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
             </section>
           ) : null}
-          {reviewModalOpen && extractTwitterHandleFromUrl(project.links?.twitter) ? (
-            <EthosReviewModal
-              projectName={project.name}
-              twitterUsername={extractTwitterHandleFromUrl(project.links?.twitter)!}
-              onClose={() => setReviewModalOpen(false)}
-            />
-          ) : null}
-          <JojoOracle projectId={project.id} onNavigate={selectProject} fallbackInsight={project.jojoInsight} />
           <section>
             <h3>{incentiveSectionLabel}</h3>
             {hasSpecialEvent ? (

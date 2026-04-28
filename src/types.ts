@@ -17,6 +17,11 @@ export type Incentive = {
 
 export type IncentiveMap = Record<string, Incentive[]>;
 
+export type TerminalMission = {
+  description: string;
+  link: string;
+};
+
 export type RawProject = {
   id: string;
   name: string;
@@ -28,6 +33,8 @@ export type RawProject = {
   incentives?: Incentive[];
   linkedIds?: string[];
   jojoInsight?: string;
+  incentivizedWave?: number;
+  terminalMissions?: TerminalMission[];
 };
 
 export type SpecialFilters = {
@@ -35,6 +42,7 @@ export type SpecialFilters = {
   jojo: boolean;
   mobile: boolean;
   native: boolean;
+  incentivized: boolean;
 };
 
 export type JojoProfile = {

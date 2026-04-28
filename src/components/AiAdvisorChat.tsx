@@ -74,8 +74,11 @@ const MAX_MESSAGE_LENGTH = 500;
 const MAX_MESSAGE_LENGTH_SENT = 400;
 const MAX_HISTORY_MESSAGES = 6;
 const STARTER_PROMPTS = [
+  'Which incentivized Wave 1 apps on Terminal should I farm first?',
+  'How do Terminal points and boosters actually work?',
+  'How do I maximise my Terminal multiplier with weekly app selection?',
+  'Should I pledge to an NFT clan this week?',
   'Which lending protocol looks strongest on MegaETH right now?',
-  'Compare the safest DeFi options for a new user.',
   'Which bridge should I use to move into MegaETH?',
   'Which mobile-first app should I try first?'
 ];

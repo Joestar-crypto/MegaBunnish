@@ -405,8 +405,10 @@
       "Jojo",
       "Gaming",
       "Mobile",
-      "Native"
+      "Native",
+      "Incentivized"
     ],
+    "incentivizedWave": 1,
     "networks": [
       "MegaETH"
     ],
@@ -416,7 +418,13 @@
       "discord": "https://discord.com/invite/Jw4C3pSqCD"
     },
     "logo": "/logos/TopStrike.webp",
-    "isLive": true
+    "isLive": true,
+    "terminalMissions": [
+      { "description": "Buy cards of players you expect to perform well. Card prices rise with demand, so early buyers get the best price.", "link": "https://play.topstrike.io?invite=V71RGO2Z" },
+      { "description": "Sell cards to lock in profits or rotate into new opportunities.", "link": "https://play.topstrike.io?invite=V71RGO2Z" },
+      { "description": "Hold cards through a matchday to qualify for prizes based on player performance.", "link": "https://play.topstrike.io?invite=V71RGO2Z" },
+      { "description": "Refer friends and earn a share of their trading fees automatically when they sell.", "link": "https://play.topstrike.io?invite=V71RGO2Z" }
+    ]
   },
   {
     "id": "stomp",
@@ -482,8 +490,10 @@
       "Launchpad",
       "DeFi",
       "Megamafia",
-      "Native"
+      "Native",
+      "Incentivized"
     ],
+    "incentivizedWave": 1,
     "networks": [
       "MegaETH"
     ],
@@ -492,7 +502,13 @@
       "twitter": "https://x.com/kumbaya_xyz"
     },
     "logo": "/logos/Kumbaya.webp",
-    "isLive": true
+    "isLive": true,
+    "terminalMissions": [
+      { "description": "Add liquidity like USDm to a pool to earn a share of trading fees from every swap.", "link": "https://www.kumbaya.xyz/" },
+      { "description": "Trade tokens on MegaETH's most liquid DEX. The smart order router finds the best price across all available pools automatically.", "link": "https://www.kumbaya.xyz/" },
+      { "description": "Browse newly launched tokens on the Kumbaya launchpad, join the social discussion, and trade early before they gain traction.", "link": "https://www.kumbaya.xyz/" },
+      { "description": "Launch tokens to capture moments of culture.", "link": "https://www.kumbaya.xyz/" }
+    ]
   },
   {
     "id": "meth",
@@ -930,8 +946,10 @@
       "Megamafia",
       "Gambling",
       "Mobile",
-      "Native"
+      "Native",
+      "Incentivized"
     ],
+    "incentivizedWave": 1,
     "networks": [
       "MegaETH"
     ],
@@ -940,7 +958,11 @@
       "twitter": "https://x.com/hitdotone"
     },
     "logo": "/logos/Hitdotone.webp",
-    "isLive": true
+    "isLive": true,
+    "terminalMissions": [
+      { "description": "Hit the button to open a highly-leveraged trade with USDm. You won't know the details until you close it.", "link": "https://app.hit.one/r/CYP8SS" },
+      { "description": "Refer your friends and earn a share of their fees.", "link": "https://app.hit.one/r/CYP8SS" }
+    ]
   },
   {
     "id": "sectorone",
@@ -1116,8 +1138,10 @@
     "name": "ITS",
     "categories": [
       "Gaming",
-      "Native"
+      "Native",
+      "Incentivized"
     ],
+    "incentivizedWave": 1,
     "networks": [
       "MegaETH"
     ],
@@ -1126,7 +1150,11 @@
       "twitter": "https://x.com/megatruther"
     },
     "logo": "/logos/ITS.webp",
-    "isLive": true
+    "isLive": true,
+    "terminalMissions": [
+      { "description": "Open booster packs to build your card collection and strengthen your deck.", "link": "https://itstheseason.xyz/?ref=FX8WPK" },
+      { "description": "Play cards, outsmart opponents, and compete for the pot.", "link": "https://itstheseason.xyz/?ref=FX8WPK" }
+    ]
   },
   {
     "id": "huntertales",
@@ -1990,8 +2018,10 @@
     "categories": [
       "RWA",
       "Mobile",
-      "Native"
+      "Native",
+      "Incentivized"
     ],
+    "incentivizedWave": 1,
     "networks": [
       "MegaETH"
     ],
@@ -2002,7 +2032,10 @@
     },
     "logo": "/logos/NextRare.webp",
     "jojoInsight": "A gacha app already live on mobile and desktop that looks pretty cool. Haven't tried it yet but it looks sick. Imo TCG is one of the most interesting narratives and we haven't seen much innovation or competition there, so love to see NextRare iterate!",
-    "isLive": true
+    "isLive": true,
+    "terminalMissions": [
+      { "description": "Buy trading card packs at your fingertip with USDm and decide to keep or sell back once you open.", "link": "https://nextrare.cards/download" }
+    ]
   },
   {
     "id": "purrlend",
@@ -2026,8 +2059,10 @@
     "name": "Monster",
     "categories": [
       "RWA",
-      "Native"
+      "Native",
+      "Incentivized"
     ],
+    "incentivizedWave": 1,
     "networks": [
       "MegaETH"
     ],
@@ -2037,7 +2072,12 @@
       "discord": "https://discord.gg/5EnuG6XzWB"
     },
     "logo": "/logos/Monster.webp",
-    "jojoInsight": "Monster left Base for MegaETH and they're bringing an amazing TCG app to the ecosystem. Welcome them to the family!"
+    "jojoInsight": "Monster left Base for MegaETH and they're bringing an amazing TCG app to the ecosystem. Welcome them to the family!",
+    "isLive": true,
+    "terminalMissions": [
+      { "description": "Use USDm to buy Pokemon card packs. Open and then decide to keep or sell a card back at 85% of its market value.", "link": "https://mnstr.xyz/packs/monster/" },
+      { "description": "Shop cards available for sale on the marketplace and buy with USDm.", "link": "https://mnstr.xyz/" }
+    ]
   },
   {
     "id": "xeet",
