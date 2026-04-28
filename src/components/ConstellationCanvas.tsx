@@ -803,6 +803,7 @@ export const ConstellationCanvas = ({
   >([]);
   const mintProjectIdsRef = useRef<Set<string>>(new Set());
   const specialEventIdsRef = useRef<Set<string>>(new Set());
+  const eventProjectIdsRef = useRef<Set<string>>(new Set());
   const interactionActiveRef = useRef(false);
   const favoriteSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
   const ethosScoreFormatter = useMemo(() => new Intl.NumberFormat('fr-FR'), []);
@@ -966,6 +967,17 @@ export const ConstellationCanvas = ({
 
       mintProjectIdsRef.current = mintIds;
       specialEventIdsRef.current = specialIds;
+
+      // Generic bell trigger: every project that currently has an active or
+      // upcoming event (end >= now) gets a bell, regardless of event title.
+      const eventIds = new Set(
+        APP_EVENTS.filter((event) => {
+          const endValue = event.end ?? event.start;
+          const endMs = new Date(endValue).getTime();
+          return !Number.isNaN(endMs) && endMs >= nowMs;
+        }).map((event) => event.projectId)
+      );
+      eventProjectIdsRef.current = eventIds;
     };
 
     updateEventSets();
@@ -1280,6 +1292,7 @@ export const ConstellationCanvas = ({
       const nowMs = Date.now();
       const mintProjectIds = mintProjectIdsRef.current;
       const specialEventIds = specialEventIdsRef.current;
+      const eventProjectIds = eventProjectIdsRef.current;
 
       const categoryLabels: { x: number; y: number; text: string; color: string; fontSize: number }[] = [];
       const nextCategoryRings: {
@@ -1510,7 +1523,12 @@ export const ConstellationCanvas = ({
           const endMs = new Date(incentive.expiresAt).getTime();
           return !Number.isNaN(endMs) && endMs > nowMs;
         });
-        if (hasActiveIncentive || mintProjectIds.has(project.id) || specialEventIds.has(project.id)) {
+        if (
+          hasActiveIncentive ||
+          mintProjectIds.has(project.id) ||
+          specialEventIds.has(project.id) ||
+          eventProjectIds.has(project.id)
+        ) {
           const bellOffset = Math.max(radius * 0.7, radius - 8);
           drawIncentiveBell(context, x - bellOffset, y - bellOffset);
         }

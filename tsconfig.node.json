@@ -15,6 +15,7 @@
     "server/**/*.ts",
     "src/data/appEvents.ts",
     "src/data/ethosManualProfiles.ts",
+    "src/data/jojoScores.ts",
     "src/data/projects.json"
   ]
 }

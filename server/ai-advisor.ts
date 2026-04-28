@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { APP_EVENTS, type AppEvent } from '../src/data/appEvents';
 import { ETHOS_PROFILE_OVERRIDES } from '../src/data/ethosManualProfiles';
+import { JOJO_SCORES_BY_PROJECT_ID } from '../src/data/jojoScores';
 import rawProjects from '../src/data/projects.json';
 
 type AdvisorProject = {
@@ -149,6 +150,45 @@ const ETHOS_BY_PROJECT_ID = new Map<string, EthosProfile>(
     }
   ])
 );
+
+// BadBunnz family = the BadBunnz NFT itself plus every project that links to
+// it (via linkedIds, in either direction). Membership earns a small score
+// boost and a "BadBunnz family: yes" line in the LLM context, matching how
+// Jojo treats them as lower-risk MegaETH-native picks.
+const BAD_BUNNZ_ID = 'bad-bunnz';
+const BADBUNNZ_FAMILY_IDS: Set<string> = (() => {
+  const ids = new Set<string>([BAD_BUNNZ_ID]);
+  const badBunnz = PROJECTS.find((project) => project.id === BAD_BUNNZ_ID);
+  for (const linkedId of badBunnz?.linkedIds ?? []) {
+    ids.add(linkedId);
+  }
+  for (const project of PROJECTS) {
+    if (project.linkedIds?.includes(BAD_BUNNZ_ID)) {
+      ids.add(project.id);
+    }
+  }
+  return ids;
+})();
+
+function isMegamafiaProject(project: AdvisorProject) {
+  return project.categories.includes('Megamafia');
+}
+
+function isBadbunnzFamily(project: AdvisorProject) {
+  return BADBUNNZ_FAMILY_IDS.has(project.id);
+}
+
+// MegaETH-native projects are the ones where farming, points, and early
+// engagement actually pay off. Anything outside this trio (i.e. infra apps
+// like Aave, GMX, Lido, Stargate, OpenSea, generic bridges) is treated as
+// non-native and is de-prioritized in the recommendation ranking.
+function isNativeMegaEthProject(project: AdvisorProject) {
+  return (
+    project.categories.includes('Native') ||
+    project.categories.includes('Megamafia') ||
+    project.categories.includes('Jojo')
+  );
+}
 const DEFAULT_MODEL = 'gpt-4.1-mini';
 const DEFAULT_BASE_URL = 'https://api.openai.com/v1';
 const DEFAULT_SUGGESTED_PROMPTS = [
@@ -517,6 +557,35 @@ function scoreProject(project: AdvisorProject, query: string, intent: IntentProf
     score += Math.max(0, Math.min(18, Math.round((ethos.score - 1100) / 40)));
   }
 
+  // Megamafia builders ship the headline MegaETH apps and carry the lowest
+  // execution risk in the ecosystem — surface them harder.
+  if (isMegamafiaProject(project)) {
+    score += 18;
+  }
+
+  // BadBunnz family (BadBunnz itself + projects mutually linked with it)
+  // is treated as a lower-risk MegaETH-native cluster Jojo vouches for.
+  if (isBadbunnzFamily(project)) {
+    score += 14;
+  }
+
+  // Penalize non-native projects across the board so MegaETH-native picks
+  // win all ties. Explicit name matches and narrative-forced inclusions
+  // bypass scoreProject entirely, so power-users asking by name are unaffected.
+  if (!isNativeMegaEthProject(project)) {
+    score -= 14;
+  }
+
+  // Jojo trust + potential are the user's own per-project scores derived from
+  // his written jojoInsight notes. Each contributes up to ~7 points so the
+  // combined max boost is ~14 — enough to break ties without dominating the
+  // ranking. Projects with no Jojo score stay neutral.
+  const jojoScore = JOJO_SCORES_BY_PROJECT_ID[project.id];
+  if (jojoScore) {
+    score += Math.round(jojoScore.trust * 0.7);
+    score += Math.round(jojoScore.potential * 0.7);
+  }
+
   if (intent.strictLending) {
     if (/lending|borrow|loan|credit/.test(corpus)) {
       score += 40;
@@ -698,6 +767,7 @@ function buildContextBlock(projects: RankedProject[], intent?: IntentProfile) {
   const lines = projects.map(({ project, reason }) => {
     const event = findBestEvent(project.id, nowMs);
     const ethos = ETHOS_BY_PROJECT_ID.get(project.id);
+    const jojoScore = JOJO_SCORES_BY_PROJECT_ID[project.id];
     if (event) {
       eventIds.add(event.id);
     }
@@ -705,8 +775,13 @@ function buildContextBlock(projects: RankedProject[], intent?: IntentProfile) {
     return [
       `Project: ${project.name} (${project.id})`,
       `Categories: ${project.categories.join(', ')}`,
+      `Megamafia builder: ${isMegamafiaProject(project) ? 'yes — lower-risk, headline MegaETH builder cohort' : 'no'}`,
+      `BadBunnz family: ${isBadbunnzFamily(project) ? 'yes — Jojo-vouched MegaETH-native cluster, treat as lower risk' : 'no'}`,
+      `MegaETH-native: ${isNativeMegaEthProject(project) ? 'yes' : 'no — not a native MegaETH app, prefer native alternatives when available'}`,
       `Live: ${project.isLive ? 'yes' : 'no'}`,
       `Ethos trust: ${ethos ? `${ethos.score}${ethos.tier ? ` (${ethos.tier})` : ''}${ethos.url ? ` | ${ethos.url}` : ''}` : 'not available'}`,
+      `Jojo trust: ${jojoScore ? `${jojoScore.trust}/10 (rationale: ${jojoScore.rationale})` : 'not rated'}`,
+      `Jojo potential: ${jojoScore ? `${jojoScore.potential}/10` : 'not rated'}`,
       `Incentives: ${project.incentives?.map((entry) => entry.title).join(' | ') || 'none visible'}`,
       `Editorial insight (high-signal — incorporate this framing when relevant): ${project.jojoInsight ?? 'No editorial insight available.'}`,
       `Event: ${event ? `${event.title} (${event.start}${event.end ? ` -> ${event.end}` : ''})` : 'none active or upcoming'}`,
@@ -848,6 +923,10 @@ function buildPrompt(message: string, history: AdvisorChatMessage[], contextText
     'Default to 2 to 5 short sentences, or up to 3 bullets for comparisons.',
     'When the user asks about farming, points, yield, rewards, safety, or app comparisons, be explicit about tradeoffs and risk.',
     'CRITICAL: For farming, airdrops, points, or incentive grinding, recommend ONLY MegaETH-native projects (those tagged Native, Megamafia, or Jojo). Non-native projects (Aave, GMX, Lido, Stargate, OpenSea, etc.) already have liquid tokens and are far less rewarding to farm — never recommend them for airdrop/farming questions.',
+    'CRITICAL: When listing opportunities, lean Megamafia builders forward as the safest bets — they are the headline MegaETH builder cohort with the lowest execution risk in the ecosystem. Highlight "Megamafia" explicitly when applicable and frame them as lower-risk standout opportunities.',
+    'CRITICAL: BadBunnz-family projects (BadBunnz itself plus every project mutually linked with it via linkedIds — see the "BadBunnz family: yes" line in the project context) are a Jojo-vouched MegaETH-native cluster. Treat them as lower risk than the rest of the long tail and surface them when the user is hunting for solid native plays.',
+    'CRITICAL: Down-weight non-native projects in opportunity / discovery / "what should I try" answers. Projects marked "MegaETH-native: no" should only appear when the user explicitly asks for that vertical with no native alternative, or names them directly. Do not lead a recommendation list with non-native apps.',
+    'CRITICAL: When a project carries a Jojo trust or Jojo potential score in the context, treat it as Jojo\'s personal rating derived from his own written editorial notes. Lean on it the same way you lean on Ethos: 8+ on either is a strong vouch worth surfacing explicitly (e.g. "Jojo personally rates them 9/10"); 4 or below means Jojo himself stayed neutral, so soften the framing and do not push them as a top pick. Never invent these numbers — only use the ones provided in the project context, and only mention them when they meaningfully change the recommendation.',
     'CRITICAL: When the user asks for NFT collections to buy, mint, or hold, recommend actual mintable collections (e.g. Glitchy Bunnies, Meganacci, Fluffle, Miniminds, Alzena). Never recommend NFT marketplaces (OpenSea, Rarible, NextRare, Magic Eden) as a "collection" — they are venues, not collections.',
     'When the user asks about safety, trust, reliability, or beginner-friendly choices, explicitly factor Ethos trust scores into the comparison, but never rely on Ethos alone.',
     'For token, ICO, public sale, TGE, or tokenomics questions, clearly separate disclosed facts from undisclosed details. State the 10B MEGA implied total supply when supply is asked, and cite the source.',
